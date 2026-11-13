@@ -86,6 +86,61 @@ contract rather than in the prompt.
 The agent chooses the recipient and the amount. It never chooses the
 limits.
 
+## The agent's decision loop
+
+1. **Read.** A message arrives: "send alice 20 bucks for pizza". The agent
+   parses the recipient, the token, the amount and the note.
+2. **Resolve.** It looks the name up on chain. An unclaimed name stops here,
+   and it asks rather than guessing.
+3. **Check its own leash.** It reads `limitOf` and `remainingToday` before
+   it builds anything, so it can say "that is over your daily cap, I have
+   $40 left" instead of sending a transaction that reverts.
+4. **Confirm.** Anything at or near the per-send cap goes back to the human
+   in words before it moves.
+5. **Send.** It calls `sendAsAgent`, which re-checks every limit on chain.
+   The contract, not the prompt, is what actually stops it.
+6. **Report.** It replies with the transaction hash and the new remaining
+   allowance for the day.
+
+The agent can be wrong at steps 1 to 4 and still cannot exceed what the
+user allowed, because step 5 is enforced by code the agent does not
+control.
+
+## How stablegram uses Arc
+
+- **Gas is USDC**, so a recipient who has never touched crypto needs no gas
+  token to receive or to send onward. Fees are quoted in dollars.
+- **`sendNative` moves the chain's own currency**, which on Arc means
+  sending someone dollars is a native transfer, not an ERC-20 call.
+- **Sub-second deterministic finality**, so the app confirms on one receipt
+  with no reorg window to design around.
+- **Foundry throughout**, which the Arc award asks for, with one deploy
+  script and no hardcoded addresses.
+- The agent path deliberately uses USDC's **ERC-20 interface** rather than
+  the native balance, because native value cannot be pulled from a user's
+  account. This is the practical consequence of Arc's two-faced USDC:
+  18 decimals native, 6 through the ERC-20 interface, over one balance.
+
+## QuickNode Streams
+
+Not configured yet. The design: one Stream on Arc testnet filtered to the
+`Sent` event from `GatedShare` and `Stablegram`, delivered to a webhook
+that writes the feed and pushes a notification to the recipient.
+
+Both contracts emit an identical `Sent` signature on purpose, so a single
+filter covers every send in the system:
+
+```
+Sent(address indexed token, address indexed from, address indexed to,
+     string name, uint256 value, string memo, bool byAgent)
+```
+
+## Grok Bot
+
+Not built yet. Grok Bot is xAI's assistant inside X, so the role here is
+watching on-chain activity and acting on it rather than answering
+questions.
+
 ## Deployed addresses
 
 | Network | Chain ID | Addresses |
