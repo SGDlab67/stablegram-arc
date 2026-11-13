@@ -4,54 +4,38 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {EligibilityRegistry} from "../src/EligibilityRegistry.sol";
-import {GatedShare} from "../src/GatedShare.sol";
 import {MockShare} from "../src/MockShare.sol";
 import {Stablegram} from "../src/Stablegram.sol";
 import {UsernameRegistry} from "../src/UsernameRegistry.sol";
 
 contract FlowTest is Test {
     MockShare share;
-    EligibilityRegistry registry;
+    MockShare other; // a second token, to prove the agent's limits are per token
     UsernameRegistry usernames;
-    GatedShare gated;
     Stablegram gram;
 
-    address compliance = makeAddr("compliance");
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
-    address mallory = makeAddr("mallory"); // has a name, never cleared by compliance
+    address mallory = makeAddr("mallory");
     address agent = makeAddr("agent");
 
     string constant MEMO = unicode"pizza last night 🍕";
 
     function setUp() public {
         share = new MockShare("Mock Circle Share", "mCRCL");
-        registry = new EligibilityRegistry(compliance);
+        other = new MockShare("Other Share", "oCRCL");
         usernames = new UsernameRegistry();
-        gated = new GatedShare(share, "Sendable Circle Share", "sCRCL", registry, usernames);
         gram = new Stablegram(usernames);
 
-        vm.startPrank(compliance);
-        registry.set(alice, true);
-        registry.set(bob, true);
-        vm.stopPrank();
-
         share.mint(alice, 100e18);
+        other.mint(alice, 100e18);
 
         vm.prank(alice);
         usernames.claim("alice");
         vm.prank(bob);
         usernames.claim("Bob"); // claimed with a capital, resolves either way
         vm.prank(mallory);
-        usernames.claim("mallory"); // anyone may claim a name; holding is what is gated
-    }
-
-    function _wrap(address who, uint256 amount) private {
-        vm.startPrank(who);
-        share.approve(address(gated), amount);
-        gated.depositFor(who, amount);
-        vm.stopPrank();
+        usernames.claim("mallory");
     }
 
     // --- usernames ---
@@ -87,108 +71,7 @@ contract FlowTest is Test {
         vm.stopPrank();
     }
 
-    // --- wrapping and the gate ---
-
-    function test_wrapAndUnwrapRoundTrips() public {
-        _wrap(alice, 40e18);
-        assertEq(gated.balanceOf(alice), 40e18);
-        assertEq(share.balanceOf(alice), 60e18);
-
-        vm.prank(alice);
-        gated.withdrawTo(alice, 40e18);
-        assertEq(gated.balanceOf(alice), 0);
-        assertEq(share.balanceOf(alice), 100e18);
-    }
-
-    function test_wrappedShareKeepsUnderlyingDecimals() public view {
-        assertEq(gated.decimals(), share.decimals());
-    }
-
-    function test_ineligibleCannotReceive() public {
-        _wrap(alice, 10e18);
-        vm.prank(alice);
-        vm.expectRevert(abi.encodeWithSelector(GatedShare.NotEligible.selector, mallory));
-        gated.transfer(mallory, 1e18);
-    }
-
-    function test_ineligibleCannotWrap() public {
-        share.mint(mallory, 5e18);
-        vm.startPrank(mallory);
-        share.approve(address(gated), 5e18);
-        vm.expectRevert(abi.encodeWithSelector(GatedShare.NotEligible.selector, mallory));
-        gated.depositFor(mallory, 5e18);
-        vm.stopPrank();
-    }
-
-    /// The gate must never be able to trap somebody's shares.
-    function test_revokedHolderCanStillUnwrap() public {
-        _wrap(alice, 10e18);
-        vm.prank(compliance);
-        registry.set(alice, false);
-
-        vm.prank(alice);
-        gated.withdrawTo(alice, 10e18);
-        assertEq(share.balanceOf(alice), 100e18);
-    }
-
-    function test_cannotSendToARevokedHolder() public {
-        _wrap(alice, 10e18);
-        vm.prank(compliance);
-        registry.set(bob, false);
-
-        vm.prank(alice);
-        vm.expectRevert(abi.encodeWithSelector(GatedShare.NotEligible.selector, bob));
-        gated.sendToUsername("bob", 1e18, MEMO);
-    }
-
-    // --- sending a share by name ---
-
-    function test_sendShareToUsername() public {
-        _wrap(alice, 50e18);
-
-        vm.prank(alice);
-        address to = gated.sendToUsername("bob", 20e18, MEMO);
-
-        assertEq(to, bob);
-        assertEq(gated.balanceOf(bob), 20e18);
-        assertEq(gated.balanceOf(alice), 30e18);
-    }
-
-    function test_sendFractionOfAShare() public {
-        _wrap(alice, 1e18);
-
-        vm.prank(alice);
-        gated.sendToUsername("bob", 0.25e18, "quarter share, happy birthday");
-
-        // the thing ACATS cannot do at all
-        assertEq(gated.balanceOf(bob), 0.25e18);
-        assertEq(gated.balanceOf(alice), 0.75e18);
-    }
-
-    function test_shareSendEmitsTheMemo() public {
-        _wrap(alice, 10e18);
-        vm.expectEmit(true, true, true, true, address(gated));
-        emit GatedShare.Sent(address(gated), alice, bob, "bob", 1e18, MEMO, false);
-        vm.prank(alice);
-        gated.sendToUsername("bob", 1e18, MEMO);
-    }
-
-    function test_sendToUnclaimedNameReverts() public {
-        _wrap(alice, 10e18);
-        vm.prank(alice);
-        vm.expectRevert(UsernameRegistry.NoSuchName.selector);
-        gated.sendToUsername("nobody", 1e18, MEMO);
-    }
-
-    function test_memoHasALimit() public {
-        _wrap(alice, 10e18);
-        string memory tooLong = new string(141);
-        vm.prank(alice);
-        vm.expectRevert(GatedShare.MemoTooLong.selector);
-        gated.sendToUsername("bob", 1e18, tooLong);
-    }
-
-    // --- stablegram: crypto, and anything else ---
+    // --- sending by name ---
 
     function test_sendsAnyToken() public {
         vm.startPrank(alice);
@@ -201,13 +84,31 @@ contract FlowTest is Test {
         assertEq(share.balanceOf(alice), 70e18);
     }
 
-    /// Stablegram has no gate of its own, so the share's gate must still bite.
-    function test_cannotBypassTheGateThroughStablegram() public {
-        _wrap(alice, 10e18);
+    function test_sendFractionOfAShare() public {
         vm.startPrank(alice);
-        gated.approve(address(gram), 10e18);
-        vm.expectRevert(abi.encodeWithSelector(GatedShare.NotEligible.selector, mallory));
-        gram.sendToken(IERC20(address(gated)), "mallory", 1e18, MEMO);
+        share.approve(address(gram), 1e18);
+        gram.sendToken(IERC20(address(share)), "bob", 0.25e18, "quarter share, happy birthday");
+        vm.stopPrank();
+
+        // the thing ACATS cannot do at all
+        assertEq(share.balanceOf(bob), 0.25e18);
+    }
+
+    function test_sendEmitsTheMemo() public {
+        vm.startPrank(alice);
+        share.approve(address(gram), 1e18);
+        vm.expectEmit(true, true, true, true, address(gram));
+        emit Stablegram.Sent(address(share), alice, bob, "bob", 1e18, MEMO, false);
+        gram.sendToken(IERC20(address(share)), "bob", 1e18, MEMO);
+        vm.stopPrank();
+    }
+
+    function test_memoHasALimit() public {
+        string memory tooLong = new string(141);
+        vm.startPrank(alice);
+        share.approve(address(gram), 1e18);
+        vm.expectRevert(Stablegram.MemoTooLong.selector);
+        gram.sendToken(IERC20(address(share)), "bob", 1e18, tooLong);
         vm.stopPrank();
     }
 
@@ -353,25 +254,11 @@ contract FlowTest is Test {
     function test_agentLimitsArePerToken() public {
         _authorizeAgent(10e18, 10e18); // limit is on `share` only
 
-        _wrap(alice, 20e18);
         vm.prank(alice);
-        gated.approve(address(gram), 20e18);
+        other.approve(address(gram), 20e18);
 
         vm.prank(agent);
         vm.expectRevert(abi.encodeWithSelector(Stablegram.OverPerSendLimit.selector, 1e18, 0));
-        gram.sendAsAgent(alice, IERC20(address(gated)), "bob", 1e18, MEMO);
-    }
-
-    function test_agentStillCannotBreakTheEligibilityGate() public {
-        _wrap(alice, 20e18);
-        vm.startPrank(alice);
-        gated.approve(address(gram), 20e18);
-        gram.authorizeAgent(agent);
-        gram.setLimit(address(gated), 10e18, 10e18);
-        vm.stopPrank();
-
-        vm.prank(agent);
-        vm.expectRevert(abi.encodeWithSelector(GatedShare.NotEligible.selector, mallory));
-        gram.sendAsAgent(alice, IERC20(address(gated)), "mallory", 1e18, MEMO);
+        gram.sendAsAgent(alice, IERC20(address(other)), "bob", 1e18, MEMO);
     }
 }

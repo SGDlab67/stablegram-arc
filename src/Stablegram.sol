@@ -18,9 +18,9 @@ import {UsernameRegistry} from "./UsernameRegistry.sol";
 ///
 /// This contract holds no balance and has no owner. It moves value in the
 /// same transaction it receives the instruction, so there is nothing here
-/// to drain. Any rule on the token itself, such as the eligibility gate on
-/// GatedShare, still applies because this calls the token's ordinary
-/// transfer path.
+/// to drain. Any rule the token itself enforces, such as a pause or a
+/// transfer restriction, still applies because this calls the token's
+/// ordinary transfer path.
 ///
 /// On Arc the chain's currency is USDC, so sendNative is how you send
 /// dollars. An agent cannot send the native balance, because nothing can
@@ -51,7 +51,6 @@ contract Stablegram {
     mapping(address => mapping(address => Spend)) public spentOf;
 
     /// One shape for every send, so a single indexer builds the whole feed.
-    /// GatedShare declares the same event for its own direct sends.
     /// `token` is address(0) for the chain's native currency.
     event Sent(
         address indexed token,

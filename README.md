@@ -22,22 +22,20 @@ experience. Measured on 2026-11-13, three xStocks on Solana (NVDAx, SPYx,
 TSLAx) were held across 360,694 accounts holding $228.7M. You still cannot
 send any of it to a person by name, with a note, from your phone.
 
-stablegram is the missing half: a share that knows who is allowed to hold
-it, a name instead of an address, a note instead of a bare transfer, and an
-agent that can do it for you inside limits you set.
+stablegram is the missing half: a name instead of an address, a note instead
+of a bare transfer, and an agent that can do it for you inside limits you
+set.
 
 ## How it works
 
 1. **Claim a name.** One username per address, first come first served,
    resolved case-insensitively so `Alice` and `alice` are the same person.
-2. **Wrap.** Deposit the tokenized stock and receive a share that refuses to
-   move to anyone the compliance role has not cleared.
-3. **Send.** `sendToUsername("alice", 0.25e18, "quarter share, happy
+2. **Send.** `sendToken(share, "alice", 0.25e18, "quarter share, happy
    birthday")`. A quarter of a share, instantly, with a note. On Arc the
    recipient needs no gas token, because gas is USDC.
-4. **Or send dollars.** `sendNative("alice", "dinner")` moves the chain's
+3. **Or send dollars.** `sendNative("alice", "dinner")` moves the chain's
    own currency, which on Arc is USDC.
-5. **Or tell your agent.** Authorize one agent, cap it per send and per day
+4. **Or tell your agent.** Authorize one agent, cap it per send and per day
    per token, and text it. It can never exceed the caps, never reach an
    unclaimed name, and you can revoke it in one transaction.
 
@@ -49,20 +47,14 @@ log is the feed.
 | Contract | What it does |
 | --- | --- |
 | `MockShare` | Stand-in for a tokenized stock on testnet |
-| `EligibilityRegistry` | Who may hold the share. The rule is set by a compliance role, not hardcoded |
 | `UsernameRegistry` | One name per address, case-insensitive, reverts on an unclaimed name |
-| `GatedShare` | `ERC20Wrapper` with an eligibility gate on every transfer, plus send-by-name with a note |
 | `Stablegram` | Send any token or the native currency by name, with a note, as yourself or as someone's agent |
 
-Three decisions worth knowing:
+Two decisions worth knowing:
 
-- **The gate is the feature, not the obstacle.** A payment app moves value
-  to whoever you name. A share has to check first, because the issuer's
-  terms say who may hold it. Doing that check inside the transfer is what
-  lets the thing being sent be a real security rather than a token that
-  looks like one.
-- **Unwrapping is always allowed.** The gate blocks receiving, never
-  burning, so it can never trap somebody's shares. There is a test for it.
+- **Nothing wraps the asset.** stablegram sends the token you already hold,
+  so it works with any ERC-20 on day one and inherits whatever rules that
+  token enforces. No wrapper, no allowlist, no new asset to bootstrap.
 - **`Stablegram` holds nothing and has no owner.** It moves value in the
   same transaction it receives the instruction. There is a fuzz test
   asserting its balance is always zero.
@@ -81,7 +73,7 @@ contract rather than in the prompt.
 | Can only send to a claimed username | `mustResolve` reverts otherwise |
 | Cannot send the native balance | Nothing can pull native value from a user's account |
 | Revocable instantly, for every token at once | `authorizeAgent(address(0))` |
-| The token's own rules still apply | The eligibility gate bites even when the agent sends |
+| The token's own rules still apply | A paused or restricted token reverts even when the agent sends |
 
 The agent chooses the recipient and the amount. It never chooses the
 limits.
@@ -124,11 +116,11 @@ control.
 ## QuickNode Streams
 
 Not configured yet. The design: one Stream on Arc testnet filtered to the
-`Sent` event from `GatedShare` and `Stablegram`, delivered to a webhook
-that writes the feed and pushes a notification to the recipient.
+`Sent` event from `Stablegram`, delivered to a webhook that writes the feed
+and pushes a notification to the recipient.
 
-Both contracts emit an identical `Sent` signature on purpose, so a single
-filter covers every send in the system:
+Every send, token or native, as yourself or through an agent, emits the same
+signature, so one filter covers the whole system:
 
 ```
 Sent(address indexed token, address indexed from, address indexed to,
@@ -178,13 +170,13 @@ Judges mark down a demo that hides its mocks, so here they are.
 | Piece | In this repo | The real version |
 | --- | --- | --- |
 | Tokenized stock | `MockShare` on testnet | CRCLx or an xStock on mainnet |
-| Compliance check | An allowlist set by one wallet | A KYC or attestation provider |
 | Usernames | On-chain, first come first served | The same, plus recovery and a dispute process |
 | Agent | Sends inside on-chain caps | The same, and this part is not mocked |
 
-The honest limit: this moves a wrapped claim, not the registered share. A
-transfer agent still has to recognise the wrapper for the holder to be a
-shareholder of record. That is a business problem, not a contract one.
+The honest limit: this moves a tokenized claim, not the registered share.
+Whether the holder is a shareholder of record is the issuer's and the
+transfer agent's call, not ours. That is a business problem, not a contract
+one.
 
 ## Chain notes
 
