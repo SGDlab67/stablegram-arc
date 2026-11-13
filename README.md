@@ -1,75 +1,90 @@
-# Project-Compliance
+# stablegram
 
-**Send someone a fraction of a share. Then let them vote it.**
+**Send someone a fraction of a share, or a few dollars, by name. Say what
+it was for. Or just text your agent and let it do it.**
 
-Tokenized stocks give holders the price and leave out the rights. This
-project adds the layer underneath: a share you can send to a person by name,
-that checks eligibility before it moves, and that can actually be voted at a
-shareholder meeting, by the holder or by an agent acting on their stated
-values.
-
-Built for the University Blockchain Conference hackathon 2026 and Monad
-Blitz Oregon. The contracts are chain neutral and run on Arc testnet first.
+Built for the University Blockchain Conference Hackathon 2026 (Nov 13 to
+20) and Monad Blitz Oregon. Contracts are chain neutral and run on Arc
+testnet first, where gas is USDC.
 
 ## Why
 
 You cannot send a friend $20 of Apple today.
 
 - An ACATS transfer between brokerages takes 5 to 10 business days.
-- Fractional shares cannot be transferred at all. They are a
+- **Fractional shares cannot be transferred at all.** They are a
   platform-specific construct, and ACATS moves whole shares only.
 - The sender needs the recipient's full name, address, SSN or TIN and
   account number.
 
-Tokenized stocks fix the movement and then drop the rights. Kraken's xStocks
-FAQ says they "do not confer shareholder rights like voting or dividends
-paid as cash". Measured on 2026-11-13, three xStocks on Solana (NVDAx, SPYx,
-TSLAx) were held across 360,694 accounts holding $228.7M, and none of those
-holders had a vote.
+Tokenized stocks fix the movement and then drop the rights and the
+experience. Measured on 2026-11-13, three xStocks on Solana (NVDAx, SPYx,
+TSLAx) were held across 360,694 accounts holding $228.7M. You still cannot
+send any of it to a person by name, with a note, from your phone.
 
-CRCLx on Monad mainnet
-(`0xfEbDEd1B0986a8ee107f5AB1a1c5a813491DeCEB`) is a verified upgradeable
-proxy with no vote checkpoints and no delegation, so a voting contract
-cannot read past balances from it at all. That is the specific reason
-`VoteShare` exists.
+stablegram is the missing half: a share that knows who is allowed to hold
+it, a name instead of an address, a note instead of a bare transfer, and an
+agent that can do it for you inside limits you set.
 
 ## How it works
 
-1. **Claim a name.** One username per address, first come first served.
-2. **Wrap.** Deposit the tokenized stock, receive a share that records
-   balances at every past moment and refuses to move to an address the
-   compliance role has not cleared.
-3. **Send.** `sendToUsername("alice", 5e18)`. It arrives instantly, and on
-   Arc the recipient needs no gas token because gas is USDC.
-4. **Meeting.** The custodian publishes a record time, a deadline, the
-   ballot items and a hash of the proxy document.
-5. **Vote.** The holder votes, or an agent votes for them from their stated
-   policy. Weight is whatever they held at the record time.
-6. **Override.** The holder can take any agent vote back until the deadline.
-7. **Tally.** At the deadline the totals are the instruction a custodian
-   holding the real shares would act on.
+1. **Claim a name.** One username per address, first come first served,
+   resolved case-insensitively so `Alice` and `alice` are the same person.
+2. **Wrap.** Deposit the tokenized stock and receive a share that refuses to
+   move to anyone the compliance role has not cleared.
+3. **Send.** `sendToUsername("alice", 0.25e18, "quarter share, happy
+   birthday")`. A quarter of a share, instantly, with a note. On Arc the
+   recipient needs no gas token, because gas is USDC.
+4. **Or send dollars.** `sendNative("alice", "dinner")` moves the chain's
+   own currency, which on Arc is USDC.
+5. **Or tell your agent.** Authorize one agent, cap it per send and per day
+   per token, and text it. It can never exceed the caps, never reach an
+   unclaimed name, and you can revoke it in one transaction.
+
+Every send emits the same `Sent` event with the note attached. That event
+log is the feed.
 
 ## Contracts
 
 | Contract | What it does |
 | --- | --- |
 | `MockShare` | Stand-in for a tokenized stock on testnet |
-| `EligibilityRegistry` | Who may hold and vote. The rule is set by a compliance role, not hardcoded |
-| `UsernameRegistry` | One name per address, resolved case-insensitively |
-| `VoteShare` | `ERC20Wrapper` + `ERC20Votes`, gated transfers, send by username |
-| `Ballot` | A meeting with several items, agent voting, holder override, tally |
+| `EligibilityRegistry` | Who may hold the share. The rule is set by a compliance role, not hardcoded |
+| `UsernameRegistry` | One name per address, case-insensitive, reverts on an unclaimed name |
+| `GatedShare` | `ERC20Wrapper` with an eligibility gate on every transfer, plus send-by-name with a note |
+| `Stablegram` | Send any token or the native currency by name, with a note, as yourself or as someone's agent |
 
 Three decisions worth knowing:
 
-- **The clock is timestamps, not block numbers.** Monad and Arc produce
-  blocks at very different speeds, and a record date is a moment in the
-  world.
-- **Shares self-delegate on arrival.** `ERC20Votes` gives zero voting power
-  until a holder delegates, which almost nobody does, so `VoteShare`
-  delegates to the holder the first time shares land.
-- **`Ballot` is not a Governor.** A Governor proposal is one decision; an
-  annual meeting is a dozen on one agenda under one record date. The trade
-  is that the counting is ours and has to be tested rather than inherited.
+- **The gate is the feature, not the obstacle.** A payment app moves value
+  to whoever you name. A share has to check first, because the issuer's
+  terms say who may hold it. Doing that check inside the transfer is what
+  lets the thing being sent be a real security rather than a token that
+  looks like one.
+- **Unwrapping is always allowed.** The gate blocks receiving, never
+  burning, so it can never trap somebody's shares. There is a test for it.
+- **`Stablegram` holds nothing and has no owner.** It moves value in the
+  same transaction it receives the instruction. There is a fuzz test
+  asserting its balance is always zero.
+
+## Agent safety limits
+
+The agent is the part that can lose someone money, so the limits are in the
+contract rather than in the prompt.
+
+| Limit | Enforced by |
+| --- | --- |
+| One agent per user, named by the user | `agentOf`, set only by the user |
+| A cap per single send, per token | `OverPerSendLimit` |
+| A cap per rolling day, per token | `OverDailyLimit`, reset by UTC day |
+| Both caps default to zero | A fresh agent can send nothing until the user sets a limit |
+| Can only send to a claimed username | `mustResolve` reverts otherwise |
+| Cannot send the native balance | Nothing can pull native value from a user's account |
+| Revocable instantly, for every token at once | `authorizeAgent(address(0))` |
+| The token's own rules still apply | The eligibility gate bites even when the agent sends |
+
+The agent chooses the recipient and the amount. It never chooses the
+limits.
 
 ## Deployed addresses
 
@@ -108,23 +123,13 @@ Judges mark down a demo that hides its mocks, so here they are.
 | Piece | In this repo | The real version |
 | --- | --- | --- |
 | Tokenized stock | `MockShare` on testnet | CRCLx or an xStock on mainnet |
-| Custodian | One wallet with the custodian role | The custodian voting the real shares |
 | Compliance check | An allowlist set by one wallet | A KYC or attestation provider |
-| Ballot items | Circle's real 2026 items, loaded by hand | A feed of filings |
-| Tally | An event | An instruction a custodian acts on |
+| Usernames | On-chain, first come first served | The same, plus recovery and a dispute process |
+| Agent | Sends inside on-chain caps | The same, and this part is not mocked |
 
-The one thing this cannot do on its own is make anybody vote the real
-shares. An on-chain tally is an instruction, and somebody holding the
-underlying has to honour it. That is the honest limit of the design.
-
-## Prior art
-
-Broadridge already runs proxy voting for tokenized stocks (Galaxy, Ondo,
-NYSE, Dinari). It delivers the ballot to the holder. Two gaps remain, and
-they are what this project is:
-
-- Nobody reads the ballot for the holder or votes by a policy.
-- xStocks, the largest family by volume, have no vote at all.
+The honest limit: this moves a wrapped claim, not the registered share. A
+transfer agent still has to recognise the wrapper for the holder to be a
+shareholder of record. That is a business problem, not a contract one.
 
 ## Chain notes
 
@@ -132,10 +137,10 @@ they are what this project is:
   explorer `explorer.testnet.arc.io`, faucet `faucet.circle.com`. Gas is
   USDC and finality is under a second.
 - **USDC on Arc has two faces.** The native balance uses 18 decimals and the
-  ERC-20 interface uses 6, over one balance. Anything paying USDC must use
-  the ERC-20 interface and 6 decimals.
+  ERC-20 interface uses 6, over one balance. An agent sends through the
+  ERC-20 interface, because native value cannot be pulled from a user.
 - **Monad**: mainnet chain ID 143, testnet 10143.
-- No hardcoded addresses anywhere. The port between chains is a redeploy.
+- No hardcoded addresses anywhere. Porting between chains is a redeploy.
 
 ## Licence
 
