@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="stablegram">
+<title>stablegram</title>
+<link rel="apple-touch-icon" href="icon.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.5/ethers.umd.min.js"></script>
+<style>
+  :root { --bg:#0b0d10; --card:#15181d; --line:#262b33; --fg:#e8ecf1; --dim:#8b95a3; --accent:#3ddc97; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 24px);
+         background:var(--bg); color:var(--fg); font:16px/1.45 -apple-system,system-ui,sans-serif; }
+  header { padding:18px 0 10px; display:flex; align-items:baseline; gap:8px; }
+  h1 { font-size:22px; margin:0; letter-spacing:-.02em; }
+  header span { color:var(--dim); font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px; }
+  label { display:block; font-size:12px; color:var(--dim); margin:10px 0 4px; text-transform:uppercase; letter-spacing:.04em; }
+  input, select, button { width:100%; font:inherit; border-radius:10px; padding:12px; border:1px solid var(--line);
+                          background:#0f1216; color:var(--fg); -webkit-appearance:none; }
+  button { background:var(--accent); color:#07140d; font-weight:600; border:0; margin-top:14px; }
+  button:active { opacity:.75; }
+  button.ghost { background:transparent; color:var(--fg); border:1px solid var(--line); font-weight:400; }
+  .row { display:flex; gap:8px; }
+  .row > * { flex:1; }
+  .who { font-size:13px; color:var(--dim); }
+  .who b { color:var(--fg); }
+  #status { min-height:20px; font-size:13px; color:var(--accent); word-break:break-all; }
+  #status.err { color:#ff7a7a; }
+  .item { border-top:1px solid var(--line); padding:11px 0; font-size:14px; }
+  .item:first-child { border-top:0; }
+  .item .memo { color:var(--fg); }
+  .item .meta { color:var(--dim); font-size:12px; margin-top:2px; }
+  .amt { color:var(--accent); font-weight:600; }
+</style>
+</head>
+<body>
+<header><h1>stablegram</h1><span id="chainLabel"></span></header>
+
+<div class="card">
+  <div class="row">
+    <select id="chain"></select>
+    <select id="account"></select>
+  </div>
+  <p class="who" id="who">loading</p>
+  <input id="newName" placeholder="claim a username" autocapitalize="off" autocorrect="off">
+  <button class="ghost" id="claim">Claim</button>
+</div>
+
+<div class="card">
+  <label for="to">Send to</label>
+  <input id="to" placeholder="username" autocapitalize="off" autocorrect="off">
+  <div class="row">
+    <div>
+      <label for="amount">Amount</label>
+      <input id="amount" inputmode="decimal" placeholder="0.25">
+    </div>
+    <div>
+      <label for="asset">Asset</label>
+      <select id="asset"></select>
+    </div>
+  </div>
+  <label for="memo">What it was for</label>
+  <input id="memo" maxlength="140" placeholder="quarter share, happy birthday">
+  <button id="send">Send</button>
+  <p id="status"></p>
+</div>
+
+<div class="card">
+  <label>Feed</label>
+  <div id="feed" class="who">nothing yet</div>
+</div>
+
+<script>
+// Fill these in after `forge script script/Deploy.s.sol:Deploy`.
+// DEMO_KEYS are throwaway testnet keys, pre-funded before the demo so a judge
+// can send without installing a wallet. Never put a key with real value here.
+const CHAINS = {
+  arc: {
+    name: "Arc testnet", id: 5042002, rpc: "https://rpc.testnet.arc.io",
+    symbol: "USDC", explorer: "https://explorer.testnet.arc.io",
+    usernames: "0x0000000000000000000000000000000000000000",
+    gram: "0x0000000000000000000000000000000000000000",
+    share: "0x0000000000000000000000000000000000000000",
+    fromBlock: 0
+  },
+  monad: {
+    name: "Monad testnet", id: 10143, rpc: "https://testnet-rpc.monad.xyz",
+    symbol: "MON", explorer: "https://testnet.monadexplorer.com",
+    usernames: "0x0000000000000000000000000000000000000000",
+    gram: "0x0000000000000000000000000000000000000000",
+    share: "0x0000000000000000000000000000000000000000",
+    fromBlock: 0
+  }
+};
+const DEMO_KEYS = { alice: "", bob: "" };
+
+const ABI = {
+  usernames: [
+    "function claim(string name)",
+    "function resolve(string name) view returns (address)",
+    "function nameOf(address) view returns (string)"
+  ],
+  gram: [
+    "function sendToken(address token, string name, uint256 value, string memo) returns (address)",
+    "function sendNative(string name, string memo) payable returns (address)",
+    "event Sent(address indexed token, address indexed from, address indexed to, string name, uint256 value, string memo, bool byAgent)"
+  ],
+  erc20: [
+    "function approve(address spender, uint256 value) returns (bool)",
+    "function allowance(address owner, address spender) view returns (uint256)",
+    "function balanceOf(address) view returns (uint256)",
+    "function symbol() view returns (string)",
+    "function decimals() view returns (uint8)"
+  ]
+};
+
+const $ = id => document.getElementById(id);
+const MAX = (1n << 256n) - 1n;
+let cfg, wallet, provider, names, gram, share, shareMeta;
+
+function say(msg, isError) {
+  $("status").textContent = msg;
+  $("status").className = isError ? "err" : "";
+}
+
+async function connect() {
+  cfg = CHAINS[$("chain").value];
+  $("chainLabel").textContent = cfg.name;
+  provider = new ethers.JsonRpcProvider(cfg.rpc, cfg.id, { staticNetwork: true });
+  const key = DEMO_KEYS[$("account").value];
+  if (!key) return say("No demo key set for this account. Fill DEMO_KEYS in index.html.", true);
+  wallet = new ethers.Wallet(key, provider);
+  names = new ethers.Contract(cfg.usernames, ABI.usernames, wallet);
+  gram = new ethers.Contract(cfg.gram, ABI.gram, wallet);
+  share = new ethers.Contract(cfg.share, ABI.erc20, wallet);
+  shareMeta = { symbol: "SHARE", decimals: 18 };
+  try {
+    const [symbol, decimals] = await Promise.all([share.symbol(), share.decimals()]);
+    shareMeta = { symbol, decimals: Number(decimals) };
+  } catch { /* contracts not deployed on this chain yet */ }
+  $("asset").innerHTML = `<option value="token">${shareMeta.symbol}</option>`
+                       + `<option value="native">${cfg.symbol}</option>`;
+  await refresh();
+}
+
+async function refresh() {
+  const [name, gas, bal] = await Promise.all([
+    names.nameOf(wallet.address).catch(() => ""),
+    provider.getBalance(wallet.address),
+    share.balanceOf(wallet.address).catch(() => 0n)
+  ]);
+  $("who").innerHTML = `<b>${name || "unclaimed"}</b> &middot; `
+    + `${ethers.formatUnits(bal, shareMeta.decimals)} ${shareMeta.symbol} &middot; `
+    + `${(+ethers.formatEther(gas)).toFixed(4)} ${cfg.symbol} for gas`;
+  loadFeed();
+}
+
+async function loadFeed() {
+  let logs = [];
+  try {
+    logs = await gram.queryFilter(gram.filters.Sent(), cfg.fromBlock, "latest");
+  } catch (e) { $("feed").textContent = "feed unavailable: " + (e.shortMessage || e.message); return; }
+  if (!logs.length) return void ($("feed").textContent = "nothing yet");
+  $("feed").innerHTML = logs.slice(-25).reverse().map(l => {
+    const native = l.args.token === ethers.ZeroAddress;
+    const unit = native ? cfg.symbol : shareMeta.symbol;
+    const dec = native ? 18 : shareMeta.decimals;
+    return `<div class="item"><div class="memo">${esc(l.args.memo) || "(no note)"}</div>`
+      + `<div class="meta"><span class="amt">${ethers.formatUnits(l.args.value, dec)} ${unit}</span>`
+      + ` to ${esc(l.args.name)}${l.args.byAgent ? " &middot; by agent" : ""}</div></div>`;
+  }).join("");
+}
+
+const esc = s => String(s).replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
+
+$("claim").onclick = async () => {
+  const name = $("newName").value.trim();
+  if (!name) return;
+  try {
+    say("claiming " + name);
+    await (await names.claim(name)).wait();
+    $("newName").value = "";
+    say("you are " + name);
+    refresh();
+  } catch (e) { say(e.shortMessage || e.message, true); }
+};
+
+$("send").onclick = async () => {
+  const to = $("to").value.trim(), memo = $("memo").value, amount = $("amount").value.trim();
+  if (!to || !amount) return say("needs a username and an amount", true);
+  try {
+    say("sending");
+    let tx;
+    if ($("asset").value === "native") {
+      tx = await gram.sendNative(to, memo, { value: ethers.parseEther(amount) });
+    } else {
+      const value = ethers.parseUnits(amount, shareMeta.decimals);
+      if (await share.allowance(wallet.address, cfg.gram) < value) {
+        say("approving once");
+        await (await share.approve(cfg.gram, MAX)).wait();
+      }
+      tx = await gram.sendToken(cfg.share, to, value, memo);
+    }
+    const r = await tx.wait();
+    say(`sent. ${cfg.explorer}/tx/${r.hash}`);
+    $("amount").value = ""; $("memo").value = "";
+    refresh();
+  } catch (e) { say(e.shortMessage || e.message, true); }
+};
+
+$("chain").innerHTML = Object.entries(CHAINS).map(([k, c]) => `<option value="${k}">${c.name}</option>`).join("");
+$("account").innerHTML = Object.keys(DEMO_KEYS).map(k => `<option value="${k}">as ${k}</option>`).join("");
+$("chain").onchange = $("account").onchange = connect;
+connect().catch(e => say(e.message, true));
+</script>
+</body>
+</html>
