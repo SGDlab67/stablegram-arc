@@ -97,18 +97,16 @@ export const RESERVED_HANDLES = ["admin", "support", "help", "stablegram", "pay"
 export const HANDLE_RULE = /^[a-z0-9_]{3,20}$/;
 
 export const PEOPLE: Person[] = [
-  { handle: "charlie", first: "Charlie", last: "Sneed", color: "#1F4F82" },
-  { handle: "taihl", first: "Taihl", last: "Le", color: "#0F9D8A" },
-  { handle: "ana", first: "Ana", last: "Rivera", color: "#E8590C" },
-  { handle: "wes", first: "Wes", last: "Kim", color: "#1971C2" },
-  { handle: "sabina", first: "Sabina", last: "Okafor", color: "#C2255C" },
-  { handle: "maya", first: "Maya", last: "Tran", color: "#2F9E44" },
-  { handle: "jordan", first: "Jordan", last: "Park", color: "#B5651D" },
-  { handle: "dev", first: "Dev", last: "Mehta", color: "#D9480F" },
-  { handle: "priya", first: "Priya", last: "Nair", color: "#0B7285" },
-  { handle: "luke", first: "Luke", last: "Hansen", color: "#5C7A99" },
-  { handle: "zoe", first: "Zoe", last: "Castillo", color: "#A61E4D" },
-  { handle: "sam", first: "Sam", last: "Whitfield", color: "#364FC7" },
+  { handle: "charlie", first: "Charlie", last: "Sneed", color: "#1F4F82", photo: "/avatars/charlie.png" },
+  { handle: "taihl", first: "Taihl", last: "Le", color: "#0F9D8A", photo: "/avatars/taihl.png" },
+  { handle: "ana", first: "Ana", last: "Rivera", color: "#E8590C", photo: "/avatars/ana.png" },
+  { handle: "wes", first: "Wes", last: "Kim", color: "#1971C2", photo: "/avatars/wes.png" },
+  { handle: "sabina", first: "Sabina", last: "Okafor", color: "#C2255C", photo: "/avatars/sabina.png" },
+  { handle: "maya", first: "Maya", last: "Tran", color: "#2F9E44", photo: "/avatars/maya.png" },
+  { handle: "jordan", first: "Jordan", last: "Park", color: "#B5651D", photo: "/avatars/jordan.png" },
+  { handle: "dev", first: "Dev", last: "Mehta", color: "#D9480F", photo: "/avatars/dev.png" },
+  { handle: "priya", first: "Priya", last: "Nair", color: "#0B7285", photo: "/avatars/priya.png" },
+  { handle: "zoe", first: "Zoe", last: "Castillo", color: "#A61E4D", photo: "/avatars/zoe.png" },
 ];
 
 export const MY_HOLDINGS: Record<string, number> = {
@@ -130,8 +128,8 @@ export const OTHER_FRIENDSHIPS: [string, string][] = [
   ["sabina", "wes"],
   ["maya", "taihl"],
   ["dev", "priya"],
-  ["luke", "zoe"],
-  ["sam", "jordan"],
+  ["priya", "zoe"],
+  ["zoe", "jordan"],
   ["ana", "dev"],
 ];
 
@@ -142,10 +140,10 @@ export const PAYMENTS: Payment[] = [
   { ref: "p7", from: "maya", to: "taihl", usd: 12, note: "🌮 taco tuesday", audience: "public", asset: "TSLA", ago: 160, reactions: { "😂": ["ana"] }, comments: [], feeUsd: 0.005 },
   { ref: "p6", from: "dev", to: "priya", usd: 60, note: "✈️ Lisbon hostel", audience: "public", asset: "USDC", ago: 240, reactions: { "✨": ["zoe"] }, comments: [], feeUsd: 0.006 },
   { ref: "p5", from: "wes", to: "charlie", usd: 15, note: "⛽ gas money", audience: "private", asset: "BTC", ago: 420, reactions: {}, comments: [], feeUsd: 0.005 },
-  { ref: "p4", from: "luke", to: "zoe", usd: 25, note: "🎂 birthday dinner", audience: "public", asset: "ETH", ago: 600, reactions: { "❤️": ["sam"] }, comments: [], feeUsd: 0.005 },
+  { ref: "p4", from: "priya", to: "zoe", usd: 25, note: "🎂 birthday dinner", audience: "public", asset: "ETH", ago: 600, reactions: { "❤️": ["dev"] }, comments: [], feeUsd: 0.005 },
   { ref: "p3", from: "charlie", to: "sabina", usd: 9, note: "🍻 last night", audience: "friends", asset: "USDC", ago: 1500, reactions: { "😂": ["sabina"] }, comments: [], feeUsd: 0.004 },
   { ref: "p2", from: "ana", to: "maya", usd: 400, note: "🏠 rent", audience: "friends", asset: "SPY", ago: 2900, reactions: {}, comments: [], feeUsd: 0.005 },
-  { ref: "p1", from: "sam", to: "jordan", usd: 18, note: "🛒 groceries", audience: "public", asset: "SOL", ago: 4300, reactions: {}, comments: [], feeUsd: 0.004 },
+  { ref: "p1", from: "zoe", to: "jordan", usd: 18, note: "🛒 groceries", audience: "public", asset: "SOL", ago: 4300, reactions: {}, comments: [], feeUsd: 0.004 },
 ];
 
 export const REQUESTS: MoneyRequest[] = [
