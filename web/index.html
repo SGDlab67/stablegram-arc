@@ -9,6 +9,7 @@
 <title>stablegram</title>
 <link rel="apple-touch-icon" href="icon.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.5/ethers.umd.min.js"></script>
+<script src="demo-keys.js"></script>
 <style>
   :root { --bg:#0b0d10; --card:#15181d; --line:#262b33; --fg:#e8ecf1; --dim:#8b95a3; --accent:#3ddc97; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -76,8 +77,9 @@
 
 <script>
 // Fill these in after `forge script script/Deploy.s.sol:Deploy`.
-// DEMO_KEYS are throwaway testnet keys, pre-funded before the demo so a judge
-// can send without installing a wallet. Never put a key with real value here.
+// The demo accounts come from demo-keys.js, which is gitignored: throwaway
+// testnet keys, pre-funded before the demo so a judge can send without
+// installing a wallet. Never put a key with real value there.
 const CHAINS = {
   arc: {
     name: "Arc testnet", id: 5042002, rpc: "https://rpc.testnet.arc.io",
@@ -96,7 +98,7 @@ const CHAINS = {
     fromBlock: 0
   }
 };
-const DEMO_KEYS = { alice: "", bob: "" };
+const DEMO_KEYS = window.DEMO_KEYS || { alice: "", bob: "" };
 
 const ABI = {
   usernames: [
