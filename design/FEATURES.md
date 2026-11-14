@@ -1,6 +1,13 @@
 # stablegram — what the app looks like and what it does
 
-Open `stablegram-prototype.html` in a browser. It is a clickable layout of the app with sample people and payments. Prices are real as of Nov 13 2026. Nothing in it touches a chain, and none of it is the real app's code yet.
+There are two ways to look at the layout. Both use made-up people and payments, and neither touches a chain.
+
+| | What it is | How to open it |
+|---|---|---|
+| `../web/` | The app preview, built with Next.js. Home, Pay/Request, Friends, Portfolio with an asset page, Me, My code, settings. This is the base the real app grows from. | `cd web && npm install && npm run dev`, then open localhost:3000 on a phone-sized window |
+| `stablegram-prototype.html` | One file, no install. Same tabs, plus the sign-up screens, which `web/` does not have yet. | Double-click it |
+
+The two were made separately, so their sample people and prices differ. Where they disagree on layout, `web/` wins.
 
 The layout and flows follow Venmo's current app (its May 2026 redesign). The name, colours, logo and artwork are ours. The full screen-by-screen description is in `../spec/UI-SPEC.md`.
 
@@ -56,5 +63,5 @@ Saturday: the app shell, the feed, sign-up without a wallet, and one real paymen
 Monday: friends, photos, reactions and comments on real data, connecting MetaMask or Phantom, the portfolio chart and asset pages, the camera scanner.
 Detail and checks: `../spec/UI-SPEC.md` section 16.
 
-## In the prototype but not real
-Sample people, sample payments, a sample chart, a sample QR pattern, and a fee shown as "about $0.005", which is an estimate. Not in the prototype: the camera scanner, the comments thread, settings, split, and any wallet connection.
+## What is sample and what is missing
+Sample in both: people, payments, charts, and the fee shown on the confirm sheet, which is an estimate. Missing from both: the camera scanner and any wallet connection. Sign-up exists only in the single-file prototype.
