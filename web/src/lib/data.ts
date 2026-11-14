@@ -1,5 +1,7 @@
 // Sample data for the design preview. People and payments are made up.
-// Prices are a CoinGecko snapshot from Nov 13 2026; stock prices use the xStocks tokens.
+// Crypto prices: Blockworks asset-price, daily close 2026-11-13 UTC (change vs the day before), pulled 2026-11-14T22:56Z.
+// Stock prices: CoinGecko xStocks tokens (Blockworks does not carry them), pulled 2026-11-14T22:56Z. Logos: Blockworks for crypto
+// (CoinGecko where its image was too small), xStocks token images for stocks.
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "stablegram";
 
@@ -14,6 +16,8 @@ export interface Asset {
   change24h: number;
   color: string;
   demo: boolean;
+  /** Square logo in /public/logos, shown in a circle. */
+  logo?: string;
   about: string;
 }
 
@@ -71,23 +75,25 @@ export interface Notice {
 export const ME = "charlie";
 
 export const ASSETS: Asset[] = [
-  { symbol: "NVDA", name: "NVIDIA", group: "stocks", price: 161.56, change24h: -4.07, color: "#76B900", demo: true, about: "Designs the chips behind most AI training and gaming graphics." },
-  { symbol: "TSLA", name: "Tesla", group: "stocks", price: 387.54, change24h: -3.07, color: "#E31937", demo: true, about: "Electric vehicles, batteries and energy storage." },
-  { symbol: "SPY", name: "S&P 500", group: "stocks", price: 754.96, change24h: -1.32, color: "#1C4E80", demo: true, about: "A fund that tracks 500 of the largest US companies." },
-  { symbol: "QQQ", name: "Nasdaq 100", group: "stocks", price: 676.16, change24h: -2.54, color: "#0096D6", demo: true, about: "A fund that tracks the 100 largest non-financial Nasdaq companies." },
-  { symbol: "AAPL", name: "Apple", group: "stocks", price: 357.11, change24h: 0.25, color: "#555555", demo: true, about: "iPhone, Mac and services." },
-  { symbol: "CRCL", name: "Circle", group: "stocks", price: 61.53, change24h: -4.17, color: "#3D7BF7", demo: true, about: "Issuer of the USDC and EURC stablecoins." },
-  { symbol: "COIN", name: "Coinbase", group: "stocks", price: 126.45, change24h: -3.67, color: "#0052FF", demo: true, about: "A US crypto exchange and custodian." },
-  { symbol: "GOLD", name: "Gold", group: "stocks", price: 3876.17, change24h: -0.17, color: "#C9A227", demo: true, about: "One troy ounce of gold, tokenized." },
-  { symbol: "BTC", name: "Bitcoin", group: "crypto", price: 68279, change24h: -4.23, color: "#F7931A", demo: true, about: "The first and largest cryptocurrency." },
-  { symbol: "ETH", name: "Ethereum", group: "crypto", price: 1933.11, change24h: -4.07, color: "#627EEA", demo: true, about: "The network most on-chain apps are built on." },
-  { symbol: "SOL", name: "Solana", group: "crypto", price: 78.38, change24h: -3.92, color: "#9945FF", demo: true, about: "A fast, low-fee network." },
-  { symbol: "MON", name: "Monad", group: "crypto", price: 0.01677, change24h: -3.0, color: "#6E54FF", demo: true, about: "A high-throughput EVM network." },
-  { symbol: "USDC", name: "US Dollar", group: "cash", price: 1, change24h: 0, color: "#2775CA", demo: false, about: "A digital dollar issued by Circle. On Arc it also pays the network fee." },
-  { symbol: "EURC", name: "Euro", group: "cash", price: 1.1, change24h: -0.3, color: "#1A3E9C", demo: false, about: "A digital euro issued by Circle." },
+  { symbol: "NVDA", name: "NVIDIA", group: "stocks", price: 159.22, change24h: -1.41, color: "#76B900", demo: true, logo: "/logos/NVDA.png", about: "Designs the chips behind most AI training and gaming graphics." },
+  { symbol: "TSLA", name: "Tesla", group: "stocks", price: 382.72, change24h: -1.33, color: "#E31937", demo: true, logo: "/logos/TSLA.png", about: "Electric vehicles, batteries and energy storage." },
+  { symbol: "AAPL", name: "Apple", group: "stocks", price: 356.45, change24h: -0.07, color: "#555555", demo: true, logo: "/logos/AAPL.png", about: "iPhone, Mac and services." },
+  { symbol: "GOOGL", name: "Google", group: "stocks", price: 291.05, change24h: -1.22, color: "#4285F4", demo: true, logo: "/logos/GOOGL.png", about: "Alphabet: Google search, YouTube, Android and Google Cloud." },
+  { symbol: "AMZN", name: "Amazon", group: "stocks", price: 262.27, change24h: -0.95, color: "#FF9900", demo: true, logo: "/logos/AMZN.png", about: "Online shopping, Prime and Amazon Web Services." },
+  { symbol: "META", name: "Meta", group: "stocks", price: 634.71, change24h: -0.75, color: "#0866FF", demo: true, logo: "/logos/META.png", about: "Facebook, Instagram, WhatsApp and Quest headsets." },
+  { symbol: "MSFT", name: "Microsoft", group: "stocks", price: 521.87, change24h: -0.5, color: "#00A4EF", demo: true, logo: "/logos/MSFT.png", about: "Windows, Office, Xbox and Azure cloud." },
+  { symbol: "NFLX", name: "Netflix", group: "stocks", price: 61.54, change24h: -0.87, color: "#E50914", demo: true, logo: "/logos/NFLX.png", about: "Streaming films and series." },
+  { symbol: "COIN", name: "Coinbase", group: "stocks", price: 116.35, change24h: -8.03, color: "#0052FF", demo: true, logo: "/logos/COIN.png", about: "A US crypto exchange and custodian." },
+  { symbol: "CRCL", name: "Circle", group: "stocks", price: 55.64, change24h: -9.97, color: "#3D7BF7", demo: true, logo: "/logos/CRCL.png", about: "Issuer of the USDC and EURC stablecoins." },
+  { symbol: "BTC", name: "Bitcoin", group: "crypto", price: 68245.0, change24h: -4.35, color: "#F7931A", demo: true, logo: "/logos/BTC.png", about: "The first and largest cryptocurrency." },
+  { symbol: "ETH", name: "Ethereum", group: "crypto", price: 1927.77, change24h: -4.42, color: "#627EEA", demo: true, logo: "/logos/ETH.png", about: "The network most on-chain apps are built on." },
+  { symbol: "SOL", name: "Solana", group: "crypto", price: 78.14, change24h: -4.28, color: "#9945FF", demo: true, logo: "/logos/SOL.png", about: "A fast, low-fee network." },
+  { symbol: "MON", name: "Monad", group: "crypto", price: 0.01674, change24h: -3.29, color: "#836EF9", demo: true, logo: "/logos/MON.png", about: "A high-throughput EVM network." },
+  { symbol: "USDC", name: "US Dollar", group: "cash", price: 1, change24h: 0, color: "#2775CA", demo: false, logo: "/logos/USDC.png", about: "A digital dollar issued by Circle. On Arc it also pays the network fee." },
+  { symbol: "EURC", name: "Euro", group: "cash", price: 1.1, change24h: -0.28, color: "#1A3E9C", demo: false, logo: "/logos/EURC.png", about: "A digital euro issued by Circle." },
 ];
 
-export const STARTER_CHOICES = ["NVDA", "TSLA", "SPY", "QQQ", "USDC"];
+export const STARTER_CHOICES = ["NVDA", "TSLA", "AAPL", "AMZN", "USDC"];
 /** A new account picks its first stock and starts with a little of it plus some dollars. Matches the Arc column of the sign-up grants in spec/SEED-DATA.md. */
 export const STARTER_DOLLARS = 4;
 export const STARTER_ASSET_USD = 3;
@@ -115,7 +121,7 @@ export const MY_HOLDINGS: Record<string, number> = {
   SOL: 1.85,
   TSLA: 0.05,
   BTC: 0.0012,
-  GOLD: 0.004,
+  AAPL: 0.03,
   EURC: 12,
 };
 
@@ -142,7 +148,7 @@ export const PAYMENTS: Payment[] = [
   { ref: "p5", from: "wes", to: "charlie", usd: 15, note: "⛽ gas money", audience: "private", asset: "BTC", ago: 420, reactions: {}, comments: [], feeUsd: 0.005 },
   { ref: "p4", from: "priya", to: "zoe", usd: 25, note: "🎂 birthday dinner", audience: "public", asset: "ETH", ago: 600, reactions: { "❤️": ["dev"] }, comments: [], feeUsd: 0.005 },
   { ref: "p3", from: "charlie", to: "sabina", usd: 9, note: "🍻 last night", audience: "friends", asset: "USDC", ago: 1500, reactions: { "😂": ["sabina"] }, comments: [], feeUsd: 0.004 },
-  { ref: "p2", from: "ana", to: "maya", usd: 400, note: "🏠 rent", audience: "friends", asset: "SPY", ago: 2900, reactions: {}, comments: [], feeUsd: 0.005 },
+  { ref: "p2", from: "ana", to: "maya", usd: 400, note: "🏠 rent", audience: "friends", asset: "AAPL", ago: 2900, reactions: {}, comments: [], feeUsd: 0.005 },
   { ref: "p1", from: "zoe", to: "jordan", usd: 18, note: "🛒 groceries", audience: "public", asset: "SOL", ago: 4300, reactions: {}, comments: [], feeUsd: 0.004 },
 ];
 

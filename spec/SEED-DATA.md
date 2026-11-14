@@ -3,24 +3,26 @@ Checked Fri Nov 13 2026 unless a row says otherwise. **[check]** means not confi
 
 ## 1. Assets
 
-**Demo assets** (our test tokens, 18 decimals, priced from the CoinGecko id). Stock prices use the xStocks token, which trades all week.
+**Demo assets** (our test tokens, 18 decimals). **Only assets with a clean logo are in the demo** (Charlie, Nov 14): the S&P 500, Nasdaq 100 and gold tokens were dropped because they have no recognisable logo.
 
 | Symbol | Name shown | CoinGecko id | Kind | Offered as a first stock |
 |---|---|---|---|---|
 | dNVDA | NVIDIA (demo) | `nvidia-xstock` | stock | yes |
 | dTSLA | Tesla (demo) | `tesla-xstock` | stock | yes |
-| dSPY | S&P 500 (demo) | `sp500-xstock` | stock | yes |
-| dQQQ | Nasdaq 100 (demo) | `nasdaq-xstock` | stock | yes |
-| dAAPL | Apple (demo) | `apple-xstock` | stock | |
-| dCRCL | Circle (demo) | `circle-xstock` | stock | |
-| dCOIN | Coinbase (demo) | `coinbase-xstock` | stock | |
-| dBTC | Bitcoin (demo) | `bitcoin` | crypto | |
-| dETH | Ethereum (demo) | `ethereum` | crypto | |
-| dSOL | Solana (demo) | `solana` | crypto | |
-| dMON | Monad (demo) | `monad` | crypto | |
-| dGOLD | Gold (demo) | `pax-gold` | commodity | |
+| dAAPL | Apple (demo) | `apple-xstock` | stock | yes |
+| dAMZN | Amazon (demo) | `amazon-xstock` | stock | yes |
+| dGOOGL | Google (demo) | `alphabet-xstock` | stock |  |
+| dMETA | Meta (demo) | `meta-xstock` | stock |  |
+| dMSFT | Microsoft (demo) | `microsoft-xstock` | stock |  |
+| dNFLX | Netflix (demo) | `netflix-xstock` | stock |  |
+| dCOIN | Coinbase (demo) | `coinbase-xstock` | stock |  |
+| dCRCL | Circle (demo) | `circle-xstock` | stock |  |
+| dBTC | Bitcoin (demo) | `bitcoin` | crypto |  |
+| dETH | Ethereum (demo) | `ethereum` | crypto |  |
+| dSOL | Solana (demo) | `solana` | crypto |  |
+| dMON | Monad (demo) | `monad` | crypto |  |
 
-The ids were confirmed against CoinGecko on Nov 13; `/simple/price` returned a price for each. The four offered at sign-up (NVDA, TSLA, SPY, QQQ) are the ones with a real market on Monad's Uniswap v4 as of Nov 12. "Dollars" is the fifth choice at sign-up.
+**Prices and logos (pulled 2026-11-14T22:56Z).** Crypto prices come from the Blockworks API (`asset-price`, daily close 2026-11-13 UTC). Blockworks does not carry the xStocks tokens, so stock prices come from CoinGecko's xStocks ids, which trade all week. Crypto logos are Blockworks' `logoURL` (CoinGecko where Blockworks' copy was too small or failed: MON, EURC). Stock logos are the xStocks token images, cropped to the company mark. All are saved in `web/public/logos/` so the app never loads them from a third party. Sign-up offers NVDA, TSLA, AAPL and AMZN, plus "Just dollars". NVDA and TSLA have a real Uniswap market on Monad as of Nov 12; AAPL and AMZN were chosen for their logos.
 
 **The dollar:** USDC on Arc, tUSD on Monad. CoinGecko id `usd-coin` for display only; the contracts treat it as exactly one dollar.
 

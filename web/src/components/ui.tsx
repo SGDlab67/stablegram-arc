@@ -28,6 +28,16 @@ export function Avatar({ handle, size = 40, ring = false }: { handle: string; si
 
 export function AssetDot({ symbol, size = 36 }: { symbol: string; size?: number }) {
   const a = assetOf(symbol);
+  if (a.logo) {
+    return (
+      <span
+        className="inline-flex shrink-0 rounded-full bg-white ring-1 ring-black/5"
+        style={{ width: size, height: size, backgroundImage: `url(${a.logo})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        role="img"
+        aria-label={a.name}
+      />
+    );
+  }
   const label = symbol.length > 4 ? symbol.slice(0, 4) : symbol;
   return (
     <span
