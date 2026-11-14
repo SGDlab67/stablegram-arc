@@ -14,7 +14,7 @@ Read this file, `SEED-DATA.md` and `UI-SPEC.md` in full before writing anything.
 
 1. **Do not ask product questions.** Every decision is made here. If something is ambiguous, take the simpler reading, write one line in `NOTES.md`, and keep going.
 2. **Build the milestones in section 2 in order.** Each has an acceptance line you can check yourself. Do not start one until the previous one passes.
-3. **Deployed beats local.** The web app is on Vercel in the first 15 minutes. Only pushes to `main` deploy.
+3. **Deployed beats local.** The app is on Vercel in the first 15 minutes. It is a phone app that installs from a link (see UI-SPEC section 2), not a website: no landing page and no desktop layout. Only pushes to `main` deploy.
 4. **Simulate before you send.** Every write is simulated first, and a call that would revert is never sent.
 5. **No external call may be able to break a page.** Every third-party fetch has a cache and a stored snapshot.
 6. **No secrets in the repo.** `.env.example` lists names only. `ADMIN_PRIVATE_KEY` is for local scripts and is never set in Vercel.

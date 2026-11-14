@@ -1,15 +1,26 @@
 # stablegram — what the app looks like and what it does
 
-There are two ways to look at the layout. Both use made-up people and payments, and neither touches a chain.
+**It is a phone app, not a website.** Added to the Home Screen it opens from its own icon, full screen, with no browser bar. On a computer it shows inside a phone-sized frame, next to a code that sends you to your phone. It installs from a link or QR code, not from the App Store.
 
-| | What it is | How to open it |
-|---|---|---|
-| `../web/` | The app preview, built with Next.js. Home, Pay/Request, Friends, Portfolio with an asset page, Me, My code, settings. This is the base the real app grows from. | `cd web && npm install && npm run dev`, then open localhost:3000 on a phone-sized window |
-| `stablegram-prototype.html` | One file, no install. Same tabs, plus the sign-up screens, which `web/` does not have yet. | Double-click it |
+The app is in `../web/`. Run it with `cd web && npm install && npm run dev`. Every screen works on made-up people and payments; nothing talks to a wallet or a chain yet, and reloading returns to the sample account.
 
-The two were made separately, so their sample people and prices differ. Where they disagree on layout, `web/` wins.
+`stablegram-prototype.html` in this folder was a first single-file mock. `web/` has replaced it.
 
 The layout and flows follow Venmo's current app (its May 2026 redesign). The name, colours, logo and artwork are ours. The full screen-by-screen description is in `../spec/UI-SPEC.md`.
+
+## Every screen in `web/`
+
+| Screen | What it does |
+|---|---|
+| Welcome and sign-up | Sign-in choice, name, @username with a live availability check, photo or colour, what to get paid in, who can see payments. Creates a fresh account with a starter balance. |
+| Home | Search, top people, "Get paid in" and requests shortcuts, a Friends / Everyone switch, the feed. |
+| Pay/Request | Person, dollar amount, note, audience, then a sheet to pick what to pay with that shows what the other person receives. Split among several people. |
+| Friends | Requests to accept, suggestions, your friends. |
+| Someone's profile | Photo, @username, what they get paid in, friends in common, add friend, pay, payments between you. |
+| Payment page | The payment, its details for the two people involved, reactions, comments, quick thank-you replies. |
+| Portfolio and asset page | Total, chart, "Get paid in", holdings by group, Buy and Sell. |
+| Me, My code, Settings | Profile, QR code, requests, activity, default audience, name. |
+| Requests, Notifications | What is waiting for you and what happened. |
 
 ## The five tabs
 
@@ -64,4 +75,4 @@ Monday: friends, photos, reactions and comments on real data, connecting MetaMas
 Detail and checks: `../spec/UI-SPEC.md` section 16.
 
 ## What is sample and what is missing
-Sample in both: people, payments, charts, and the fee shown on the confirm sheet, which is an estimate. Missing from both: the camera scanner and any wallet connection. Sign-up exists only in the single-file prototype.
+Sample: people, payments, charts, prices (a snapshot from Nov 13 2026), and the fee, which is an estimate. Missing: any wallet connection, the camera scanner, saving anything between visits, and sharing a photo with other people (a photo you add stays on your phone).

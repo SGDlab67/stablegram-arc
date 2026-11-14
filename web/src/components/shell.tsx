@@ -55,7 +55,7 @@ export function TabBar() {
 
 export function Screen({ children, tabs = true }: { children: ReactNode; tabs?: boolean }) {
   return (
-    <div className={`min-h-dvh ${tabs ? "pb-28" : "pb-8"}`}>
+    <div className={`min-h-app ${tabs ? "pb-28" : "pb-8"}`}>
       {children}
       {tabs && <TabBar />}
     </div>

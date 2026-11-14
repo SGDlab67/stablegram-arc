@@ -3,7 +3,7 @@ import { AssetScreen } from "./asset-screen";
 
 export default function AssetPage() {
   return (
-    <Suspense fallback={<div className="min-h-dvh" />}>
+    <Suspense fallback={<div className="min-h-app" />}>
       <AssetScreen />
     </Suspense>
   );

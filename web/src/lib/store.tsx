@@ -13,6 +13,8 @@ import {
   PEOPLE,
   RECEIVE_PREFS,
   REQUESTS,
+  STARTER_ASSET_USD,
+  STARTER_DOLLARS,
   assetOf,
   type Audience,
   type MoneyRequest,
@@ -32,8 +34,21 @@ interface PayInput {
   requestId?: string;
 }
 
+export interface SignUpInput {
+  handle: string;
+  first: string;
+  last: string;
+  color: string;
+  photo?: string;
+  /** The asset the new person wants to be paid in. "USDC" means dollars. */
+  receive: string;
+  audience: Audience;
+}
+
 interface Store {
   me: Person;
+  /** True while the preview is showing the made-up account rather than one created through sign-up. */
+  isSample: boolean;
   people: Person[];
   payments: Payment[];
   requests: MoneyRequest[];
@@ -49,6 +64,9 @@ interface Store {
   areFriends: (a: string, b: string) => boolean;
   canSee: (p: Payment) => boolean;
   receiveAssetFor: (handle: string, payAsset: string) => string;
+  receivePrefOf: (handle: string) => string | null;
+  signUp: (input: SignUpInput) => void;
+  resetToSample: () => void;
   pay: (input: PayInput) => Payment;
   request: (from: string[], usdEach: number, note: string) => void;
   declineRequest: (id: string) => void;
@@ -67,6 +85,7 @@ interface Store {
 }
 
 const Ctx = createContext<Store | null>(null);
+const NO_NOTICES: Notice[] = [];
 
 let counter = 100;
 const nextId = (prefix: string) => `${prefix}${++counter}`;
@@ -75,7 +94,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [people, setPeople] = useState<Person[]>(PEOPLE);
   const [payments, setPayments] = useState<Payment[]>(PAYMENTS);
   const [requests, setRequests] = useState<MoneyRequest[]>(REQUESTS);
-  const [notices] = useState<Notice[]>(NOTICES);
+  const [meHandle, setMeHandle] = useState<string>(ME);
   const [holdings, setHoldings] = useState<Record<string, number>>(MY_HOLDINGS);
   const [receivePref, setReceivePref] = useState<string | null>(RECEIVE_PREFS[ME] ?? null);
   const [defaultAudience, setDefaultAudience] = useState<Audience>("public");
@@ -83,45 +102,53 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [incoming, setIncoming] = useState<string[]>(INCOMING_FRIEND_REQUESTS);
   const [outgoing, setOutgoing] = useState<string[]>([]);
 
-  const me = useMemo(() => people.find((p) => p.handle === ME) ?? PEOPLE[0], [people]);
+  const me = useMemo(() => people.find((p) => p.handle === meHandle) ?? PEOPLE[0], [people, meHandle]);
+  const isSample = meHandle === ME;
+  // The sample notifications belong to the sample account. A new account starts with none.
+  const notices: Notice[] = isSample ? NOTICES : NO_NOTICES;
 
   const areFriends = useCallback(
     (a: string, b: string) => {
       if (a === b) return true;
-      if (a === ME) return friends.includes(b);
-      if (b === ME) return friends.includes(a);
+      if (a === meHandle) return friends.includes(b);
+      if (b === meHandle) return friends.includes(a);
       return OTHER_FRIENDSHIPS.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
     },
-    [friends],
+    [friends, meHandle],
   );
 
   const friendState = useCallback(
     (handle: string): FriendState => {
-      if (handle === ME) return "self";
+      if (handle === meHandle) return "self";
       if (friends.includes(handle)) return "friends";
       if (incoming.includes(handle)) return "incoming";
       if (outgoing.includes(handle)) return "requested";
       return "none";
     },
-    [friends, incoming, outgoing],
+    [friends, incoming, outgoing, meHandle],
   );
 
   const canSee = useCallback(
     (p: Payment) => {
-      if (p.from === ME || p.to === ME) return true;
+      if (p.from === meHandle || p.to === meHandle) return true;
       if (p.audience === "public") return true;
       if (p.audience === "friends") return friends.includes(p.from) || friends.includes(p.to);
       return false;
     },
-    [friends],
+    [friends, meHandle],
   );
 
   const receiveAssetFor = useCallback(
     (handle: string, payAsset: string) => {
-      const pref = handle === ME ? receivePref : RECEIVE_PREFS[handle];
+      const pref = handle === meHandle ? receivePref : RECEIVE_PREFS[handle];
       return pref ?? payAsset;
     },
-    [receivePref],
+    [receivePref, meHandle],
+  );
+
+  const receivePrefOf = useCallback(
+    (handle: string) => (handle === meHandle ? receivePref : (RECEIVE_PREFS[handle] ?? null)),
+    [receivePref, meHandle],
   );
 
   const pay = useCallback(
@@ -131,7 +158,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const receiveAsset = receiveAssetFor(input.to, input.payAsset);
       const payment: Payment = {
         ref: nextId("p"),
-        from: ME,
+        from: meHandle,
         to: input.to,
         usd: input.usd,
         note: input.note,
@@ -150,15 +177,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
       return payment;
     },
-    [receiveAssetFor],
+    [receiveAssetFor, meHandle],
   );
 
   const request = useCallback((from: string[], usdEach: number, note: string) => {
     setRequests((list) => [
-      ...from.map((payer) => ({ id: nextId("r"), requester: ME, payer, usd: usdEach, note, status: "open" as const, ago: 0 })),
+      ...from.map((payer) => ({ id: nextId("r"), requester: meHandle, payer, usd: usdEach, note, status: "open" as const, ago: 0 })),
       ...list,
     ]);
-  }, []);
+  }, [meHandle]);
 
   const declineRequest = useCallback((id: string) => {
     setRequests((list) => list.map((r) => (r.id === id ? { ...r, status: "declined" } : r)));
@@ -175,21 +202,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const next: Record<string, string[]> = {};
         let had = false;
         for (const [e, who] of Object.entries(p.reactions)) {
-          const without = who.filter((h) => h !== ME);
-          if (e === emoji && who.includes(ME)) had = true;
+          const without = who.filter((h) => h !== meHandle);
+          if (e === emoji && who.includes(meHandle)) had = true;
           if (without.length) next[e] = without;
         }
-        if (!had) next[emoji] = [...(next[emoji] ?? []), ME];
+        if (!had) next[emoji] = [...(next[emoji] ?? []), meHandle];
         return { ...p, reactions: next };
       }),
     );
-  }, []);
+  }, [meHandle]);
 
   const comment = useCallback((ref: string, text: string) => {
     setPayments((list) =>
-      list.map((p) => (p.ref === ref ? { ...p, comments: [...p.comments, { id: nextId("c"), by: ME, text, ago: 0 }] } : p)),
+      list.map((p) => (p.ref === ref ? { ...p, comments: [...p.comments, { id: nextId("c"), by: meHandle, text, ago: 0 }] } : p)),
     );
-  }, []);
+  }, [meHandle]);
 
   const addFriend = useCallback((handle: string) => setOutgoing((o) => (o.includes(handle) ? o : [...o, handle])), []);
   const acceptFriend = useCallback((handle: string) => {
@@ -200,7 +227,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const unfriend = useCallback((handle: string) => setFriends((f) => f.filter((h) => h !== handle)), []);
 
   const updateMe = useCallback((patch: Partial<Person>) => {
-    setPeople((list) => list.map((p) => (p.handle === ME ? { ...p, ...patch, handle: ME } : p)));
+    setPeople((list) => list.map((p) => (p.handle === meHandle ? { ...p, ...patch, handle: meHandle } : p)));
+  }, [meHandle]);
+
+  const signUp = useCallback((input: SignUpInput) => {
+    const person: Person = { handle: input.handle, first: input.first, last: input.last, color: input.color, photo: input.photo };
+    setPeople((list) => [person, ...list.filter((p) => p.handle !== input.handle)]);
+    setMeHandle(input.handle);
+    setFriends([]);
+    setIncoming([]);
+    setOutgoing([]);
+    setHoldings(
+      input.receive === "USDC"
+        ? { USDC: STARTER_DOLLARS + STARTER_ASSET_USD }
+        : { USDC: STARTER_DOLLARS, [input.receive]: STARTER_ASSET_USD / assetOf(input.receive).price },
+    );
+    setReceivePref(input.receive);
+    setDefaultAudience(input.audience);
+  }, []);
+
+  const resetToSample = useCallback(() => {
+    setPeople(PEOPLE);
+    setMeHandle(ME);
+    setPayments(PAYMENTS);
+    setRequests(REQUESTS);
+    setHoldings(MY_HOLDINGS);
+    setReceivePref(RECEIVE_PREFS[ME] ?? null);
+    setDefaultAudience("public");
+    setFriends(FRIENDS);
+    setIncoming(INCOMING_FRIEND_REQUESTS);
+    setOutgoing([]);
   }, []);
 
   const buy = useCallback((symbol: string, dollars: number) => {
@@ -220,6 +276,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const value: Store = {
     me,
+    isSample,
     people,
     payments,
     requests,
@@ -235,6 +292,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     areFriends,
     canSee,
     receiveAssetFor,
+    receivePrefOf,
+    signUp,
+    resetToSample,
     pay,
     request,
     declineRequest,

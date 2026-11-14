@@ -6,7 +6,7 @@ import { Check, Delete, Plus, QrCode, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Sentence } from "@/components/feed";
 import { AssetDot, AudienceLabel, Avatar, PrimaryButton, Sheet } from "@/components/ui";
-import { ASSETS, NOTE_SHORTCUTS, amountLabel, assetOf, personOf, shortName, usd, type Audience, type Payment } from "@/lib/data";
+import { ASSETS, NOTE_SHORTCUTS, amountLabel, assetOf, feeLabel, personOf, shortName, usd, type Audience, type Payment } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"];
@@ -45,7 +45,11 @@ export function PayFlow() {
   const candidates = useMemo(() => {
     const q = query.trim().toLowerCase().replace(/^@/, "");
     const others = people.filter((p) => p.handle !== me.handle && !recipients.includes(p.handle));
-    if (!q) return others.filter((p) => friends.includes(p.handle));
+    if (!q) {
+      // A new account has no friends yet. Show everyone rather than an empty list.
+      const mine = others.filter((p) => friends.includes(p.handle));
+      return mine.length > 0 ? mine : others;
+    }
     return others.filter((p) => p.handle.includes(q) || `${p.first} ${p.last}`.toLowerCase().includes(q));
   }, [query, people, me.handle, friends, recipients]);
 
@@ -95,7 +99,7 @@ export function PayFlow() {
 
   if (step === "done" && done) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-white px-8 text-center">
+      <div className="flex min-h-app flex-col items-center justify-center bg-white px-8 text-center">
         <span className="pop flex h-24 w-24 items-center justify-center rounded-full bg-money text-white">
           <Check size={48} strokeWidth={3} />
         </span>
@@ -108,7 +112,7 @@ export function PayFlow() {
                 ? `${personOf(done.payment.to, people).first} received it as ${done.payment.receiveAsset}.`
                 : ""}
             </p>
-            <p className="mt-1 text-[13px] text-muted">Fee about {usd(done.payment.feeUsd, { cents: true })}</p>
+            <p className="mt-1 text-[13px] text-muted">Fee {feeLabel(done.payment.feeUsd)} (estimate)</p>
           </div>
         ) : (
           <p className="mt-8 text-[26px] font-medium leading-tight tracking-tight">
@@ -124,7 +128,7 @@ export function PayFlow() {
 
   if (step === "who" || adding) {
     return (
-      <div className="min-h-dvh bg-white">
+      <div className="min-h-app bg-white">
         <div className="flex h-14 items-center justify-between px-3">
           <button
             type="button"
@@ -152,7 +156,7 @@ export function PayFlow() {
             <QrCode size={22} />
           </Link>
         </div>
-        <p className="px-5 pb-1 pt-6 text-[13px] font-semibold uppercase tracking-wide text-muted">{query ? "People" : "Friends"}</p>
+        <p className="px-5 pb-1 pt-6 text-[13px] font-semibold uppercase tracking-wide text-muted">{query || friends.length === 0 ? "People" : "Friends"}</p>
         <ul>
           {candidates.map((p) => (
             <li key={p.handle}>
@@ -174,7 +178,7 @@ export function PayFlow() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
+    <div className="flex min-h-app flex-col bg-white">
       <div className="flex h-14 items-center justify-between px-3">
         <button type="button" aria-label="Close" onClick={() => router.push("/")} className="flex h-10 w-10 items-center justify-center rounded-full bg-chip">
           <X size={20} />
@@ -315,7 +319,7 @@ export function PayFlow() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted">Fee</span>
-              <span className="font-semibold">about $0.005</span>
+              <span className="font-semibold">under 1¢ (estimate)</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted">Who can see it</span>

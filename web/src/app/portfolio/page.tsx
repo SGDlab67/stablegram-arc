@@ -3,7 +3,7 @@ import { Portfolio } from "./portfolio";
 
 export default function PortfolioPage() {
   return (
-    <Suspense fallback={<div className="min-h-dvh" />}>
+    <Suspense fallback={<div className="min-h-app" />}>
       <Portfolio />
     </Suspense>
   );

@@ -12,10 +12,16 @@ export function Avatar({ handle, size = 40, ring = false }: { handle: string; si
   return (
     <span
       className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white ${ring ? "ring-2 ring-white" : ""}`}
-      style={{ width: size, height: size, background: p.color, fontSize: Math.max(10, size * 0.38) }}
+      style={{
+        width: size,
+        height: size,
+        fontSize: Math.max(10, size * 0.38),
+        ...(p.photo ? { backgroundImage: `url(${p.photo})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: p.color }),
+      }}
+      role="img"
       aria-label={`${p.first} ${p.last}`}
     >
-      {initials(p)}
+      {p.photo ? null : initials(p)}
     </span>
   );
 }
@@ -133,7 +139,7 @@ export function Sheet({ open, onClose, children, title }: { open: boolean; onClo
   return (
     <div className="fixed inset-0 z-50 mx-auto flex max-w-[430px] items-end">
       <button type="button" aria-label="Close" className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="slide-up relative max-h-[86dvh] w-full overflow-y-auto rounded-t-[28px] bg-white p-5 pb-8">
+      <div className="slide-up relative max-h-sheet w-full overflow-y-auto rounded-t-[28px] bg-white p-5 pb-8">
         <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-line" />
         {title && <h2 className="mb-4 text-xl font-semibold">{title}</h2>}
         {children}

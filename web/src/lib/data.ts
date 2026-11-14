@@ -22,6 +22,8 @@ export interface Person {
   first: string;
   last: string;
   color: string;
+  /** A small square image as a data URL. Missing means initials on the colour. */
+  photo?: string;
 }
 
 export interface Comment {
@@ -86,6 +88,13 @@ export const ASSETS: Asset[] = [
 ];
 
 export const STARTER_CHOICES = ["NVDA", "TSLA", "SPY", "QQQ", "USDC"];
+/** What a new account starts with. Matches the Arc column of the sign-up grants in spec/SEED-DATA.md. */
+export const STARTER_DOLLARS = 4;
+export const STARTER_ASSET_USD = 3;
+
+export const AVATAR_COLORS = ["#6E54FF", "#0F9D8A", "#E8590C", "#1971C2", "#C2255C", "#2F9E44", "#D9480F", "#364FC7"];
+export const RESERVED_HANDLES = ["admin", "support", "help", "stablegram", "pay", "request", "requests", "me", "home", "friends", "portfolio", "settings", "everyone", "welcome"];
+export const HANDLE_RULE = /^[a-z0-9_]{3,20}$/;
 
 export const PEOPLE: Person[] = [
   { handle: "charlie", first: "Charlie", last: "Sneed", color: "#6E54FF" },
@@ -213,6 +222,11 @@ export function agoLabel(minutes: number): string {
 export function usd(n: number, opts: { cents?: boolean } = {}): string {
   const whole = Number.isInteger(n) && !opts.cents;
   return `$${n.toLocaleString("en-US", { minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: 2 })}`;
+}
+
+/** The network fee is a fraction of a cent, which a two-decimal dollar figure would round up to a whole cent. */
+export function feeLabel(n: number): string {
+  return n < 0.01 ? "under 1¢" : `about ${usd(n, { cents: true })}`;
 }
 
 export function amountLabel(amount: number, symbol: string): string {

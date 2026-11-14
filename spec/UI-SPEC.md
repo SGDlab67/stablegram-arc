@@ -41,7 +41,7 @@ Nothing here has been built. Venmo's Me tab, settings and Crypto tab are describ
 - **Icon buttons** in a card: 56 px grey circles `#F0F0F0` with a dark outline icon.
 - **Avatars:** round photos. Inline in a feed sentence they are 28 px; on a profile 96 px. No photo: initials on one of eight colours picked from the username.
 - **Motion:** new feed cards slide in from the top; a sent payment ends on a full-screen tick with the sentence it will show in the feed; reactions pop.
-- **Shape of the app:** built at 390 px wide with safe-area padding. On a laptop it sits in a centred 430 px column on the grey page. Add a web app manifest and icons so "Add to Home Screen" opens it full screen.
+- **Shape of the app: a phone app, never a website.** Built at 390 px wide with safe-area padding. Added to the Home Screen it opens from its own icon, full screen, with no browser bar (a manifest, icons, and the standalone setting). On a computer it does not stretch: it shows inside a phone-sized frame beside a QR code that sends people to their phone. No landing page, no desktop layout, no hover-only controls. On a phone in a browser tab, Home shows one dismissible card explaining how to add it to the Home Screen. It is installed from a link or a QR code, not from the App Store or Play Store; a store build would be a wrapper around this same app and is not planned for this week.
 - No lightning bolt anywhere.
 
 ---
@@ -233,7 +233,7 @@ Merged into SPEC v3.1: tables and shapes in Appendix B, routes in section 8, the
 
 | Step | When | Deliverable | Check |
 |---|---|---|---|
-| U0 | Sat | App live on Vercel: tab bar, grey page, white cards, fonts, the five empty tabs, manifest. Schema, session helper and shared types committed. | Production URL returns 200 on a phone |
+| U0 | Sat | App live on Vercel: tab bar, grey page, white cards, fonts, the five empty tabs, the manifest and icons, the phone frame for computers. Schema, session helper and shared types committed. | Production URL returns 200 on a phone |
 | U1 | Sat | Home, the feed card, from fixture data with all three audiences, both pill types, reactions and an emoji tile | A screenshot beside `reference/venmo/01` has the same structure |
 | U2 | Sat | Sign-up with a browser-made wallet: screens 1, 2 (first row only), 3, 4, 6, 7, 8. Initials for avatars. | A new browser profile reaches Home with a username |
 | U3 | Sat | Pay/Request steps 1 to 4 with real quotes; requests: create, list, pay; "My code" and pay links (no camera yet) | A real payment between two test accounts appears in both feeds |

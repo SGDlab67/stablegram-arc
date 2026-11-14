@@ -34,6 +34,91 @@ body {
   background: var(--page);
   color: var(--ink);
   -webkit-tap-highlight-color: transparent;
+  /* Behave like an app, not a page: no rubber-band, no long-press menus, no text selection on chrome. */
+  overscroll-behavior-y: none;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+.selectable {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/*
+ * The app frame.
+ * On a phone the app fills the screen and the page scrolls.
+ * On anything wider it sits inside a phone-sized frame, with a panel beside it that
+ * sends people to their phone. It never stretches into a website layout.
+ */
+.device {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+  background: var(--page);
+}
+.aside {
+  display: none;
+}
+.min-h-app {
+  min-height: var(--app-h, 100dvh);
+}
+.max-h-sheet {
+  max-height: calc(var(--app-h, 100dvh) * 0.86);
+}
+
+@media (min-width: 820px) {
+  html,
+  body {
+    background: #e9e7f0;
+    overflow: hidden;
+  }
+  .stage {
+    display: flex;
+    height: 100dvh;
+    align-items: center;
+    justify-content: center;
+    gap: 64px;
+    padding: 24px;
+  }
+  .device {
+    --app-h: min(844px, calc(100dvh - 68px));
+    flex: none;
+    width: 390px;
+    max-width: 390px;
+    height: var(--app-h);
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 44px;
+    box-shadow:
+      0 0 0 10px #15121f,
+      0 30px 70px rgba(30, 16, 90, 0.28);
+    /* Makes this box the anchor for the tab bar and sheets, which are position: fixed. */
+    transform: translateZ(0);
+  }
+  .device-scroll {
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  .device-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .aside {
+    display: block;
+    width: 320px;
+    flex: none;
+    user-select: text;
+    -webkit-user-select: text;
+  }
 }
 
 button {

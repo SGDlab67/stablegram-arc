@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FeedCard } from "@/components/feed";
+import { InstallHint } from "@/components/install-hint";
 import { Screen, SearchBar } from "@/components/shell";
 import { AssetDot, Avatar, PreviewNote } from "@/components/ui";
 import { personOf } from "@/lib/data";
@@ -24,6 +25,7 @@ export default function Home() {
   return (
     <Screen>
       <SearchBar />
+      <InstallHint />
 
       <div className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-1 pt-1">
         {top.map((h) => (
