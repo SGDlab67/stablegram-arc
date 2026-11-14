@@ -106,11 +106,11 @@ export default function Welcome() {
   const title = (text: string, sub?: string) => (
     <>
       <h1 className="text-[32px] font-semibold leading-[1.08] tracking-tight">{text}</h1>
-      {sub && <p className="mt-3 text-[16px] leading-relaxed text-[#555]">{sub}</p>}
+      {sub && <p className="mt-3 text-[16px] leading-relaxed text-[#5b544a]">{sub}</p>}
     </>
   );
 
-  const field = "h-14 w-full rounded-2xl border border-[#d5d5d5] bg-white px-4 text-[18px] outline-none focus:border-brand";
+  const field = "h-14 w-full rounded-2xl border border-[#ddd5c8] bg-white px-4 text-[18px] outline-none focus:border-brand";
   const showHeader = step !== "intro" && step !== "done";
 
   return (
@@ -400,7 +400,7 @@ export default function Welcome() {
               </span>
             </span>
             <h1 className="mt-6 text-[32px] font-semibold leading-[1.08] tracking-tight">You&apos;re in, @{handle}.</h1>
-            <p className="mt-3 text-[16px] leading-relaxed text-[#555]">
+            <p className="mt-3 text-[16px] leading-relaxed text-[#5b544a]">
               You get paid in {receive === "USDC" ? "dollars" : asset.name}. We added {startsWith} to get you started (demo).
             </p>
             <PrimaryButton className="mt-8" onClick={() => router.replace("/")}>

@@ -92,21 +92,21 @@ export const STARTER_CHOICES = ["NVDA", "TSLA", "SPY", "QQQ", "USDC"];
 export const STARTER_DOLLARS = 4;
 export const STARTER_ASSET_USD = 3;
 
-export const AVATAR_COLORS = ["#6E54FF", "#0F9D8A", "#E8590C", "#1971C2", "#C2255C", "#2F9E44", "#D9480F", "#364FC7"];
+export const AVATAR_COLORS = ["#1F4F82", "#0F9D8A", "#E8590C", "#1971C2", "#C2255C", "#2F9E44", "#D9480F", "#364FC7"];
 export const RESERVED_HANDLES = ["admin", "support", "help", "stablegram", "pay", "request", "requests", "me", "home", "friends", "portfolio", "settings", "everyone", "welcome"];
 export const HANDLE_RULE = /^[a-z0-9_]{3,20}$/;
 
 export const PEOPLE: Person[] = [
-  { handle: "charlie", first: "Charlie", last: "Sneed", color: "#6E54FF" },
+  { handle: "charlie", first: "Charlie", last: "Sneed", color: "#1F4F82" },
   { handle: "taihl", first: "Taihl", last: "Le", color: "#0F9D8A" },
   { handle: "ana", first: "Ana", last: "Rivera", color: "#E8590C" },
   { handle: "wes", first: "Wes", last: "Kim", color: "#1971C2" },
   { handle: "sabina", first: "Sabina", last: "Okafor", color: "#C2255C" },
   { handle: "maya", first: "Maya", last: "Tran", color: "#2F9E44" },
-  { handle: "jordan", first: "Jordan", last: "Park", color: "#7048E8" },
+  { handle: "jordan", first: "Jordan", last: "Park", color: "#B5651D" },
   { handle: "dev", first: "Dev", last: "Mehta", color: "#D9480F" },
   { handle: "priya", first: "Priya", last: "Nair", color: "#0B7285" },
-  { handle: "luke", first: "Luke", last: "Hansen", color: "#5F3DC4" },
+  { handle: "luke", first: "Luke", last: "Hansen", color: "#5C7A99" },
   { handle: "zoe", first: "Zoe", last: "Castillo", color: "#A61E4D" },
   { handle: "sam", first: "Sam", last: "Whitfield", color: "#364FC7" },
 ];

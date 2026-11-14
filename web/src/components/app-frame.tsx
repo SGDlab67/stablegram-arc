@@ -24,7 +24,7 @@ function PhonePanel() {
     <aside className="aside">
       <p className="text-[28px] font-bold tracking-tight text-brand">{APP_NAME}</p>
       <h1 className="mt-3 text-[30px] font-semibold leading-[1.1] tracking-tight">This is a phone app.</h1>
-      <p className="mt-3 text-[16px] leading-relaxed text-[#4b4760]">
+      <p className="mt-3 text-[16px] leading-relaxed text-[#5b544a]">
         Scan the code with your phone&apos;s camera to open it there. The frame on the left is the same app at phone size.
       </p>
 
@@ -38,8 +38,8 @@ function PhonePanel() {
         )}
       </div>
 
-      <h2 className="mt-7 text-[13px] font-semibold uppercase tracking-wide text-[#6b6780]">Put it on your Home Screen</h2>
-      <ul className="mt-2 space-y-1.5 text-[15px] leading-snug text-[#4b4760]">
+      <h2 className="mt-7 text-[13px] font-semibold uppercase tracking-wide text-[#7a7265]">Put it on your Home Screen</h2>
+      <ul className="mt-2 space-y-1.5 text-[15px] leading-snug text-[#5b544a]">
         <li>
           <span className="font-semibold text-ink">iPhone:</span> open in Safari, tap Share, then Add to Home Screen.
         </li>
@@ -47,7 +47,7 @@ function PhonePanel() {
           <span className="font-semibold text-ink">Android:</span> open in Chrome, tap the menu, then Install app.
         </li>
       </ul>
-      <p className="mt-2 text-[15px] leading-snug text-[#4b4760]">It then opens full screen from its own icon, with no browser bar.</p>
+      <p className="mt-2 text-[15px] leading-snug text-[#5b544a]">It then opens full screen from its own icon, with no browser bar.</p>
 
       <Link href="/welcome" className="mt-6 inline-flex h-11 items-center rounded-full bg-white px-5 text-[15px] font-semibold text-ink">
         See the sign-up screens

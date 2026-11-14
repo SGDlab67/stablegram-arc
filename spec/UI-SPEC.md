@@ -35,10 +35,10 @@ Nothing here has been built. Venmo's Me tab, settings and Crypto tab are describ
 
 ## 2. Look
 
-- **Page:** light grey `#F3F3F3`. **Cards:** white, 28 px radius, no border, 12 px gap between cards, 16 px side margin.
-- **Type:** Inter. Feed sentences are large, about 26 px, tight line height, weight 500. Names are near-black; the joining words ("paid", "for") are mid-grey `#8A8A8A`. Small labels are 14 px grey.
-- **Colours:** ink `#111111`; our purple `#6E54FF` for the centre button, the Pay and Request buttons, links and active states; green `#1F9D55` for money in; red `#E5484D` only for the filled heart. The primary action inside a feed card is a **black pill with white text**, as on Venmo.
-- **Icon buttons** in a card: 56 px grey circles `#F0F0F0` with a dark outline icon.
+- **Page:** beige `#F3EEE5`. **Cards:** white, 28 px radius, no border, 12 px gap between cards, 16 px side margin.
+- **Type:** Inter. Feed sentences are large, about 26 px, tight line height, weight 500. Names are near-black; the joining words ("paid", "for") are warm grey `#7A7265`. Small labels are 14 px grey.
+- **Colours: blue and beige** (Charlie's choice, Nov 14). Ink `#14202E`; deep navy `#1F4F82` for the centre button, the Pay and Request buttons, links and active states, with `#E3ECF6` as its light tint; beige `#EFE9DF` for chips and icon circles; lines `#E8E1D5`; green `#2B8A57` for money in; red `#C8433A` for losses and `#E5484D` only for unread dots. The navy is kept well away from Venmo's bright sky blue so it never reads as Venmo's brand. The primary action inside a feed card is a **black pill with white text**, as on Venmo.
+- **Icon buttons** in a card: 56 px beige circles `#EFE9DF` with a dark outline icon.
 - **Avatars:** round photos. Inline in a feed sentence they are 28 px; on a profile 96 px. No photo: initials on one of eight colours picked from the username.
 - **Motion:** new feed cards slide in from the top; a sent payment ends on a full-screen tick with the sentence it will show in the feed; reactions pop.
 - **Shape of the app: a phone app, never a website.** Built at 390 px wide with safe-area padding. Added to the Home Screen it opens from its own icon, full screen, with no browser bar (a manifest, icons, and the standalone setting). On a computer it does not stretch: it shows inside a phone-sized frame beside a QR code that sends people to their phone. No landing page, no desktop layout, no hover-only controls. On a phone in a browser tab, Home shows one dismissible card explaining how to add it to the Home Screen. It is installed from a link or a QR code, not from the App Store or Play Store; a store build would be a wrapper around this same app and is not planned for this week.

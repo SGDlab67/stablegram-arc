@@ -11,9 +11,9 @@ import { ASSETS, RANGES, agoLabel, amountLabel, sampleSeries, usd, type Asset, t
 import { useStore } from "@/lib/store";
 
 const GROUPS: { id: AssetGroup; title: string; short: string; color: string }[] = [
-  { id: "stocks", title: "Stocks and real-world assets", short: "Stocks & RWA", color: "#6E54FF" },
-  { id: "crypto", title: "Crypto", short: "Crypto", color: "#F59F00" },
-  { id: "cash", title: "Cash", short: "Cash", color: "#12B886" },
+  { id: "stocks", title: "Stocks and real-world assets", short: "Stocks & RWA", color: "#1F4F82" },
+  { id: "crypto", title: "Crypto", short: "Crypto", color: "#C9A46A" },
+  { id: "cash", title: "Cash", short: "Cash", color: "#8DB3DA" },
 ];
 const PORTFOLIO_RANGES: Range[] = ["1D", "1W", "1M"];
 const MASK = "$•••••";

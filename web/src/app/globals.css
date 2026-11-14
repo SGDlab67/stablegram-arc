@@ -1,15 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --page: #f3f3f3;
-  --ink: #111111;
-  --muted: #8a8a8a;
-  --brand: #6e54ff;
-  --brand-soft: #eeeaff;
-  --money: #1f9d55;
-  --down: #d64545;
-  --chip: #f0f0f0;
-  --line: #e7e7e7;
+  /* Blue and beige. The blue is a deep navy, well away from Venmo's bright sky blue. */
+  --page: #f3eee5;
+  --ink: #14202e;
+  --muted: #7a7265;
+  --brand: #1f4f82;
+  --brand-soft: #e3ecf6;
+  --money: #2b8a57;
+  --down: #c8433a;
+  --chip: #efe9df;
+  --line: #e8e1d5;
 }
 
 @theme inline {
@@ -76,7 +77,7 @@ textarea,
 @media (min-width: 820px) {
   html,
   body {
-    background: #e9e7f0;
+    background: #e6ddcf;
     overflow: hidden;
   }
   .stage {
@@ -98,8 +99,8 @@ textarea,
     overflow: hidden;
     border-radius: 44px;
     box-shadow:
-      0 0 0 10px #15121f,
-      0 30px 70px rgba(30, 16, 90, 0.28);
+      0 0 0 10px #14202e,
+      0 30px 70px rgba(20, 32, 46, 0.25);
     /* Makes this box the anchor for the tab bar and sheets, which are position: fixed. */
     transform: translateZ(0);
   }
