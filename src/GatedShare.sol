@@ -50,10 +50,7 @@ contract GatedShare is ERC20, ERC20Wrapper {
 
     /// Send shares to a username with a note saying what it was for.
     /// Reverts on an unclaimed name, so a typo cannot send shares nowhere.
-    function sendToUsername(string calldata name, uint256 value, string calldata memo)
-        external
-        returns (address to)
-    {
+    function sendToUsername(string calldata name, uint256 value, string calldata memo) external returns (address to) {
         if (bytes(memo).length > MAX_MEMO_BYTES) revert MemoTooLong();
         to = usernames.mustResolve(name);
         _transfer(msg.sender, to, value);
