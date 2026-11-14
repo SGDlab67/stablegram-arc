@@ -114,6 +114,14 @@ Likes are open to anyone who can see the card. Comments need you to be a friend 
 
 ## 7. Pay/Request
 
+**Markets (Charlie, Nov 14).** `/markets` is reached from Portfolio ("See all" or a category chip). From top to bottom:
+1. A soft-blue banner with a pulsing green dot: "Open 24/7. Everything here trades on-chain, so buys and sells fill nights and weekends too."
+2. A search box.
+3. A "Moving today" carousel of 6 cards (logo, name, price, change), shown only when no filter or search is active.
+4. Sticky category chips: All · Stocks · Crypto · Gold & silver · Treasuries · Dollars & euros.
+5. A count and sort pills (Biggest moves / Price / A to Z), then rows: logo, name, symbol, a 56 px line chart, price and change.
+6. The demo note at the bottom.
+
 **Buy (Charlie, Nov 14).** `/buy` is a full-screen flow in four steps:
 1. Pick an asset, grouped Stocks / Crypto / Dollars and euros. Skipped when you start from an asset page.
 2. Type the amount on a keypad, with $10 / $25 / $50 / $100 shortcuts. A "Pay with" row opens a sheet listing Apple Pay, debit card, Venmo, PayPal, Cash App, bank account, wallet and "Your dollars", each with a one-line hint.

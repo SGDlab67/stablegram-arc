@@ -2,17 +2,30 @@
 // Crypto prices: Blockworks asset-price, daily close 2026-11-13 UTC (change vs the day before), pulled 2026-11-14T22:56Z.
 // Stock prices: CoinGecko xStocks tokens (Blockworks does not carry them), pulled 2026-11-14T22:56Z. Logos: Blockworks for crypto
 // (CoinGecko where its image was too small), xStocks token images for stocks.
+// Gold, Tether Gold, US Treasuries (USDY) and BlackRock (BUIDL): Blockworks asset-price, daily close 2026-11-13 UTC.
+// Silver (KAG): CoinGecko (not on Blockworks). All pulled 2026-11-14T23:32Z.
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "stablegram";
 
 /** Who can see a payment in feeds. Two choices only: everyone, or just the two people. */
 export type Audience = "public" | "private";
 export type AssetGroup = "stocks" | "crypto" | "cash";
+/** The finer category used on the Markets screen. Metals and treasuries count as "stocks" (stocks and real-world assets) in the portfolio. */
+export type Market = "stocks" | "crypto" | "metals" | "treasuries" | "cash";
+
+export const MARKETS: { id: Market; label: string }[] = [
+  { id: "stocks", label: "Stocks" },
+  { id: "crypto", label: "Crypto" },
+  { id: "metals", label: "Gold & silver" },
+  { id: "treasuries", label: "Treasuries" },
+  { id: "cash", label: "Dollars & euros" },
+];
 
 export interface Asset {
   symbol: string;
   name: string;
   group: AssetGroup;
+  market: Market;
   price: number;
   change24h: number;
   color: string;
@@ -76,22 +89,27 @@ export interface Notice {
 export const ME = "charlie";
 
 export const ASSETS: Asset[] = [
-  { symbol: "NVDA", name: "NVIDIA", group: "stocks", price: 159.22, change24h: -1.41, color: "#76B900", demo: true, logo: "/logos/NVDA.png", about: "Designs the chips behind most AI training and gaming graphics." },
-  { symbol: "TSLA", name: "Tesla", group: "stocks", price: 382.72, change24h: -1.33, color: "#E31937", demo: true, logo: "/logos/TSLA.png", about: "Electric vehicles, batteries and energy storage." },
-  { symbol: "AAPL", name: "Apple", group: "stocks", price: 356.45, change24h: -0.07, color: "#555555", demo: true, logo: "/logos/AAPL.png", about: "iPhone, Mac and services." },
-  { symbol: "GOOGL", name: "Google", group: "stocks", price: 291.05, change24h: -1.22, color: "#4285F4", demo: true, logo: "/logos/GOOGL.png", about: "Alphabet: Google search, YouTube, Android and Google Cloud." },
-  { symbol: "AMZN", name: "Amazon", group: "stocks", price: 262.27, change24h: -0.95, color: "#FF9900", demo: true, logo: "/logos/AMZN.png", about: "Online shopping, Prime and Amazon Web Services." },
-  { symbol: "META", name: "Meta", group: "stocks", price: 634.71, change24h: -0.75, color: "#0866FF", demo: true, logo: "/logos/META.png", about: "Facebook, Instagram, WhatsApp and Quest headsets." },
-  { symbol: "MSFT", name: "Microsoft", group: "stocks", price: 521.87, change24h: -0.5, color: "#00A4EF", demo: true, logo: "/logos/MSFT.png", about: "Windows, Office, Xbox and Azure cloud." },
-  { symbol: "NFLX", name: "Netflix", group: "stocks", price: 61.54, change24h: -0.87, color: "#E50914", demo: true, logo: "/logos/NFLX.png", about: "Streaming films and series." },
-  { symbol: "COIN", name: "Coinbase", group: "stocks", price: 116.35, change24h: -8.03, color: "#0052FF", demo: true, logo: "/logos/COIN.png", about: "A US crypto exchange and custodian." },
-  { symbol: "CRCL", name: "Circle", group: "stocks", price: 55.64, change24h: -9.97, color: "#3D7BF7", demo: true, logo: "/logos/CRCL.png", about: "Issuer of the USDC and EURC stablecoins." },
-  { symbol: "BTC", name: "Bitcoin", group: "crypto", price: 68245.0, change24h: -4.35, color: "#F7931A", demo: true, logo: "/logos/BTC.png", about: "The first and largest cryptocurrency." },
-  { symbol: "ETH", name: "Ethereum", group: "crypto", price: 1927.77, change24h: -4.42, color: "#627EEA", demo: true, logo: "/logos/ETH.png", about: "The network most on-chain apps are built on." },
-  { symbol: "SOL", name: "Solana", group: "crypto", price: 78.14, change24h: -4.28, color: "#9945FF", demo: true, logo: "/logos/SOL.png", about: "A fast, low-fee network." },
-  { symbol: "MON", name: "Monad", group: "crypto", price: 0.01674, change24h: -3.29, color: "#836EF9", demo: true, logo: "/logos/MON.png", about: "A high-throughput EVM network." },
-  { symbol: "USDC", name: "US Dollar", group: "cash", price: 1, change24h: 0, color: "#2775CA", demo: false, logo: "/logos/USDC.png", about: "A digital dollar issued by Circle. On Arc it also pays the network fee." },
-  { symbol: "EURC", name: "Euro", group: "cash", price: 1.1, change24h: -0.28, color: "#1A3E9C", demo: false, logo: "/logos/EURC.png", about: "A digital euro issued by Circle." },
+  { symbol: "NVDA", name: "NVIDIA", group: "stocks", market: "stocks", price: 159.22, change24h: -1.41, color: "#76B900", demo: true, logo: "/logos/NVDA.png", about: "Designs the chips behind most AI training and gaming graphics." },
+  { symbol: "TSLA", name: "Tesla", group: "stocks", market: "stocks", price: 382.72, change24h: -1.33, color: "#E31937", demo: true, logo: "/logos/TSLA.png", about: "Electric vehicles, batteries and energy storage." },
+  { symbol: "AAPL", name: "Apple", group: "stocks", market: "stocks", price: 356.45, change24h: -0.07, color: "#555555", demo: true, logo: "/logos/AAPL.png", about: "iPhone, Mac and services." },
+  { symbol: "GOOGL", name: "Google", group: "stocks", market: "stocks", price: 291.05, change24h: -1.22, color: "#4285F4", demo: true, logo: "/logos/GOOGL.png", about: "Alphabet: Google search, YouTube, Android and Google Cloud." },
+  { symbol: "AMZN", name: "Amazon", group: "stocks", market: "stocks", price: 262.27, change24h: -0.95, color: "#FF9900", demo: true, logo: "/logos/AMZN.png", about: "Online shopping, Prime and Amazon Web Services." },
+  { symbol: "META", name: "Meta", group: "stocks", market: "stocks", price: 634.71, change24h: -0.75, color: "#0866FF", demo: true, logo: "/logos/META.png", about: "Facebook, Instagram, WhatsApp and Quest headsets." },
+  { symbol: "MSFT", name: "Microsoft", group: "stocks", market: "stocks", price: 521.87, change24h: -0.5, color: "#00A4EF", demo: true, logo: "/logos/MSFT.png", about: "Windows, Office, Xbox and Azure cloud." },
+  { symbol: "NFLX", name: "Netflix", group: "stocks", market: "stocks", price: 61.54, change24h: -0.87, color: "#E50914", demo: true, logo: "/logos/NFLX.png", about: "Streaming films and series." },
+  { symbol: "COIN", name: "Coinbase", group: "stocks", market: "stocks", price: 116.35, change24h: -8.03, color: "#0052FF", demo: true, logo: "/logos/COIN.png", about: "A US crypto exchange and custodian." },
+  { symbol: "CRCL", name: "Circle", group: "stocks", market: "stocks", price: 55.64, change24h: -9.97, color: "#3D7BF7", demo: true, logo: "/logos/CRCL.png", about: "Issuer of the USDC and EURC stablecoins." },
+  { symbol: "PAXG", name: "Gold", group: "stocks", market: "metals", price: 3875.01, change24h: -0.09, color: "#D4AF37", demo: true, logo: "/logos/PAXG.png", about: "PAX Gold. Each token is one troy ounce of gold in a London vault, issued by Paxos." },
+  { symbol: "XAUT", name: "Tether Gold", group: "stocks", market: "metals", price: 3872.45, change24h: -0.1, color: "#C9A646", demo: true, logo: "/logos/XAUT.png", about: "Each token is one troy ounce of gold in a Swiss vault, issued by Tether." },
+  { symbol: "KAG", name: "Silver", group: "stocks", market: "metals", price: 48.72, change24h: -0.22, color: "#9AA0A6", demo: true, logo: "/logos/KAG.png", about: "Kinesis Silver. Each token is one troy ounce of silver held in a vault." },
+  { symbol: "USDY", name: "US Treasuries", group: "stocks", market: "treasuries", price: 1.1512, change24h: -0.13, color: "#0E2A5C", demo: true, logo: "/logos/USDY.png", about: "Ondo US Dollar Yield. Backed by short-term US Treasuries and bank deposits; the price rises slowly as interest builds up." },
+  { symbol: "BUIDL", name: "BlackRock Treasury Fund", group: "stocks", market: "treasuries", price: 0.9997, change24h: 0.0, color: "#000000", demo: true, logo: "/logos/BUIDL.png", about: "BlackRock USD Institutional Digital Liquidity Fund. Holds cash and US Treasury bills and stays near $1; interest is paid out as new tokens." },
+  { symbol: "BTC", name: "Bitcoin", group: "crypto", market: "crypto", price: 68245.0, change24h: -4.35, color: "#F7931A", demo: true, logo: "/logos/BTC.png", about: "The first and largest cryptocurrency." },
+  { symbol: "ETH", name: "Ethereum", group: "crypto", market: "crypto", price: 1927.77, change24h: -4.42, color: "#627EEA", demo: true, logo: "/logos/ETH.png", about: "The network most on-chain apps are built on." },
+  { symbol: "SOL", name: "Solana", group: "crypto", market: "crypto", price: 78.14, change24h: -4.28, color: "#9945FF", demo: true, logo: "/logos/SOL.png", about: "A fast, low-fee network." },
+  { symbol: "MON", name: "Monad", group: "crypto", market: "crypto", price: 0.01674, change24h: -3.29, color: "#836EF9", demo: true, logo: "/logos/MON.png", about: "A high-throughput EVM network." },
+  { symbol: "USDC", name: "US Dollar", group: "cash", market: "cash", price: 1, change24h: 0, color: "#2775CA", demo: false, logo: "/logos/USDC.png", about: "A digital dollar issued by Circle. On Arc it also pays the network fee." },
+  { symbol: "EURC", name: "Euro", group: "cash", market: "cash", price: 1.1, change24h: -0.28, color: "#1A3E9C", demo: false, logo: "/logos/EURC.png", about: "A digital euro issued by Circle." },
 ];
 
 export const STARTER_CHOICES = ["NVDA", "TSLA", "AAPL", "AMZN", "USDC"];
@@ -256,6 +274,8 @@ export function sampleChange(symbol: string, range: Range = "1D"): number {
   if (range === "1D") return a.change24h;
   const rand = seeded(`${symbol}:${range}:change`);
   const move = (rand() - 0.42) * 2 * RANGES[range].swing;
+  if (a.market === "treasuries") return symbol === "BUIDL" ? 0 : Math.abs(move) * 0.03; // interest builds up slowly
+  if (a.market === "metals") return move * 0.5;
   return a.group === "cash" ? (symbol === "USDC" ? 0 : move * 0.05) : move;
 }
 
@@ -267,7 +287,8 @@ export function sampleSeries(symbol: string, points = 48, range: Range = "1D"): 
   // A random walk pinned to zero at both ends, so the line wanders but still lands on today's price.
   const walk: number[] = [0];
   for (let i = 1; i < points; i++) walk.push(walk[i - 1] + (rand() - 0.5));
-  const rough = a.group === "cash" ? (symbol === "USDC" ? 0 : RANGES[range].rough * 0.1) : RANGES[range].rough;
+  const calm = symbol === "USDC" || symbol === "BUIDL";
+  const rough = calm ? 0 : a.market === "treasuries" ? RANGES[range].rough * 0.03 : a.group === "cash" ? RANGES[range].rough * 0.1 : a.market === "metals" ? RANGES[range].rough * 0.5 : RANGES[range].rough;
   const out: number[] = [];
   for (let i = 0; i < points; i++) {
     const t = i / (points - 1);

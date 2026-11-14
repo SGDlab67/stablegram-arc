@@ -14,6 +14,7 @@ import {
 } from "@/components/ui";
 import {
   ASSETS,
+  MARKETS,
   RANGES,
   agoLabel,
   amountLabel,
@@ -34,7 +35,7 @@ const GROUPS: {
   {
     id: "stocks",
     title: "Stocks and real-world assets",
-    short: "Stocks & RWA",
+    short: "Stocks & RWAs",
     color: "#1F4F82",
   },
   { id: "crypto", title: "Crypto", short: "Crypto", color: "#C9A46A" },
@@ -97,7 +98,10 @@ export function Portfolio() {
   const held = ASSETS.filter((a) => (holdings[a.symbol] ?? 0) > 0).sort(
     (x, y) => valueOf(y) - valueOf(x),
   );
-  const rest = ASSETS.filter((a) => !((holdings[a.symbol] ?? 0) > 0));
+  // Markets you don't hold yet, biggest movers first.
+  const rest = ASSETS.filter(
+    (a) => !((holdings[a.symbol] ?? 0) > 0) && a.group !== "cash",
+  ).sort((x, y) => Math.abs(y.change24h) - Math.abs(x.change24h));
 
   // What today's holdings would have been worth across the range.
   const series = useMemo(() => {
@@ -274,11 +278,39 @@ export function Portfolio() {
           );
         })}
 
-        <SectionTitle>Explore</SectionTitle>
+        <SectionTitle
+          right={
+            <Link
+              href="/markets"
+              className="text-[14px] font-semibold text-brand"
+            >
+              See all
+            </Link>
+          }
+        >
+          Markets · open 24/7
+        </SectionTitle>
+        <div className="no-scrollbar -mx-4 mb-3 flex gap-2 overflow-x-auto px-4">
+          {MARKETS.map((m) => (
+            <Link
+              key={m.id}
+              href={`/markets?m=${m.id}`}
+              className="flex h-9 shrink-0 items-center rounded-full bg-white px-4 text-[14px] font-semibold"
+            >
+              {m.label}
+            </Link>
+          ))}
+        </div>
         <Card className="divide-y divide-line py-1">
-          {rest.map((a) => (
+          {rest.slice(0, 5).map((a) => (
             <Row key={a.symbol} asset={a} />
           ))}
+          <Link
+            href="/markets"
+            className="flex h-12 items-center justify-center gap-1 text-[15px] font-semibold text-brand"
+          >
+            See all {ASSETS.length} markets <ChevronRight size={16} />
+          </Link>
         </Card>
 
         <Link

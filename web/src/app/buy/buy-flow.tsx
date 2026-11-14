@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Building2, Check, ChevronDown, ChevronLeft, CreditCard, Delete, Wallet, X } from "lucide-react";
 import { AssetDot, PrimaryButton, Sheet } from "@/components/ui";
-import { ASSETS, amountLabel, assetOf, personOf, usd } from "@/lib/data";
+import { ASSETS, MARKETS, amountLabel, assetOf, personOf, usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"];
@@ -95,11 +95,7 @@ export function BuyFlow() {
 
   // 1. Pick what to buy (skipped when an asset is passed in).
   if (!symbol) {
-    const groups = [
-      { title: "Stocks", items: ASSETS.filter((a) => a.group === "stocks") },
-      { title: "Crypto", items: ASSETS.filter((a) => a.group === "crypto") },
-      { title: "Dollars and euros", items: ASSETS.filter((a) => a.group === "cash") },
-    ];
+    const groups = MARKETS.map((m) => ({ title: m.label, items: ASSETS.filter((a) => a.market === m.id) }));
     return (
       <div className="min-h-app bg-page pb-10">
         <div className="sticky top-0 z-30 flex h-14 items-center justify-between bg-page/95 px-3 backdrop-blur">
@@ -109,6 +105,7 @@ export function BuyFlow() {
           <span className="text-[17px] font-semibold">{payee ? `Buy something to send ${payee.first}` : "Buy"}</span>
           <span className="w-10" />
         </div>
+        <p className="mx-4 mb-3 rounded-2xl bg-brand-soft px-4 py-2.5 text-[13px] text-brand"><span className="font-semibold">Open 24/7.</span> Buys fill on-chain any time, weekends included.</p>
         <div className="space-y-4 px-4 pt-2">
           {groups.map((g) => (
             <div key={g.title}>

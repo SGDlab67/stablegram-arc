@@ -55,7 +55,14 @@ export function AssetScreen() {
               {asset.name}
               {asset.demo && <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold uppercase text-muted">demo</span>}
             </p>
-            <p className="text-[14px] text-muted">{asset.symbol}</p>
+            <p className="flex items-center gap-1.5 text-[14px] text-muted">
+              {asset.symbol}
+              <span>·</span>
+              <span className="inline-flex items-center gap-1 font-medium text-money">
+                <span className="h-1.5 w-1.5 rounded-full bg-money" />
+                Open 24/7
+              </span>
+            </p>
           </div>
         </div>
         <p className="mt-4 text-[40px] font-semibold tabular-nums leading-none tracking-tight">{usd(shown, { cents: true })}</p>

@@ -22,6 +22,18 @@ Checked Fri Nov 13 2026 unless a row says otherwise. **[check]** means not confi
 | dSOL | Solana (demo) | `solana` | crypto |  |
 | dMON | Monad (demo) | `monad` | crypto |  |
 
+**Real-world assets (added Nov 14):**
+
+| Symbol | Name shown | Source token | Market |
+|---|---|---|---|
+| dPAXG | Gold | PAX Gold | Gold & silver |
+| dXAUT | Tether Gold | Tether Gold | Gold & silver |
+| dKAG | Silver | Kinesis Silver | Gold & silver |
+| dUSDY | US Treasuries | Ondo US Dollar Yield | Treasuries |
+| dBUIDL | BlackRock Treasury Fund | BlackRock BUIDL | Treasuries |
+
+Prices for PAXG, XAUT, USDY and BUIDL come from Blockworks (`asset-price`, daily close 2026-11-13). KAG is not on Blockworks; its price comes from CoinGecko (`kinesis-silver`). Logos are CoinGecko's large images. The Tether Gold diamond sits on a cream tile. Silver alternatives that were not used: Ondo SLVON, xStocks SLVX, Matrixdock XAGM.
+
 **Prices and logos (pulled 2026-11-14T22:56Z).** Crypto prices come from the Blockworks API (`asset-price`, daily close 2026-11-13 UTC). Blockworks does not carry the xStocks tokens, so stock prices come from CoinGecko's xStocks ids, which trade all week. Crypto logos are Blockworks' `logoURL` (CoinGecko where Blockworks' copy was too small or failed: MON, EURC). Stock logos are the xStocks token images, cropped to the company mark. All are saved in `web/public/logos/` so the app never loads them from a third party. Sign-up offers NVDA, TSLA, AAPL and AMZN, plus "Just dollars". NVDA and TSLA have a real Uniswap market on Monad as of Nov 12; AAPL and AMZN were chosen for their logos.
 
 **The dollar:** USDC on Arc, tUSD on Monad. CoinGecko id `usd-coin` for display only; the contracts treat it as exactly one dollar.
