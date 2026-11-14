@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, Delete, Plus, QrCode, Search, X } from "lucide-react";
+import { Check, ChevronLeft, Delete, Plus, QrCode, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Sentence } from "@/components/feed";
 import { AssetDot, AudienceLabel, Avatar, PrimaryButton, Sheet } from "@/components/ui";
@@ -25,7 +25,7 @@ export function PayFlow() {
   const presetTo = params.get("to");
   const requestId = params.get("request") ?? undefined;
   const [recipients, setRecipients] = useState<string[]>(presetTo ? [presetTo] : []);
-  const [step, setStep] = useState<"who" | "amount" | "done">(presetTo ? "amount" : "who");
+  const [step, setStep] = useState<"who" | "amount" | "confirm" | "done">(presetTo ? "amount" : "who");
   const [adding, setAdding] = useState(false);
   const [query, setQuery] = useState("");
   const [amount, setAmount] = useState(params.get("amount") ?? "");
@@ -60,8 +60,20 @@ export function PayFlow() {
         .sort((a, b) => b.value - a.value),
     [holdings],
   );
-  const preferred = funded.find((h) => h.asset.symbol === payAsset && h.value >= value);
-  const chosen = preferred?.asset.symbol ?? funded.find((h) => h.value >= value)?.asset.symbol ?? null;
+  // Holdings that cover the amount come first, largest first; the rest are listed but greyed out.
+  const choices = [...funded].sort((a, b) => Number(b.value >= value) - Number(a.value >= value) || b.value - a.value);
+  const chosen = payAsset && funded.some((h) => h.asset.symbol === payAsset && h.value >= value) ? payAsset : null;
+
+  const startPay = () => {
+    // Coming from an asset's "Send some" button, that asset is already picked: go straight to confirm.
+    if (chosen) setStep("confirm");
+    else setConfirmOpen(true);
+  };
+  const pickAsset = (symbol: string) => {
+    setPayAsset(symbol);
+    setConfirmOpen(false);
+    setStep("confirm");
+  };
   const firstTime = first ? !payments.some((p) => p.from === me.handle && p.to === first.handle) : false;
 
   const press = (k: string) => {
@@ -121,6 +133,83 @@ export function PayFlow() {
         <PrimaryButton className="mt-10" onClick={() => router.push("/")}>
           Done
         </PrimaryButton>
+      </div>
+    );
+  }
+
+  if (step === "confirm" && first && chosen) {
+    const a = assetOf(chosen);
+    const units = value / a.price;
+    return (
+      <div className="flex min-h-app flex-col bg-white">
+        <div className="flex h-14 items-center justify-between px-3">
+          <button
+            type="button"
+            aria-label="Back"
+            onClick={() => {
+              setStep("amount");
+              setConfirmOpen(true);
+            }}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-chip"
+          >
+            <ChevronLeft size={22} />
+          </button>
+          <span className="text-[17px] font-semibold">Confirm</span>
+          <span className="w-10" />
+        </div>
+
+        <div className="flex flex-1 flex-col items-center px-6 pt-4 text-center">
+          <Avatar handle={first.handle} size={72} />
+          <p className="mt-3 text-[17px] text-muted">
+            Pay <span className="font-semibold text-ink">{first.first} {first.last}</span>
+          </p>
+          <p className="mt-1 text-[56px] font-semibold leading-none tracking-tight">{usd(value)}</p>
+          <p className="mt-3 text-[17px] text-muted">with</p>
+          <div className="mt-3 flex items-center gap-3 rounded-full bg-chip py-2 pl-2 pr-5">
+            <AssetDot symbol={chosen} size={44} />
+            <span className="text-left">
+              <span className="block text-[19px] font-semibold leading-tight">{a.name}</span>
+              <span className="block text-[14px] text-muted">{amountLabel(units, chosen)}</span>
+            </span>
+          </div>
+
+          <div className="mt-6 w-full space-y-2.5 rounded-2xl border border-line p-4 text-left text-[15px]">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-muted">For</span>
+              <span className="truncate font-semibold">{note.trim()}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted">{first.first} gets</span>
+              <span className="font-semibold">{amountLabel(units, chosen)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Who can see it</span>
+              <AudienceLabel audience={audience} className="font-semibold" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Fee</span>
+              <span className="font-semibold">under 1¢ (estimate)</span>
+            </div>
+          </div>
+          <p className="mt-3 text-[13px] text-muted">{first.first} can keep it or sell it for dollars any time.</p>
+          {firstTime && <p className="mt-3 w-full rounded-xl bg-brand-soft px-3 py-2 text-[14px] font-medium text-brand">First time paying @{first.handle}. Check the name and photo.</p>}
+        </div>
+
+        <div className="px-4 pb-[max(env(safe-area-inset-bottom),24px)] pt-4">
+          <PrimaryButton onClick={doPay}>
+            Pay {usd(value)} with {a.name}
+          </PrimaryButton>
+          <button
+            type="button"
+            onClick={() => {
+              setStep("amount");
+              setConfirmOpen(true);
+            }}
+            className="mt-1 h-12 w-full text-[16px] font-semibold text-brand"
+          >
+            Pay with something else
+          </button>
+        </div>
       </div>
     );
   }
@@ -244,7 +333,7 @@ export function PayFlow() {
           <button
             type="button"
             disabled={!ready || split}
-            onClick={() => setConfirmOpen(true)}
+            onClick={startPay}
             className="h-14 flex-1 rounded-full bg-brand text-lg font-semibold text-white disabled:opacity-40"
           >
             Pay
@@ -281,56 +370,29 @@ export function PayFlow() {
         </div>
       </Sheet>
 
-      <Sheet open={confirmOpen} onClose={() => setConfirmOpen(false)} title={first ? `Pay ${shortName(first)} ${usd(value)}` : "Pay"}>
-        <p className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-muted">Send from your portfolio</p>
+      <Sheet open={confirmOpen} onClose={() => setConfirmOpen(false)} title={first ? `Pay ${shortName(first)} ${usd(value)} with…` : "Pay with…"}>
+        <p className="-mt-2 mb-3 text-[14px] text-muted">Pick what to send from your portfolio.</p>
         <div className="space-y-2">
-          {funded.map((h) => {
+          {choices.map((h) => {
             const enough = h.value >= value;
-            const selected = chosen === h.asset.symbol;
             return (
               <button
                 key={h.asset.symbol}
                 type="button"
                 disabled={!enough}
-                onClick={() => setPayAsset(h.asset.symbol)}
-                className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left disabled:opacity-35 ${selected ? "bg-brand-soft ring-1 ring-brand/40" : "bg-chip"}`}
+                onClick={() => pickAsset(h.asset.symbol)}
+                className="flex w-full items-center gap-3 rounded-2xl bg-chip p-3 text-left active:bg-brand-soft disabled:opacity-35"
               >
                 <AssetDot symbol={h.asset.symbol} size={40} />
                 <span className="flex-1">
                   <span className="block text-[16px] font-semibold">{h.asset.name}</span>
-                  <span className="block text-[13px] text-muted">
-                    {selected && enough ? `You send ${amountLabel(value / h.asset.price, h.asset.symbol)}` : amountLabel(h.units, h.asset.symbol)}
-                  </span>
+                  <span className="block text-[13px] text-muted">{enough ? amountLabel(h.units, h.asset.symbol) : "Not enough for this payment"}</span>
                 </span>
                 <span className="font-mono text-[15px] font-semibold">{usd(h.value, { cents: true })}</span>
               </button>
             );
           })}
         </div>
-        {first && chosen && (
-          <div className="mt-4 space-y-2 rounded-2xl border border-line p-4 text-[15px]">
-            <div className="flex items-center justify-between">
-              <span className="text-muted">{first.first} gets</span>
-              <span className="flex items-center gap-2 font-semibold">
-                <AssetDot symbol={chosen} size={22} />
-                {amountLabel(value / assetOf(chosen).price, chosen)}
-              </span>
-            </div>
-            <p className="text-[13px] text-muted">{first.first} can keep it or sell it for dollars any time.</p>
-            <div className="flex items-center justify-between">
-              <span className="text-muted">Fee</span>
-              <span className="font-semibold">under 1¢ (estimate)</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted">Who can see it</span>
-              <AudienceLabel audience={audience} className="font-semibold" />
-            </div>
-            {firstTime && <p className="rounded-xl bg-brand-soft px-3 py-2 text-[14px] font-medium text-brand">First time paying @{first.handle}. Check the name.</p>}
-          </div>
-        )}
-        <PrimaryButton className="mt-5" disabled={!chosen} onClick={doPay}>
-          {chosen ? `Pay ${usd(value)}` : "Not enough in any one holding"}
-        </PrimaryButton>
       </Sheet>
     </div>
   );
