@@ -10,7 +10,7 @@ const robotoMono = Roboto_Mono({ variable: "--font-roboto-mono", subsets: ["lati
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: "Pay friends in what you hold.",
+  description: "Settle up with friends in stocks and crypto.",
   applicationName: APP_NAME,
   // Opens full screen from the iPhone Home Screen, with the normal status bar above it.
   appleWebApp: { capable: true, title: APP_NAME, statusBarStyle: "default" },

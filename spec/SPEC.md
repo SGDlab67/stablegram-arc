@@ -1,4 +1,4 @@
-# stablegram — Build Spec v3.2 (send friends a slice of your portfolio)
+# Settle — Build Spec v3.2 (send friends a slice of your portfolio)
 UBC 2026 Hackathon on Arc (build now, submit Fri Nov 20, 10:00 AM PT) and Monad Blitz Oregon (Sun Nov 15).
 Authors: Charlie Sneed, Huu Tai Le (Taihl). v3.1 written Fri Nov 13 2026 after an implementer review and a judge red-team (both in `reviews/`). **v3.2, Sat Nov 14: no conversion.** The receiver gets exactly the asset the sender sent and can sell it for dollars any time; "Get paid in" is gone. v3.1 is in `reviews/v3.1/`.
 

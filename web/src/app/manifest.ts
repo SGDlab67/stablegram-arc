@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: APP_NAME,
     short_name: APP_NAME,
-    description: "Pay friends in what you hold.",
+    description: "Settle up with friends in stocks and crypto.",
     id: "/",
     start_url: "/",
     scope: "/",

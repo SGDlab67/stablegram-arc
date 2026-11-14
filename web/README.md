@@ -1,4 +1,4 @@
-# stablegram — the app
+# Settle — the app
 
 A phone app for paying friends by @username, in dollars, where each person receives the asset they chose.
 

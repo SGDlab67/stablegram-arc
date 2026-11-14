@@ -1,4 +1,4 @@
-# stablegram — what the app looks like and what it does
+# Settle — what the app looks like and what it does
 
 **It is a phone app, not a website.** Added to the Home Screen it opens from its own icon, full screen, with no browser bar. On a computer it shows inside a phone-sized frame, next to a code that sends you to your phone. It installs from a link or QR code, not from the App Store.
 
@@ -59,7 +59,7 @@ The layout and flows follow Venmo's current app (its May 2026 redesign). The nam
 
 ## What we took from Venmo and what we changed
 
-| Venmo | stablegram |
+| Venmo | Settle |
 |---|---|
 | Home · Cards · Pay/Request · Crypto · Me | Home · Friends · Pay/Request · Portfolio · Me |
 | Cards tab | Left out for now |
