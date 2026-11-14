@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>stablegram — app prototype</title>
+<style>
+:root{
+  --page:#F3F3F3; --card:#fff; --ink:#111; --mute:#8A8A8A; --line:#E7E7E7; --chip:#F0F0F0;
+  --brand:#6E54FF; --brand-ink:#fff; --in:#1F9D55; --heart:#E5484D; --r:28px;
+  --font: Inter, "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono: "Roboto Mono", "SF Mono", ui-monospace, Menlo, monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#E9E7F0;color:var(--ink);font-family:var(--font)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+input{font:inherit;color:inherit}
+.stage{display:flex;gap:28px;align-items:flex-start;padding:20px}
+.phone{width:390px;height:812px;flex:none;background:var(--page);border-radius:44px;position:relative;overflow:hidden;
+  box-shadow:0 0 0 10px #15121F, 0 24px 60px rgba(20,10,60,.25)}
+.side{width:300px;flex:none;font-size:14px;line-height:1.45}
+.side h1{font-size:22px;margin:6px 0 2px;letter-spacing:-.02em}
+.side p{margin:0 0 14px;color:#4b4760}
+.side h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#6b6780;margin:18px 0 8px}
+.jump{display:flex;flex-wrap:wrap;gap:8px}
+.jump button{padding:9px 14px;border-radius:999px;background:#fff;font-weight:600;font-size:13px}
+.jump button:hover{background:var(--brand);color:#fff}
+.side ul{margin:0;padding-left:18px;color:#4b4760}
+.side li{margin:0 0 6px}
+@media (max-width:760px){.stage{flex-direction:column;padding:0}.phone{width:100vw;height:100dvh;border-radius:0;box-shadow:none}.side{display:none}}
+
+.screen{position:absolute;inset:0;overflow-y:auto;padding:14px 16px 110px;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.topbar{display:flex;gap:10px;align-items:center;position:sticky;top:-14px;margin:-14px -16px 12px;padding:14px 16px 10px;background:linear-gradient(var(--page) 78%,transparent);z-index:5}
+.search{flex:1;height:52px;border-radius:999px;background:#fff;display:flex;align-items:center;gap:10px;padding:0 18px;color:var(--mute);font-size:16px}
+.search input{border:0;outline:0;background:none;flex:1;min-width:0}
+.rbtn{width:52px;height:52px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none;position:relative}
+.dot{position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--heart);border:2px solid #fff}
+svg.i{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+svg.s{width:15px;height:15px}
+
+.people{display:flex;gap:14px;overflow-x:auto;margin:0 -16px 12px;padding:2px 16px;scrollbar-width:none}
+.people button{display:grid;justify-items:center;gap:6px;font-size:12px;color:#444;flex:none;width:58px}
+.av{border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-weight:700;flex:none;vertical-align:middle;letter-spacing:0}
+.pills{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.pill{background:#fff;border-radius:999px;height:54px;display:flex;align-items:center;gap:10px;padding:0 14px;font-weight:600;font-size:14px;text-align:left;white-space:nowrap;overflow:hidden}
+.pill small{display:block;font-weight:500;color:var(--mute);font-size:12px}
+.seg{display:inline-flex;background:#E4E4E4;border-radius:999px;padding:4px;margin:2px 0 12px}
+.seg button{padding:8px 18px;border-radius:999px;font-weight:600;font-size:14px;color:#555}
+.seg button.on{background:#fff;color:var(--ink)}
+
+.card{background:var(--card);border-radius:var(--r);padding:18px 18px 16px;margin-bottom:12px;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.meta{display:flex;align-items:center;gap:6px;color:var(--mute);font-size:13px;margin-bottom:10px}
+.meta .more{margin-left:auto;font-size:20px;line-height:1;color:#555}
+.say{font-size:25px;line-height:1.22;letter-spacing:-.02em;font-weight:500;color:var(--mute);text-wrap:pretty}
+.say b{color:var(--ink);font-weight:600}
+.say .av{margin:0 2px 4px 0}
+.chipx{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:600;margin-top:12px;font-family:var(--mono)}
+.chipx .ar{color:var(--mute)}
+.logo{border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-weight:800;font-family:var(--font);flex:none}
+.tile{height:150px;border-radius:22px;margin-top:14px;display:grid;place-items:center;font-size:84px;line-height:1}
+.acts{display:flex;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.black{background:#111;color:#fff;border-radius:999px;height:48px;padding:0 20px;font-weight:600;font-size:15px}
+.circ{width:48px;height:48px;border-radius:50%;background:var(--chip);display:grid;place-items:center}
+.rx{height:48px;border-radius:999px;background:var(--chip);padding:0 14px;font-size:16px;font-weight:600;display:flex;align-items:center;gap:6px}
+.rx.me{background:#EAE6FF;box-shadow:inset 0 0 0 2px var(--brand)}
+.rxrow{display:flex;gap:6px;margin-top:10px}
+.rxrow button{width:46px;height:46px;border-radius:50%;background:var(--chip);font-size:22px}
+
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:86px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:0 6px 14px;z-index:10}
+.tab{display:grid;justify-items:center;align-content:center;gap:4px;font-size:11px;font-weight:600;color:var(--brand);position:relative}
+.tab.on{color:var(--ink)}
+.tab .dot{top:14px;right:22px}
+.tab.pay .fab{width:62px;height:62px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;margin-top:-30px;box-shadow:0 0 0 6px #fff;font-size:26px;font-weight:800;letter-spacing:-.04em}
+
+h2.t{font-size:28px;letter-spacing:-.02em;margin:8px 0 14px}
+.lbl{font-size:13px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin:18px 4px 8px;display:flex;justify-content:space-between}
+.list{background:#fff;border-radius:24px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:13px 16px;width:100%;text-align:left;min-height:64px}
+.row + .row{border-top:1px solid var(--line)}
+.row .g{flex:1;min-width:0}
+.row .g b{display:block;font-size:16px;font-weight:600}
+.row .g small{color:var(--mute);font-size:13px}
+.row .n{text-align:right;font-family:var(--mono);font-size:15px;font-weight:600}
+.row .n small{display:block;color:var(--mute);font-weight:500;font-size:12px}
+.btn{height:40px;padding:0 16px;border-radius:999px;font-weight:700;font-size:14px;background:var(--brand);color:#fff}
+.btn.ghost{background:var(--chip);color:var(--ink)}
+.tag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--chip);color:#666;padding:2px 6px;border-radius:6px;margin-left:6px;vertical-align:2px}
+
+.total{font-size:46px;font-weight:700;letter-spacing:-.03em;font-family:var(--font);margin:6px 4px 0}
+.sub{color:var(--mute);font-size:14px;margin:0 4px 8px}
+.gp{background:#fff;border-radius:24px;padding:16px;display:flex;align-items:center;gap:12px;margin:12px 0;width:100%;text-align:left}
+.gp .g{flex:1}.gp small{color:var(--mute);font-size:13px;display:block}.gp b{font-size:18px}
+.gp span.c{color:var(--brand);font-weight:700;font-size:14px}
+
+.prof{display:grid;justify-items:center;gap:6px;padding:8px 0 14px;position:relative}
+.prof h3{font-size:24px;margin:8px 0 0;letter-spacing:-.02em}.prof p{margin:0;color:var(--mute)}
+.qrb{position:absolute;margin:68px 0 0 72px;width:38px;height:38px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;box-shadow:0 0 0 4px var(--page)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tiles button{background:#fff;border-radius:22px;padding:14px 16px;text-align:left}
+.tiles small{color:var(--mute);font-size:13px;display:block}.tiles b{font-size:20px}
+.req{background:#fff;border-radius:24px;padding:16px;margin-bottom:10px}
+.req p{margin:0 0 12px;font-size:17px;line-height:1.3;color:var(--mute)}.req p b{color:var(--ink)}
+.req .two{display:flex;gap:8px}
+.amt.in{color:var(--in)}
+
+.sheet{position:absolute;inset:0;background:var(--page);z-index:20;display:flex;flex-direction:column;animation:up .22s ease}
+@keyframes up{from{transform:translateY(28px)}to{transform:none}}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px}
+.sh b{font-size:17px}
+.x{width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:20px}
+.body{flex:1;overflow-y:auto;padding:4px 16px 16px;scrollbar-width:none}
+.who{display:grid;justify-items:center;gap:4px;margin-top:4px}
+.who b{font-size:19px}.who small{color:var(--mute)}
+.big{font-size:76px;font-weight:700;letter-spacing:-.04em;text-align:center;margin:8px 0 6px;line-height:1}
+.big sup{font-size:34px;vertical-align:28px;margin-right:2px;font-weight:600}
+.note{width:100%;height:60px;border-radius:18px;border:1.5px solid #D5D5D5;background:#fff;padding:0 16px;font-size:17px;outline:0}
+.note:focus{border-color:var(--brand)}
+.emo{display:flex;gap:6px;margin:8px 0 6px;overflow-x:auto;scrollbar-width:none}
+.emo button{width:42px;height:42px;border-radius:50%;background:#fff;font-size:20px;flex:none}
+.aud{display:inline-flex;align-items:center;gap:6px;background:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;margin:4px 0 2px}
+.hint{font-size:12px;color:var(--mute);margin:4px 2px 0;min-height:16px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cta{height:56px;border-radius:999px;background:var(--brand);color:#fff;font-weight:700;font-size:17px;width:100%}
+.cta:disabled{opacity:.35}
+.cta.dark{background:#111}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);padding:6px 16px 22px}
+.keys button{height:54px;font-size:26px;font-weight:500}
+.half{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:32px 32px 0 0;padding:20px 16px 26px;z-index:30;animation:up .2s ease;max-height:86%;overflow-y:auto}
+.scrim{position:absolute;inset:0;background:rgba(10,8,20,.45);z-index:25}
+.half h3{font-size:24px;margin:0 0 4px;letter-spacing:-.02em}
+.opt{display:flex;align-items:center;gap:12px;padding:12px 4px;width:100%;text-align:left;border-top:1px solid var(--line)}
+.opt[disabled]{opacity:.35}
+.radio{width:22px;height:22px;border-radius:50%;border:2px solid #C9C9C9;flex:none}
+.radio.on{border:7px solid var(--brand)}
+.gets{background:#F4F1FF;border-radius:18px;padding:14px;display:flex;align-items:center;gap:10px;font-weight:600;margin:12px 0 6px}
+.fee{display:flex;justify-content:space-between;color:var(--mute);font-size:14px;margin:6px 4px 14px}
+.done{flex:1;display:grid;place-items:center;text-align:center;padding:0 28px}
+.tick{width:96px;height:96px;border-radius:50%;background:var(--in);color:#fff;display:grid;place-items:center;margin:0 auto 22px;animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
+.qr{width:240px;height:240px;margin:18px auto;background:#fff;border-radius:28px;padding:18px;position:relative}
+.qr svg{width:100%;height:100%}
+.qr .av{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 6px #fff}
+.onb{flex:1;display:flex;flex-direction:column;padding:26px 22px 26px}
+.onb h2{font-size:34px;letter-spacing:-.03em;line-height:1.08;margin:22px 0 10px}
+.onb p{color:#555;font-size:16px;line-height:1.4;margin:0 0 18px}
+.onb .sp{flex:1}
+.word{font-size:30px;font-weight:800;letter-spacing:-.04em;color:var(--brand)}
+.field{height:60px;border-radius:18px;background:#fff;border:1.5px solid #D5D5D5;display:flex;align-items:center;padding:0 16px;font-size:19px;gap:4px;margin-bottom:10px}
+.field input{border:0;outline:0;flex:1;background:none;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pick{background:#fff;border-radius:22px;padding:14px;text-align:left;display:grid;gap:8px;border:2px solid transparent}
+.pick.on{border-color:var(--brand)}
+.pick b{font-size:16px}.pick small{color:var(--mute);font-family:var(--mono);font-size:13px}
+.link{color:var(--brand);font-weight:700;text-align:center;padding:14px;width:100%}
+.foot{font-size:11px;color:var(--mute);text-align:center;margin:18px 12px 0;line-height:1.4}
+svg.spark{width:100%;height:84px;display:block;margin:4px 0 0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="phone"></div>
+  <aside class="side">
+    <h1>stablegram</h1>
+    <p>Clickable layout for the app. Sample people and payments; prices are real as of Nov 13 2026. Nothing here touches a chain.</p>
+    <h2>Jump to</h2>
+    <div class="jump">
+      <button onclick="go('home')">Home feed</button>
+      <button onclick="openPay()">Pay / Request</button>
+      <button onclick="go('friends')">Friends</button>
+      <button onclick="go('portfolio')">Portfolio</button>
+      <button onclick="go('me')">Me</button>
+      <button onclick="openCode()">My code</button>
+      <button onclick="startOnb()">Sign-up flow</button>
+    </div>
+    <h2>Try this</h2>
+    <ul>
+      <li>Tap the purple button, pick Wes, type an amount and a note, tap Pay.</li>
+      <li>On the confirm sheet, choose what to pay with. Wes is set to get Nvidia.</li>
+      <li>React to a payment, or tap "Say thanks".</li>
+      <li>In Portfolio, change "Get paid in".</li>
+      <li>In Me, pay or decline Taihl's request.</li>
+    </ul>
+    <h2>Not in this mock</h2>
+    <ul>
+      <li>Camera scanner, comments thread, settings, split.</li>
+      <li>Wallet connection. Sign-up here is screens only.</li>
+    </ul>
+  </aside>
+</div>
+
+<script>
+/* ---------- sample data ---------- */
+const A = {
+  USDC:{name:'Dollars',sym:'USDC',price:1,group:'cash',color:'#2775CA',demo:false},
+  NVDA:{name:'NVIDIA',sym:'NVDA',price:160.71,group:'stocks',color:'#5E9F00',demo:true},
+  TSLA:{name:'Tesla',sym:'TSLA',price:387.38,group:'stocks',color:'#D7263D',demo:true},
+  SPY:{name:'S&P 500',sym:'SPY',price:754.49,group:'stocks',color:'#0B6E4F',demo:true},
+  AAPL:{name:'Apple',sym:'AAPL',price:356.23,group:'stocks',color:'#444',demo:true},
+  CRCL:{name:'Circle',sym:'CRCL',price:61.52,group:'stocks',color:'#1AA3A3',demo:true},
+  COIN:{name:'Coinbase',sym:'COIN',price:126.08,group:'stocks',color:'#1652F0',demo:true},
+  GOLD:{name:'Gold',sym:'GOLD',price:3873.04,group:'stocks',color:'#C99A1E',demo:true},
+  SOL:{name:'Solana',sym:'SOL',price:77.85,group:'crypto',color:'#9945FF',demo:true},
+  MON:{name:'Monad',sym:'MON',price:0.0168,group:'crypto',color:'#836EF9',demo:true},
+};
+const P = {
+  me:{first:'Charlie',last:'S',h:'charlie',c:'#6E54FF',recv:'NVDA'},
+  wes:{first:'Wes',last:'K',h:'wes',c:'#E0762B',recv:'NVDA'},
+  sabina:{first:'Sabina',last:'O',h:'sabina',c:'#C2417A',recv:'USDC'},
+  taihl:{first:'Taihl',last:'L',h:'taihl',c:'#1E7FBF',recv:'SPY'},
+  maya:{first:'Maya',last:'R',h:'maya',c:'#2E9E6B',recv:'SOL'},
+  priya:{first:'Priya',last:'N',h:'priya',c:'#8A4FD3',recv:null},
+  marcus:{first:'Marcus',last:'D',h:'marcus',c:'#B5492F',recv:'TSLA'},
+  jo:{first:'Jo',last:'P',h:'jo',c:'#3B6FD9',recv:null},
+};
+const S = {
+  tab:'home', scope:'friends', sheet:null, half:null, rxOpen:null,
+  friends:['wes','sabina','taihl','maya','marcus'], incoming:['jo'], suggested:['priya'],
+  hold:{USDC:42.10, NVDA:0.25, SOL:0.9, SPY:0.04, TSLA:0.05},
+  pay:{to:null, amt:'', note:'', aud:'public', with:null},
+  reqIn:[{id:1,from:'taihl',usd:8,note:'🌮 tacos'}], reqOut:[],
+  onb:{step:0,name:'',recv:'NVDA',aud:'public'},
+  feed:[
+    {id:1,from:'sabina',to:'wes',note:'pizza and burgers 🍕',aud:'friends',t:'2h',pay:'SOL',recv:'NVDA',rx:{'❤️':3,'😂':1},my:null,cm:2},
+    {id:2,from:'maya',to:'me',usd:12,note:'🎟️ Ducks tickets',aud:'public',t:'5h',pay:'TSLA',recv:'NVDA',rx:{'🔥':1},my:null,cm:0},
+    {id:3,from:'me',to:'wes',usd:20,note:'Coffee ☕',aud:'private',t:'1d',pay:'USDC',recv:'NVDA',rx:{},my:null,cm:0},
+    {id:4,from:'taihl',to:'priya',note:'⛽ gas money',aud:'public',t:'1d',pay:'USDC',recv:'USDC',rx:{'🙏':2},my:null,cm:1},
+    {id:5,from:'marcus',to:'jo',note:'🏠 utilities',aud:'public',t:'2d',pay:'SOL',recv:'SOL',rx:{},my:null,cm:0,stranger:true},
+  ],
+};
+const RX=['❤️','😂','🔥','🙏','💸','✨'];
+const NOTE_EMO=['🍕','☕','🍻','🏠','🚗','⛽','🎟️','🎉','🛒','✈️','🌮','🎂'];
+const TILE={'🍕':'#FFD9A8','☕':'#E7D3C2','🎟️':'#CFE0FF','⛽':'#D9F2D0','🏠':'#FFE3EC','🌮':'#FFE9A8','🍻':'#FFE08A','🎉':'#E6DDFF'};
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const usd=n=>'$'+(Math.round(n*100)/100).toLocaleString('en-US',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});
+const usd2=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const nm=id=>id==='me'?'You':`${P[id].first} ${P[id].last}.`;
+const av=(id,size=28)=>`<span class="av" style="width:${size}px;height:${size}px;background:${P[id].c};font-size:${Math.round(size*.42)}px">${P[id].first[0]}${P[id].last}</span>`;
+const logo=(k,size=28)=>`<span class="logo" style="width:${size}px;height:${size}px;background:${A[k].color};font-size:${Math.round(size*.36)}px">${k==='USDC'?'$':A[k].sym[0]}</span>`;
+const firstEmoji=s=>{const m=s.match(/\p{Extended_Pictographic}/u);return m?m[0]:null};
+const total=()=>Object.entries(S.hold).reduce((t,[k,v])=>t+v*A[k].price,0);
+const I={
+  home:'<svg class="i" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  ppl:'<svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.2-5.5 6.5-5.5s5.9 2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.6"/><path d="M17 14.6c2.400.2 4 1.700 4.5 4.400"/></svg>',
+  pie:'<svg class="i" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A8 8 0 0 1 20.5 9H15z"/></svg>',
+  qr:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M20 20v.01M17 20v.01M20 17v.01"/></svg>',
+  search:'<svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  cm:'<svg class="i" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  plus:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+  gear:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>',
+  bell:'<svg class="i" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>',
+  globe:'<svg class="i s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>',
+  lock:'<svg class="i s" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></svg>',
+  fr:'<svg class="i s" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.200-5.5 6.5-5.5s5.9 2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.6"/></svg>',
+};
+const AUD={public:[I.globe,'Public'],friends:[I.fr,'Visible to friends'],private:[I.lock,'Only visible to you']};
+const AUDS={public:'Public',friends:'Friends',private:'Private'};
+
+/* ---------- screens ---------- */
+function card(f){
+  const mine=f.from==='me', tome=f.to==='me', party=mine||tome;
+  const amt=party&&f.usd?` <b>${usd(f.usd)}</b>`:'';
+  const e=firstEmoji(f.note);
+  const chip=f.pay===f.recv?`${logo(f.pay,22)} ${A[f.pay].sym}`:`${logo(f.pay,22)} ${A[f.pay].sym} <span class="ar">→</span> ${logo(f.recv,22)} ${A[f.recv].sym}`;
+  const pill=mine?`<button class="black" onclick="again(${f.id})">Pay again</button>`:tome?`<button class="black" onclick="thanks(${f.id})">Say thanks</button>`:'';
+  const rx=Object.entries(f.rx).filter(([,n])=>n>0).map(([k,n])=>`<button class="rx ${f.my===k?'me':''}" onclick="react(${f.id},'${k}')">${k} ${n}</button>`).join('');
+  return `<article class="card">
+    <div class="meta">${AUD[f.aud][0]} ${AUD[f.aud][1]} · ${f.t}<span class="more">···</span></div>
+    <div class="say">${av(f.from)} <b>${nm(f.from)}</b> paid ${av(f.to)} <b>${f.to==='me'?'you':nm(f.to)}</b>${amt} for <b>${f.note.replace(/\p{Extended_Pictographic}\uFE0F?/gu,'').trim()||'…'}</b></div>
+    <div class="chipx">${chip}</div>
+    ${e?`<div class="tile" style="background:${TILE[e]||'#E9E4FF'}">${e}</div>`:''}
+    <div class="acts">${pill}<button class="circ" title="Comment">${I.cm}</button>${f.cm?`<span style="font-weight:600;margin-left:-2px">${f.cm}</span>`:''}${rx}<button class="circ" onclick="S.rxOpen=S.rxOpen===${f.id}?null:${f.id};render()">${I.plus}</button></div>
+    ${S.rxOpen===f.id?`<div class="rxrow">${RX.map(k=>`<button onclick="react(${f.id},'${k}')">${k}</button>`).join('')}</div>`:''}
+  </article>`;
+}
+function home(){
+  const items=S.feed.filter(f=>S.scope==='everyone'?(f.aud==='public'||f.from==='me'||f.to==='me'):!f.stranger);
+  return `<div class="topbar"><button class="search" onclick="openPay()">${I.search}<span>Find a person</span></button><button class="rbtn" onclick="openCode()">${I.qr}</button></div>
+  <div class="people">${S.friends.map(id=>`<button onclick="openPay('${id}')">${av(id,54)}<span>${P[id].first}</span></button>`).join('')}</div>
+  <div class="pills">
+    ${S.reqIn.length?`<button class="pill" onclick="go('me')"><span style="font-size:22px">🧾</span><span>${S.reqIn.length} request waiting<small>Tap to see</small></span></button>`:`<button class="pill" onclick="go('friends')"><span style="font-size:22px">👋</span><span>Add friends<small>See what they pay for</small></span></button>`}
+    <button class="pill" onclick="openRecv()">${logo(P.me.recv||'USDC',30)}<span>Get paid in<small>${P.me.recv?A[P.me.recv].name:"Whatever I'm sent"}</small></span></button>
+  </div>
+  <div class="seg"><button class="${S.scope==='friends'?'on':''}" onclick="S.scope='friends';render()">Friends</button><button class="${S.scope==='everyone'?'on':''}" onclick="S.scope='everyone';render()">Everyone</button></div>
+  ${items.map(card).join('')}
+  <p class="foot">Testnet demo. Demo assets are test tokens that follow real prices.</p>`;
+}
+function friends(){
+  const r=(id,right)=>`<div class="row">${av(id,44)}<div class="g"><b>${P[id].first} ${P[id].last}.</b><small>@${P[id].h}</small></div>${right}</div>`;
+  return `<h2 class="t">Friends</h2>
+  <div class="search" style="margin-bottom:6px">${I.search}<span>Find people</span></div>
+  ${S.incoming.length?`<div class="lbl"><span>Requests</span></div><div class="list">${S.incoming.map(id=>r(id,`<button class="btn" onclick="accept('${id}')">Accept</button><button class="btn ghost" onclick="ignore('${id}')">Ignore</button>`)).join('')}</div>`:''}
+  ${S.suggested.length?`<div class="lbl"><span>Suggested</span></div><div class="list">${S.suggested.map(id=>r(id,`<button class="btn" onclick="addFr('${id}',this)">Add</button>`)).join('')}</div>`:''}
+  <div class="lbl"><span>Your friends</span><span>${S.friends.length}</span></div>
+  <div class="list">${[...S.friends].sort().map(id=>r(id,`<button class="btn ghost" onclick="openPay('${id}')">Pay</button>`)).join('')}</div>`;
+}
+function portfolio(){
+  const grp=(g,title)=>{const ks=Object.keys(S.hold).filter(k=>A[k].group===g&&S.hold[k]>0); if(!ks.length)return'';
+    const sub=ks.reduce((t,k)=>t+S.hold[k]*A[k].price,0);
+    return `<div class="lbl"><span>${title}</span><span>${usd2(sub)}</span></div><div class="list">${ks.map(k=>`<div class="row">${logo(k,42)}<div class="g"><b>${A[k].name}${A[k].demo?'<span class="tag">demo</span>':''}</b><small>${A[k].sym} · ${usd2(A[k].price)}</small></div><div class="n">${usd2(S.hold[k]*A[k].price)}<small>${k==='USDC'?'':(+S.hold[k].toFixed(4))+' '+A[k].sym}</small></div></div>`).join('')}</div>`};
+  const rest=Object.keys(A).filter(k=>!(S.hold[k]>0));
+  return `<h2 class="t">Portfolio</h2>
+  <div class="total">${usd2(total())}</div><div class="sub">Everything in your wallet, in dollars</div>
+  <svg class="spark" viewBox="0 0 340 84" preserveAspectRatio="none"><path d="M0 62 C30 58 44 66 70 54 S110 40 136 46 170 60 196 44 236 20 262 28 300 34 340 12" fill="none" stroke="#6E54FF" stroke-width="3" stroke-linecap="round"/><path d="M0 62 C30 58 44 66 70 54 S110 40 136 46 170 60 196 44 236 20 262 28 300 34 340 12 V84 H0z" fill="#6E54FF" opacity=".08"/></svg>
+  <div class="sub" style="font-size:12px">Sample chart</div>
+  <button class="gp" onclick="openRecv()">${logo(P.me.recv||'USDC',44)}<span class="g"><small>Get paid in</small><b>${P.me.recv?A[P.me.recv].name:"Whatever I'm sent"}</b></span><span class="c">Change</span></button>
+  ${grp('stocks','Stocks and real-world assets')}${grp('crypto','Crypto')}${grp('cash','Cash')}
+  <div class="lbl"><span>Explore</span></div>
+  <div class="list">${rest.map(k=>`<div class="row">${logo(k,42)}<div class="g"><b>${A[k].name}${A[k].demo?'<span class="tag">demo</span>':''}</b><small>${A[k].sym}</small></div><div class="n">${usd2(A[k].price)}</div></div>`).join('')}</div>
+  <p class="foot">Wallet 0x7a3f…c21e · View on explorer</p>`;
+}
+function me(){
+  const mineF=S.feed.filter(f=>f.from==='me'||f.to==='me');
+  return `<div style="display:flex;justify-content:flex-end;gap:8px"><button class="rbtn">${I.bell}${S.reqIn.length?'<i class="dot"></i>':''}</button><button class="rbtn">${I.gear}</button></div>
+  <div class="prof">${av('me',104)}<button class="qrb" onclick="openCode()">${I.qr}</button><h3>Charlie S.</h3><p>@charlie</p></div>
+  <div class="tiles"><button onclick="go('friends')"><small>Friends</small><b>${S.friends.length}</b></button><button onclick="go('portfolio')"><small>Portfolio</small><b>${usd2(total())}</b></button></div>
+  ${S.reqIn.length||S.reqOut.length?'<div class="lbl"><span>Requests</span></div>':''}
+  ${S.reqIn.map(r=>`<div class="req"><p>${av(r.from)} <b>${nm(r.from)}</b> requests <b>${usd(r.usd)}</b> for <b>${r.note}</b></p><div class="two"><button class="btn" style="flex:1" onclick="payReq(${r.id})">Pay</button><button class="btn ghost" style="flex:1" onclick="decline(${r.id})">Decline</button></div></div>`).join('')}
+  ${S.reqOut.map(r=>`<div class="req"><p>You requested <b>${usd(r.usd)}</b> from ${av(r.to)} <b>${nm(r.to)}</b> for <b>${r.note}</b></p><div class="two"><button class="btn ghost" style="flex:1">Remind</button><button class="btn ghost" style="flex:1" onclick="cancelReq(${r.id})">Cancel</button></div></div>`).join('')}
+  <div class="lbl"><span>Your activity</span></div>
+  <div class="list">${mineF.map(f=>{const o=f.from==='me'?f.to:f.from;const inn=f.to==='me';return `<div class="row">${av(o,44)}<div class="g"><b>${inn?nm(o)+' paid you':'You paid '+nm(o)}</b><small>${f.note} · ${f.t}</small></div><div class="n amt ${inn?'in':''}">${inn?'+ ':'− '}${usd(f.usd)}<small>${A[inn?f.recv:f.pay].sym}</small></div></div>`}).join('')}</div>`;
+}
+function tabbar(){
+  const t=(k,icon,label,dot)=>`<button class="tab ${S.tab===k?'on':''}" onclick="go('${k}')">${icon}${dot?'<i class="dot"></i>':''}<span>${label}</span></button>`;
+  return `<nav class="tabbar">${t('home',I.home,'Home')}${t('friends',I.ppl,'Friends',S.incoming.length)}
+    <button class="tab pay" onclick="openPay()"><span class="fab">s</span><span>Pay/Request</span></button>
+    ${t('portfolio',I.pie,'Portfolio')}<button class="tab ${S.tab==='me'?'on':''}" onclick="go('me')">${av('me',26)}${S.reqIn.length?'<i class="dot"></i>':''}<span>Me</span></button></nav>`;
+}
+
+/* ---------- pay flow ---------- */
+function sheetWho(){
+  return `<div class="sheet"><div class="sh"><button class="x" onclick="closeSheet()">✕</button><b>Pay or request</b><span style="width:44px"></span></div>
+  <div class="body"><div class="search" style="margin-bottom:8px">${I.search}<input id="q" placeholder="Name or @username" oninput="filterWho(this.value)"></div>
+  <div class="lbl"><span>Top people</span></div><div class="people" style="margin-bottom:4px">${S.friends.slice(0,5).map(id=>`<button onclick="pickWho('${id}')">${av(id,54)}<span>${P[id].first}</span></button>`).join('')}</div>
+  <div class="lbl"><span>Friends</span></div><div class="list" id="wholist">${whoRows('')}</div></div></div>`;
+}
+function whoRows(q){q=q.toLowerCase().replace('@','');
+  const ids=Object.keys(P).filter(id=>id!=='me'&&(!q?S.friends.includes(id):(P[id].h.includes(q)||P[id].first.toLowerCase().includes(q))));
+  return ids.map(id=>`<button class="row" onclick="pickWho('${id}')">${av(id,44)}<div class="g"><b>${P[id].first} ${P[id].last}.</b><small>@${P[id].h}</small></div></button>`).join('')||'<div class="row"><div class="g"><small>Nobody by that name has signed up yet.</small></div></div>';
+}
+function filterWho(v){$('#wholist').innerHTML=whoRows(v)}
+function sheetAmt(){const p=S.pay,ok=parseFloat(p.amt)>0&&p.note.trim();
+  return `<div class="sheet"><div class="sh"><button class="x" onclick="S.sheet='who';render()">←</button><b></b><button class="x" onclick="closeSheet()">✕</button></div>
+  <div class="body"><div class="who">${av(p.to,68)}<b>${P[p.to].first} ${P[p.to].last}.</b><small>@${P[p.to].h}</small></div>
+  <div class="big"><sup>$</sup>${p.amt||'0'}</div>
+  <input class="note" id="note" placeholder="What's it for?" maxlength="140" value="${p.note.replace(/"/g,'&quot;')}" oninput="S.pay.note=this.value;syncCta()">
+  <div class="emo">${NOTE_EMO.map(e=>`<button onclick="addEmo('${e}')">${e}</button>`).join('')}</div>
+  <button class="aud" onclick="cycleAud()">${AUD[p.aud][0]} ${AUDS[p.aud]} ▾</button>
+  <div class="hint">${p.aud==='private'?'Hidden from feeds. The transfer is still visible on the blockchain.':p.aud==='friends'?'Your friends and '+P[p.to].first+"'s friends can see this. Amounts stay hidden.":'Anyone can see this. Amounts stay hidden.'}</div></div>
+  <div style="padding:0 16px"><div class="two"><button class="cta" id="bReq" ${ok?'':'disabled'} onclick="doRequest()">Request</button><button class="cta" id="bPay" ${ok?'':'disabled'} onclick="openConfirm()">Pay</button></div></div>
+  <div class="keys">${['1','2','3','4','5','6','7','8','9','.','0','⌫'].map(k=>`<button onclick="key('${k}')">${k}</button>`).join('')}</div></div>`;
+}
+function syncCta(){const ok=parseFloat(S.pay.amt)>0&&S.pay.note.trim();$('#bReq').disabled=$('#bPay').disabled=!ok}
+function key(k){let a=S.pay.amt; if(k==='⌫')a=a.slice(0,-1); else if(k==='.'){if(!a.includes('.'))a=(a||'0')+'.'} else {if(a.includes('.')&&a.split('.')[1].length>=2)return; if(a.length>=6)return; a=(a==='0'?'':a)+k} S.pay.amt=a; render()}
+function addEmo(e){S.pay.note=(S.pay.note?S.pay.note+' ':'')+e;render()}
+function cycleAud(){const o=['public','friends','private'];S.pay.aud=o[(o.indexOf(S.pay.aud)+1)%3];render()}
+function halfConfirm(){const p=S.pay,u=parseFloat(p.amt),to=P[p.to];
+  const opts=Object.keys(S.hold).filter(k=>S.hold[k]>0).sort((a,b)=>S.hold[b]*A[b].price-S.hold[a]*A[a].price);
+  if(!p.with||S.hold[p.with]*A[p.with].price<u)p.with=opts.find(k=>S.hold[k]*A[k].price>=u)||null;
+  const recv=to.recv||p.with, payIn=p.with?u/A[p.with].price:0;
+  return `<div class="scrim" onclick="S.half=null;render()"></div><div class="half">
+  <h3>Pay ${to.first} ${to.last}. ${usd(u)}</h3><div class="sub" style="margin:0 0 6px">${p.note}</div>
+  <div class="lbl" style="margin:12px 0 0"><span>Pay with</span></div>
+  ${opts.map(k=>{const v=S.hold[k]*A[k].price,dis=v<u;return `<button class="opt" ${dis?'disabled':''} onclick="S.pay.with='${k}';render()">${logo(k,38)}<span class="g" style="flex:1"><b>${A[k].name}</b><br><small style="color:var(--mute)">${usd2(v)} available</small></span><span class="radio ${p.with===k?'on':''}"></span></button>`}).join('')}
+  ${p.with?`<div class="gets">${logo(recv,34)}<span>${to.first} gets it as ${A[recv].name}${to.recv?'':' (no preference set)'}</span></div>
+  <div class="fee"><span>You pay ${p.with==='USDC'?usd2(u):(+payIn.toFixed(4))+' '+A[p.with].sym}</span><span>Fee about $0.005</span></div>
+  <button class="cta" onclick="doPay()">Pay ${usd(u)}</button>`:`<div class="hint" style="margin:14px 0">You don't have enough of anything for this. Try a smaller amount.</div>`}
+  </div>`;
+}
+function sheetDone(){const d=S.doneMsg;return `<div class="sheet"><div class="done"><div><div class="tick"><svg class="i" style="width:48px;height:48px;stroke-width:2.6" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+  <div class="say" style="font-size:27px">${d}</div></div></div><div style="padding:0 16px 34px"><button class="cta dark" onclick="closeSheet();go('home')">Done</button></div></div>`}
+function halfRecv(){const cur=P.me.recv;const o=(k,label,l)=>`<button class="opt" onclick="setRecv(${k?`'${k}'`:'null'})">${l}<span class="g" style="flex:1"><b>${label}</b></span><span class="radio ${cur===k?'on':''}"></span></button>`;
+  return `<div class="scrim" onclick="S.half=null;render()"></div><div class="half"><h3>Get paid in</h3><div class="sub" style="margin:0 0 8px">Every payment to you arrives as this, whatever the sender pays with.</div>
+  ${o(null,"Whatever I'm sent",'<span class="logo" style="width:38px;height:38px;background:#bbb;font-size:16px">↔</span>')}${['USDC','NVDA','TSLA','SPY','SOL','AAPL','CRCL','GOLD'].map(k=>o(k,A[k].name,logo(k,38))).join('')}</div>`}
+function sheetCode(){let cells='';let seed=7;const rnd=()=>(seed=(seed*1103515245+12345)%2147483648)/2147483648;
+  for(let y=0;y<25;y++)for(let x=0;x<25;x++){const fx=(x<7&&y<7)||(x>17&&y<7)||(x<7&&y>17);const mid=x>8&&x<16&&y>8&&y<16;
+    if(fx){const lx=x>17?x-18:x,ly=y>17?y-18:y;const on=lx===0||lx===6||ly===0||ly===6||(lx>1&&lx<5&&ly>1&&ly<5);if(on)cells+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}
+    else if(!mid&&rnd()>.52)cells+=`<rect x="${x}" y="${y}" width="1" height="1" rx=".2"/>`}
+  return `<div class="sheet"><div class="sh"><button class="x" onclick="closeSheet()">✕</button><div class="seg" style="margin:0"><button>Scan</button><button class="on">My code</button></div><span style="width:44px"></span></div>
+  <div class="body" style="text-align:center"><div class="qr"><svg viewBox="0 0 25 25" fill="#111">${cells}</svg>${av('me',58)}</div><h3 style="font-size:24px;margin:6px 0 2px">Charlie S.</h3><p style="margin:0 0 20px;color:var(--mute)">@charlie</p>
+  <div class="two"><button class="cta dark">Share</button><button class="cta" style="background:#fff;color:#111">Copy link</button></div>
+  <p class="foot">Sample code for the layout. The real one opens your profile, or a filled-in payment when it carries an amount.</p></div></div>`}
+
+/* ---------- sign-up ---------- */
+function sheetOnb(){const o=S.onb;const next=(label,dis)=>`<button class="cta" ${dis?'disabled id="onbNext"':'id="onbNext"'} onclick="S.onb.step++;render()">${label}</button>`;
+  const steps=[
+  ()=>`<div class="word">stablegram</div><div class="sp"></div><h2>Pay friends in what you hold.</h2><p>Send ten bucks in Solana. They get it in Nvidia. It lands in their own wallet.</p>${next('Get started')}<button class="link" onclick="closeSheet()">I already have an account</button>`,
+  ()=>`<h2>How do you want to sign in?</h2><p>Either way, the wallet is yours.</p><div class="list"><button class="row" onclick="S.onb.step++;render()"><span style="font-size:26px">✨</span><div class="g"><b>Start without a wallet</b><small>We'll make one on this device. Back it up later.</small></div></button><button class="row" onclick="S.onb.step++;render()"><span style="font-size:26px">👛</span><div class="g"><b>Use my wallet</b><small>MetaMask, Phantom, Rabby, Coinbase Wallet</small></div></button></div><div class="sp"></div>`,
+  ()=>`<h2>Pick a username</h2><p>This is how friends find and pay you.</p><div class="field"><span style="color:var(--mute)">@</span><input id="un" value="${o.name}" placeholder="yourname" autocapitalize="off" oninput="checkUn(this)"></div><div class="hint" id="unh">3 to 20 letters, numbers or underscores.</div><div class="sp"></div>${next('Continue',!/^[a-z0-9_]{3,20}$/.test(o.name))}`,
+  ()=>`<h2>What do you want to get paid in?</h2><p>We'll start you with a little of it (demo). Change this any time.</p><div class="grid2">${['NVDA','TSLA','SPY','SOL','USDC'].map(k=>`<button class="pick ${o.recv===k?'on':''}" onclick="S.onb.recv='${k}';render()">${logo(k,40)}<b>${A[k].name}</b><small>${k==='USDC'?'Stays in dollars':usd2(A[k].price)}</small></button>`).join('')}</div><div class="sp"></div>${next('Continue')}`,
+  ()=>`<h2>Who can see your payments?</h2><p>You can change this on any payment. Amounts are never shown to others.</p><div class="list">${Object.keys(AUDS).map(k=>`<button class="row" onclick="S.onb.aud='${k}';render()"><span style="display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--chip)">${AUD[k][0]}</span><div class="g"><b>${AUDS[k]}</b><small>${{public:'Anyone can see the note and names',friends:'Your friends and theirs',private:'Only you and the other person'}[k]}</small></div><span class="radio ${o.aud===k?'on':''}"></span></button>`).join('')}</div><div class="hint" style="margin-top:12px">Your username is linked to a public wallet. Anyone can see its balances and payments on the blockchain.</div><div class="sp"></div>${next('Create my account')}`,
+  ()=>`<div class="sp"></div><div class="tick"><svg class="i" style="width:48px;height:48px;stroke-width:2.6" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2 style="text-align:center">You're in, @${o.name||'you'}.</h2><p style="text-align:center">You'll get paid in ${A[o.recv].name}. We added a little to get you started (demo).</p><div class="sp"></div><button class="cta" onclick="closeSheet();go('home')">Go to Home</button>`];
+  return `<div class="sheet"><div class="sh">${o.step?`<button class="x" onclick="S.onb.step--;render()">←</button>`:'<span></span>'}<span></span><button class="x" onclick="closeSheet()">✕</button></div><div class="onb">${steps[o.step]()}</div></div>`}
+function checkUn(el){el.value=el.value.toLowerCase();S.onb.name=el.value;const ok=/^[a-z0-9_]{3,20}$/.test(el.value),taken=Object.values(P).some(p=>p.h===el.value);
+  $('#unh').textContent=!el.value?'3 to 20 letters, numbers or underscores.':taken?'That username is taken.':ok?'✓ @'+el.value+' is available':'Letters, numbers and underscores only, 3 to 20.';
+  $('#unh').style.color=ok&&!taken?'var(--in)':'';$('#onbNext').disabled=!ok||taken}
+
+/* ---------- actions ---------- */
+function go(t){S.tab=t;S.sheet=null;S.half=null;render();$('.screen').scrollTop=0}
+function openPay(id){S.pay={to:id||null,amt:'',note:'',aud:'public',with:null};S.sheet=id?'amt':'who';S.half=null;render()}
+function pickWho(id){S.pay.to=id;S.sheet='amt';render()}
+function openConfirm(){S.half='confirm';render()}
+function closeSheet(){S.sheet=null;S.half=null;render()}
+function openCode(){S.sheet='code';S.half=null;render()}
+function openRecv(){S.half='recv';render()}
+function startOnb(){S.onb={step:0,name:'',recv:'NVDA',aud:'public'};S.sheet='onb';S.half=null;render()}
+function setRecv(k){P.me.recv=k;S.half=null;render()}
+function doPay(){const p=S.pay,u=parseFloat(p.amt),to=P[p.to],recv=to.recv||p.with;
+  S.hold[p.with]-=u/A[p.with].price; if(S.hold[p.with]<1e-9)S.hold[p.with]=0;
+  if(p.req){S.reqIn=S.reqIn.filter(r=>r.id!==p.req)}
+  S.feed.unshift({id:Date.now(),from:'me',to:p.to,usd:u,note:p.note,aud:p.aud,t:'now',pay:p.with,recv,rx:{},my:null,cm:0});
+  S.doneMsg=`You paid ${av(p.to,30)} <b>${nm(p.to)}</b> <b>${usd(u)}</b> for <b>${p.note}</b>`;S.half=null;S.sheet='done';render()}
+function doRequest(){const p=S.pay,u=parseFloat(p.amt);S.reqOut.unshift({id:Date.now(),to:p.to,usd:u,note:p.note});
+  S.doneMsg=`You requested <b>${usd(u)}</b> from ${av(p.to,30)} <b>${nm(p.to)}</b>`;S.sheet='done';render()}
+function again(id){const f=S.feed.find(x=>x.id===id);S.pay={to:f.to,amt:String(f.usd),note:f.note,aud:f.aud,with:f.pay};S.sheet='amt';render()}
+function react(id,k){const f=S.feed.find(x=>x.id===id);if(f.my===k){f.rx[k]--;f.my=null}else{if(f.my)f.rx[f.my]--;f.rx[k]=(f.rx[k]||0)+1;f.my=k}S.rxOpen=null;render()}
+function thanks(id){const f=S.feed.find(x=>x.id===id);if(f.my!=='🙏')react(id,'🙏')}
+function accept(id){S.incoming=S.incoming.filter(x=>x!==id);S.friends.push(id);render()}
+function ignore(id){S.incoming=S.incoming.filter(x=>x!==id);render()}
+function addFr(id,b){b.textContent='Requested';b.classList.add('ghost');b.disabled=true}
+function payReq(id){const r=S.reqIn.find(x=>x.id===id);S.pay={to:r.from,amt:String(r.usd),note:r.note,aud:'public',with:null,req:id};S.sheet='amt';S.half='confirm';render()}
+function decline(id){S.reqIn=S.reqIn.filter(r=>r.id!==id);render()}
+function cancelReq(id){S.reqOut=S.reqOut.filter(r=>r.id!==id);render()}
+
+function render(){
+  const scr={home,friends,portfolio,me}[S.tab]();
+  const sh={who:sheetWho,amt:sheetAmt,done:sheetDone,code:sheetCode,onb:sheetOnb}[S.sheet];
+  const hf={confirm:halfConfirm,recv:halfRecv}[S.half];
+  const y=$('.screen')?$('.screen').scrollTop:0;
+  $('#phone').innerHTML=`<div class="screen">${scr}</div>${tabbar()}${sh?sh():''}${hf?hf():''}`;
+  $('.screen').scrollTop=y;
+}
+/* open a screen from the URL hash, e.g. #portfolio, #pay, #confirm, #code, #signup */
+(function(){const h=location.hash.slice(1);
+  if(['friends','portfolio','me'].includes(h))S.tab=h;
+  if(h==='pay'){S.pay.to='wes';S.pay.amt='20';S.pay.note='Dinner 🍕';S.sheet='amt'}
+  if(h==='confirm'){S.pay.to='wes';S.pay.amt='20';S.pay.note='Dinner 🍕';S.pay.with='SOL';S.sheet='amt';S.half='confirm'}
+  if(h==='code')S.sheet='code';
+  if(h.startsWith('signup')){S.sheet='onb';S.onb.step=+(h.split('-')[1]||0);S.onb.name='charlie_s'}
+  render()})();
+</script>
+</body>
+</html>
