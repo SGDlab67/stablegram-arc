@@ -149,7 +149,7 @@ export default function Welcome() {
                 <p className="mt-1 text-[15px] leading-snug text-muted">In his own wallet. He keeps it, or sells it for dollars whenever he wants.</p>
               </div>
             </div>
-            {title("Settle up in stocks.", "Pay friends back with a slice of your portfolio: $10 of NVIDIA, or bitcoin, by username. They get exactly what you sent.")}
+            {title("Send friends a slice of your portfolio.", "Pay back $10 in NVIDIA or in bitcoin, by username. They get exactly what you sent.")}
             <PrimaryButton className="mt-7" onClick={next}>
               Get started
             </PrimaryButton>
