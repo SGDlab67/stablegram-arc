@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Check, ChevronRight } from "lucide-react";
 import { BackHeader, Screen } from "@/components/shell";
 import { AudienceLabel, Avatar, Card, SectionTitle } from "@/components/ui";
-import { ASSETS, type Audience } from "@/lib/data";
+import { type Audience } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 const AUDIENCES: { id: Audience; hint: string }[] = [
@@ -14,8 +14,7 @@ const AUDIENCES: { id: Audience; hint: string }[] = [
 ];
 
 export default function SettingsPage() {
-  const { me, updateMe, defaultAudience, setDefaultAudience, receivePref } = useStore();
-  const pref = ASSETS.find((a) => a.symbol === receivePref);
+  const { me, updateMe, defaultAudience, setDefaultAudience } = useStore();
   return (
     <Screen tabs={false}>
       <BackHeader title="Settings" fallback="/me" />
@@ -65,12 +64,6 @@ export default function SettingsPage() {
 
         <SectionTitle>Money</SectionTitle>
         <Card className="divide-y divide-line py-1">
-          <Link href="/portfolio?paidin=1" className="flex items-center justify-between py-3 text-[16px]">
-            <span className="font-semibold">Get paid in</span>
-            <span className="flex items-center gap-1 text-muted">
-              {pref ? pref.name : "Whatever I'm sent"} <ChevronRight size={18} />
-            </span>
-          </Link>
           <div className="flex items-center justify-between py-3 text-[16px]">
             <span className="font-semibold">Wallet</span>
             <span className="font-mono text-[14px] text-muted">0x71C4…9A3f (sample)</span>

@@ -11,7 +11,6 @@ import {
   OTHER_FRIENDSHIPS,
   PAYMENTS,
   PEOPLE,
-  RECEIVE_PREFS,
   REQUESTS,
   STARTER_ASSET_USD,
   STARTER_DOLLARS,
@@ -30,7 +29,7 @@ interface PayInput {
   usd: number;
   note: string;
   audience: Audience;
-  payAsset: string;
+  asset: string;
   requestId?: string;
 }
 
@@ -40,8 +39,8 @@ export interface SignUpInput {
   last: string;
   color: string;
   photo?: string;
-  /** The asset the new person wants to be paid in. "USDC" means dollars. */
-  receive: string;
+  /** The first stock the new person picked. "USDC" means they only want dollars to start. */
+  firstAsset: string;
   audience: Audience;
 }
 
@@ -54,7 +53,6 @@ interface Store {
   requests: MoneyRequest[];
   notices: Notice[];
   holdings: Record<string, number>;
-  receivePref: string | null;
   defaultAudience: Audience;
   friends: string[];
   incoming: string[];
@@ -66,8 +64,6 @@ interface Store {
   friendState: (handle: string) => FriendState;
   areFriends: (a: string, b: string) => boolean;
   canSee: (p: Payment) => boolean;
-  receiveAssetFor: (handle: string, payAsset: string) => string;
-  receivePrefOf: (handle: string) => string | null;
   signUp: (input: SignUpInput) => void;
   resetToSample: () => void;
   pay: (input: PayInput) => Payment;
@@ -80,7 +76,6 @@ interface Store {
   acceptFriend: (handle: string) => void;
   ignoreFriend: (handle: string) => void;
   unfriend: (handle: string) => void;
-  setReceivePref: (symbol: string | null) => void;
   setDefaultAudience: (a: Audience) => void;
   updateMe: (patch: Partial<Person>) => void;
   buy: (symbol: string, dollars: number) => void;
@@ -99,7 +94,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [requests, setRequests] = useState<MoneyRequest[]>(REQUESTS);
   const [meHandle, setMeHandle] = useState<string>(ME);
   const [holdings, setHoldings] = useState<Record<string, number>>(MY_HOLDINGS);
-  const [receivePref, setReceivePref] = useState<string | null>(RECEIVE_PREFS[ME] ?? null);
   const [defaultAudience, setDefaultAudience] = useState<Audience>("public");
   const [friends, setFriends] = useState<string[]>(FRIENDS);
   const [incoming, setIncoming] = useState<string[]>(INCOMING_FRIEND_REQUESTS);
@@ -143,24 +137,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [friends, meHandle],
   );
 
-  const receiveAssetFor = useCallback(
-    (handle: string, payAsset: string) => {
-      const pref = handle === meHandle ? receivePref : RECEIVE_PREFS[handle];
-      return pref ?? payAsset;
-    },
-    [receivePref, meHandle],
-  );
-
-  const receivePrefOf = useCallback(
-    (handle: string) => (handle === meHandle ? receivePref : (RECEIVE_PREFS[handle] ?? null)),
-    [receivePref, meHandle],
-  );
-
   const pay = useCallback(
     (input: PayInput): Payment => {
-      const price = assetOf(input.payAsset).price;
-      const payIn = input.usd / price;
-      const receiveAsset = receiveAssetFor(input.to, input.payAsset);
+      const units = input.usd / assetOf(input.asset).price;
       const payment: Payment = {
         ref: nextId("p"),
         from: meHandle,
@@ -168,21 +147,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         usd: input.usd,
         note: input.note,
         audience: input.audience,
-        payAsset: input.payAsset,
-        receiveAsset,
+        asset: input.asset,
         ago: 0,
         reactions: {},
         comments: [],
         feeUsd: 0.005,
       };
-      setHoldings((h) => ({ ...h, [input.payAsset]: Math.max(0, (h[input.payAsset] ?? 0) - payIn) }));
+      setHoldings((h) => ({ ...h, [input.asset]: Math.max(0, (h[input.asset] ?? 0) - units) }));
       setPayments((list) => [payment, ...list]);
       if (input.requestId) {
         setRequests((list) => list.map((r) => (r.id === input.requestId ? { ...r, status: "paid" } : r)));
       }
       return payment;
     },
-    [receiveAssetFor, meHandle],
+    [meHandle],
   );
 
   const request = useCallback((from: string[], usdEach: number, note: string) => {
@@ -243,11 +221,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setIncoming([]);
     setOutgoing([]);
     setHoldings(
-      input.receive === "USDC"
+      input.firstAsset === "USDC"
         ? { USDC: STARTER_DOLLARS + STARTER_ASSET_USD }
-        : { USDC: STARTER_DOLLARS, [input.receive]: STARTER_ASSET_USD / assetOf(input.receive).price },
+        : { USDC: STARTER_DOLLARS, [input.firstAsset]: STARTER_ASSET_USD / assetOf(input.firstAsset).price },
     );
-    setReceivePref(input.receive);
     setDefaultAudience(input.audience);
   }, []);
 
@@ -257,7 +234,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setPayments(PAYMENTS);
     setRequests(REQUESTS);
     setHoldings(MY_HOLDINGS);
-    setReceivePref(RECEIVE_PREFS[ME] ?? null);
     setDefaultAudience("public");
     setFriends(FRIENDS);
     setIncoming(INCOMING_FRIEND_REQUESTS);
@@ -287,7 +263,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     requests,
     notices,
     holdings,
-    receivePref,
     defaultAudience,
     friends,
     incoming,
@@ -298,8 +273,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     friendState,
     areFriends,
     canSee,
-    receiveAssetFor,
-    receivePrefOf,
     signUp,
     resetToSample,
     pay,
@@ -312,7 +285,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     acceptFriend,
     ignoreFriend,
     unfriend,
-    setReceivePref,
     setDefaultAudience,
     updateMe,
     buy,

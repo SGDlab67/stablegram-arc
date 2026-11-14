@@ -18,7 +18,7 @@ import {
 } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
-const STEPS = ["intro", "signin", "name", "username", "photo", "receive", "audience", "done"] as const;
+const STEPS = ["intro", "signin", "name", "username", "photo", "first", "audience", "done"] as const;
 type Step = (typeof STEPS)[number];
 
 const WALLETS = ["MetaMask", "Phantom", "Rabby", "Coinbase Wallet"];
@@ -53,7 +53,7 @@ export default function Welcome() {
   const [color, setColor] = useState(AVATAR_COLORS[0]);
   const [photo, setPhoto] = useState<string | undefined>(undefined);
   const [photoError, setPhotoError] = useState("");
-  const [receive, setReceive] = useState(STARTER_CHOICES[0]);
+  const [firstAsset, setFirstAsset] = useState(STARTER_CHOICES[0]);
   const [audience, setAudience] = useState<Audience>("public");
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -78,14 +78,14 @@ export default function Welcome() {
     .filter((v) => !people.some((p) => p.handle === v) && !RESERVED_HANDLES.includes(v) && v !== handle)
     .slice(0, 3);
 
-  const asset = assetOf(receive);
+  const asset = assetOf(firstAsset);
   const startsWith =
-    receive === "USDC"
+    firstAsset === "USDC"
       ? `${usd(STARTER_DOLLARS + STARTER_ASSET_USD)} in dollars`
       : `${usd(STARTER_DOLLARS)} in dollars and ${usd(STARTER_ASSET_USD)} of ${asset.name}`;
 
   const create = () => {
-    signUp({ handle, first: first.trim(), last: last.trim(), color, photo, receive, audience });
+    signUp({ handle, first: first.trim(), last: last.trim(), color, photo, firstAsset, audience });
     go("done");
   };
 
@@ -135,24 +135,21 @@ export default function Welcome() {
             <Wordmark className="text-[30px]" mark />
             <div className="flex flex-1 flex-col justify-center py-6">
               <div className="rounded-[28px] bg-white p-5">
-                <p className="text-[15px] font-medium text-muted">You pay</p>
+                <p className="text-[15px] font-medium text-muted">You send @wes</p>
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-[30px] font-semibold tracking-tight">$10</span>
-                  <AssetChip pay="SOL" receive="SOL" large />
+                  <AssetChip symbol="NVDA" large />
                 </div>
                 <div className="my-3 flex items-center gap-2 text-muted">
                   <span className="h-px flex-1 bg-line" />
                   <ArrowRight size={18} />
                   <span className="h-px flex-1 bg-line" />
                 </div>
-                <p className="text-[15px] font-medium text-muted">Your friend gets</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-[30px] font-semibold tracking-tight">$10</span>
-                  <AssetChip pay="NVDA" receive="NVDA" large />
-                </div>
+                <p className="text-[15px] font-medium text-muted">Wes gets $10 of NVIDIA</p>
+                <p className="mt-1 text-[15px] leading-snug text-muted">In his own wallet. He keeps it, or sells it for dollars whenever he wants.</p>
               </div>
             </div>
-            {title("Pay friends in what you hold.", "Pay with any asset you have. They receive the one they chose, in their own wallet.")}
+            {title("Send friends a slice of your portfolio.", "Pay back $10 in NVIDIA or in bitcoin, by username. They get exactly what you sent.")}
             <PrimaryButton className="mt-7" onClick={next}>
               Get started
             </PrimaryButton>
@@ -327,24 +324,24 @@ export default function Welcome() {
           </>
         )}
 
-        {step === "receive" && (
+        {step === "first" && (
           <>
-            {title("What do you want to get paid in?", "Whatever a friend pays with, it reaches you as this. Change it any time.")}
+            {title("Pick your first stock", "Your portfolio is what you pay friends with, so it starts with a little of something.")}
             <div className="mt-5 grid grid-cols-2 gap-3">
               {STARTER_CHOICES.map((symbol) => {
                 const a = assetOf(symbol);
-                const on = receive === symbol;
+                const on = firstAsset === symbol;
                 return (
                   <button
                     key={symbol}
                     type="button"
-                    onClick={() => setReceive(symbol)}
+                    onClick={() => setFirstAsset(symbol)}
                     className={`flex items-center gap-3 rounded-[22px] bg-white p-4 text-left ${symbol === "USDC" ? "col-span-2" : ""} ${on ? "ring-2 ring-brand" : ""}`}
                   >
                     <AssetDot symbol={symbol} size={42} />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[16px] font-semibold leading-tight">{symbol === "USDC" ? "Dollars" : a.name}</span>
-                      <span className="block font-mono text-[13px] text-muted">{symbol === "USDC" ? "Stays in dollars" : usd(a.price, { cents: true })}</span>
+                      <span className="block text-[16px] font-semibold leading-tight">{symbol === "USDC" ? "Just dollars" : a.name}</span>
+                      <span className="block font-mono text-[13px] text-muted">{symbol === "USDC" ? "Pick a stock later" : usd(a.price, { cents: true })}</span>
                     </span>
                     {on && symbol === "USDC" && <Check size={20} className="shrink-0 text-brand" />}
                   </button>
@@ -401,7 +398,7 @@ export default function Welcome() {
             </span>
             <h1 className="mt-6 text-[32px] font-semibold leading-[1.08] tracking-tight">You&apos;re in, @{handle}.</h1>
             <p className="mt-3 text-[16px] leading-relaxed text-[#5b544a]">
-              You get paid in {receive === "USDC" ? "dollars" : asset.name}. We added {startsWith} to get you started (demo).
+              We added {startsWith} to get you started (demo). Send any of it to a friend by username.
             </p>
             <PrimaryButton className="mt-8" onClick={() => router.replace("/")}>
               Go to Home

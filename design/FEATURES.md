@@ -12,13 +12,13 @@ The layout and flows follow Venmo's current app (its May 2026 redesign). The nam
 
 | Screen | What it does |
 |---|---|
-| Welcome and sign-up | Sign-in choice, name, @username with a live availability check, photo or colour, what to get paid in, who can see payments. Creates a fresh account with a starter balance. |
-| Home | Search, top people, "Get paid in" and requests shortcuts, a Friends / Everyone switch, the feed. |
+| Welcome and sign-up | Sign-in choice, name, @username with a live availability check, photo or colour, a first stock, who can see payments. Creates a fresh account with a starter balance. |
+| Home | Search, top people, portfolio and requests shortcuts, a Friends / Everyone switch, the feed. |
 | Pay/Request | Person, dollar amount, note, audience, then a sheet to pick what to pay with that shows what the other person receives. Split among several people. |
 | Friends | Requests to accept, suggestions, your friends. |
-| Someone's profile | Photo, @username, what they get paid in, friends in common, add friend, pay, payments between you. |
+| Someone's profile | Photo, @username, friends in common, add friend, pay, payments between you. |
 | Payment page | The payment, its details for the two people involved, reactions, comments, quick thank-you replies. |
-| Portfolio and asset page | Total, chart, "Get paid in", holdings by group, Buy and Sell. |
+| Portfolio and asset page | Total, chart, holdings mix, holdings by group, Buy and Sell, "Send some to a friend", how much came from friends. |
 | Me, My code, Settings | Profile, QR code, requests, activity, default audience, name. |
 | Requests, Notifications | What is waiting for you and what happened. |
 
@@ -26,10 +26,10 @@ The layout and flows follow Venmo's current app (its May 2026 redesign). The nam
 
 | Tab | What is on it |
 |---|---|
-| **Home** | Search ("Find a person") with a QR button. Your top people as a row of faces. Two shortcuts: requests waiting, and "Get paid in". A Friends / Everyone switch. Then the feed. |
+| **Home** | Search ("Find a person") with a QR button. Your top people as a row of faces. Two shortcuts: your portfolio total, and requests waiting. A Friends / Everyone switch. Then the feed. |
 | **Friends** | Friend requests to accept, suggested people, and your friends list with a Pay button on each. |
 | **Pay/Request** (the big button) | Pick a person, type a dollar amount, add a note, choose who can see it, then Request or Pay. |
-| **Portfolio** | Total value, a chart, your "Get paid in" setting, then what you hold in three groups: stocks and real-world assets, crypto, cash. Under that, everything else you could hold. |
+| **Portfolio** | Total value, a chart, the mix of what you hold, then what you hold in three groups: stocks and real-world assets, crypto, cash. Under that, everything else you could hold. |
 | **Me** | Your photo, name and @username, your QR code, friend count and portfolio value, requests waiting for you, and your own activity with amounts. |
 
 ## Features
@@ -37,7 +37,8 @@ The layout and flows follow Venmo's current app (its May 2026 redesign). The nam
 **Paying**
 - Pay or request by @username. No addresses anywhere.
 - Amounts are in dollars. You choose which holding to pay with.
-- "Get paid in": set once, and every payment to you arrives as that asset. The confirm sheet tells the sender what the other person will receive.
+- **You send a slice of your portfolio.** Pick which holding to pay with: dollars, NVIDIA, bitcoin. Your friend receives exactly that, in their own wallet. No conversion.
+- **They keep it or sell it.** A received payment has "Sell for dollars"; so does every asset page.
 - Requests: ask one person or split among several. Pay, decline, remind, cancel.
 - Pay again and Say thanks, one tap from the feed.
 - QR codes: yours opens your profile; one with an amount opens a filled-in payment.
@@ -48,13 +49,13 @@ The layout and flows follow Venmo's current app (its May 2026 redesign). The nam
 - Reactions with counts, and comments.
 - Friends are mutual: one asks, the other accepts.
 - Three audiences on every payment: Public, Friends, Private. New accounts start on Public for now.
-- A chip on each payment showing what was paid and what was received, for example SOL → NVDA. This is ours, not Venmo's.
+- A chip on each payment showing which asset was sent, for example NVIDIA. This is ours, not Venmo's.
 
 **Account**
 - Sign up with a wallet you already have (MetaMask, Phantom, Rabby, Coinbase Wallet) or start without one.
 - A simple username: 3 to 20 lower-case letters, numbers or underscores.
 - A profile photo, or your initials on a colour.
-- Sign-up asks one product question: what do you want to get paid in?
+- Sign-up asks you to pick a first stock, so your portfolio starts with something to send.
 
 ## What we took from Venmo and what we changed
 

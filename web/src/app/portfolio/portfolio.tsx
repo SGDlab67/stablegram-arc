@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Check, ChevronRight, Eye, EyeOff } from "lucide-react";
+import { ChevronRight, Eye, EyeOff } from "lucide-react";
 import { useMemo, useState } from "react";
 import { RangeTabs, Sparkline } from "@/components/chart";
 import { Screen } from "@/components/shell";
-import { AssetDot, Card, Change, PreviewNote, SectionTitle, Sheet } from "@/components/ui";
+import { AssetDot, Card, Change, PreviewNote, SectionTitle } from "@/components/ui";
 import { ASSETS, RANGES, agoLabel, amountLabel, sampleSeries, usd, type Asset, type AssetGroup, type Range } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
@@ -39,9 +38,7 @@ function Row({ asset, units, hidden = false }: { asset: Asset; units?: number; h
 }
 
 export function Portfolio() {
-  const params = useSearchParams();
-  const { holdings, totalUsd, receivePref, setReceivePref, hideBalances, toggleHideBalances } = useStore();
-  const [picker, setPicker] = useState(params.get("paidin") === "1");
+  const { holdings, totalUsd, hideBalances, toggleHideBalances } = useStore();
   const [range, setRange] = useState<Range>("1D");
   const [scrub, setScrub] = useState<number | null>(null);
 
@@ -68,7 +65,6 @@ export function Portfolio() {
       : RANGES[range].words;
 
   const mix = GROUPS.map((g) => ({ ...g, value: held.filter((a) => a.group === g.id).reduce((sum, a) => sum + valueOf(a), 0) })).filter((g) => g.value > 0);
-  const pref = receivePref ? ASSETS.find((a) => a.symbol === receivePref) : null;
 
   return (
     <Screen>
@@ -129,17 +125,6 @@ export function Portfolio() {
         </div>
       )}
 
-      <div className="px-4 pt-3">
-        <button type="button" onClick={() => setPicker(true)} className="flex w-full items-center gap-3 rounded-[28px] bg-white p-5 text-left">
-          {pref ? <AssetDot symbol={pref.symbol} size={48} /> : <span className="flex h-12 w-12 items-center justify-center rounded-full bg-chip text-xl">↔</span>}
-          <span className="flex-1">
-            <span className="block text-[14px] font-medium text-muted">Get paid in</span>
-            <span className="block text-[20px] font-semibold">{pref ? pref.name : "Whatever I'm sent"}</span>
-          </span>
-          <span className="rounded-full bg-brand-soft px-4 py-2 text-[15px] font-semibold text-brand">Change</span>
-        </button>
-      </div>
-
       <div className="px-4">
         {GROUPS.map((g) => {
           const rows = held.filter((a) => a.group === g.id);
@@ -170,41 +155,6 @@ export function Portfolio() {
       </div>
       <PreviewNote />
 
-      <Sheet open={picker} onClose={() => setPicker(false)} title="Get paid in">
-        <p className="-mt-2 mb-3 text-[14px] text-muted">Whatever a friend pays with, it arrives as this.</p>
-        <div className="space-y-2">
-          <button
-            type="button"
-            onClick={() => {
-              setReceivePref(null);
-              setPicker(false);
-            }}
-            className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left ${receivePref === null ? "bg-brand-soft" : "bg-chip"}`}
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg">↔</span>
-            <span className="flex-1 text-[16px] font-semibold">Whatever I&apos;m sent</span>
-            {receivePref === null && <Check size={20} className="text-brand" />}
-          </button>
-          {ASSETS.map((a) => (
-            <button
-              key={a.symbol}
-              type="button"
-              onClick={() => {
-                setReceivePref(a.symbol);
-                setPicker(false);
-              }}
-              className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left ${receivePref === a.symbol ? "bg-brand-soft" : "bg-chip"}`}
-            >
-              <AssetDot symbol={a.symbol} size={40} />
-              <span className="flex-1">
-                <span className="block text-[16px] font-semibold">{a.name}</span>
-                <span className="block text-[13px] text-muted">{usd(a.price, { cents: true })}</span>
-              </span>
-              {receivePref === a.symbol && <Check size={20} className="text-brand" />}
-            </button>
-          ))}
-        </div>
-      </Sheet>
     </Screen>
   );
 }

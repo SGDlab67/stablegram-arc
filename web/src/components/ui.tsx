@@ -40,20 +40,13 @@ export function AssetDot({ symbol, size = 36 }: { symbol: string; size?: number 
   );
 }
 
-export function AssetChip({ pay, receive, large = false }: { pay: string; receive: string; large?: boolean }) {
-  const same = pay === receive;
-  const dot = large ? 26 : 20;
+/** The asset a payment was sent in. The receiver gets the same asset. */
+export function AssetChip({ symbol, large = false }: { symbol: string; large?: boolean }) {
+  const a = assetOf(symbol);
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full bg-chip font-medium text-ink ${large ? "px-3 py-1.5 text-base" : "px-2.5 py-1 text-sm"}`}>
-      <AssetDot symbol={pay} size={dot} />
-      {pay}
-      {!same && (
-        <>
-          <span className="text-muted">→</span>
-          <AssetDot symbol={receive} size={dot} />
-          {receive}
-        </>
-      )}
+      <AssetDot symbol={symbol} size={large ? 26 : 20} />
+      {symbol === "USDC" ? "Dollars" : a.name}
     </span>
   );
 }

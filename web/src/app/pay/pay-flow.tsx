@@ -33,7 +33,7 @@ export function PayFlow() {
   const [audience, setAudience] = useState<Audience>(defaultAudience);
   const [audienceOpen, setAudienceOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [payAsset, setPayAsset] = useState<string | null>(null);
+  const [payAsset, setPayAsset] = useState<string | null>(params.get("asset"));
   const [done, setDone] = useState<{ kind: "paid"; payment: Payment } | { kind: "requested"; each: number } | null>(null);
 
   const value = Number.parseFloat(amount || "0") || 0;
@@ -60,7 +60,8 @@ export function PayFlow() {
         .sort((a, b) => b.value - a.value),
     [holdings],
   );
-  const chosen = payAsset ?? funded.find((h) => h.value >= value)?.asset.symbol ?? null;
+  const preferred = funded.find((h) => h.asset.symbol === payAsset && h.value >= value);
+  const chosen = preferred?.asset.symbol ?? funded.find((h) => h.value >= value)?.asset.symbol ?? null;
   const firstTime = first ? !payments.some((p) => p.from === me.handle && p.to === first.handle) : false;
 
   const press = (k: string) => {
@@ -91,7 +92,7 @@ export function PayFlow() {
 
   const doPay = () => {
     if (!chosen || !first) return;
-    const payment = store.pay({ to: first.handle, usd: value, note: note.trim(), audience, payAsset: chosen, requestId });
+    const payment = store.pay({ to: first.handle, usd: value, note: note.trim(), audience, asset: chosen, requestId });
     setConfirmOpen(false);
     setDone({ kind: "paid", payment });
     setStep("done");
@@ -107,10 +108,8 @@ export function PayFlow() {
           <div className="mt-8">
             <Sentence p={done.payment} />
             <p className="mt-4 text-[15px] text-muted">
-              You paid with {done.payment.payAsset}.{" "}
-              {done.payment.payAsset !== done.payment.receiveAsset
-                ? `${personOf(done.payment.to, people).first} received it as ${done.payment.receiveAsset}.`
-                : ""}
+              You sent {amountLabel(done.payment.usd / assetOf(done.payment.asset).price, done.payment.asset)}. It&apos;s in{" "}
+              {personOf(done.payment.to, people).first}&apos;s wallet now, to keep or sell.
             </p>
             <p className="mt-1 text-[13px] text-muted">Fee {feeLabel(done.payment.feeUsd)} (estimate)</p>
           </div>
@@ -283,7 +282,7 @@ export function PayFlow() {
       </Sheet>
 
       <Sheet open={confirmOpen} onClose={() => setConfirmOpen(false)} title={first ? `Pay ${shortName(first)} ${usd(value)}` : "Pay"}>
-        <p className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-muted">Pay with</p>
+        <p className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-muted">Send from your portfolio</p>
         <div className="space-y-2">
           {funded.map((h) => {
             const enough = h.value >= value;
@@ -300,7 +299,7 @@ export function PayFlow() {
                 <span className="flex-1">
                   <span className="block text-[16px] font-semibold">{h.asset.name}</span>
                   <span className="block text-[13px] text-muted">
-                    {selected && enough ? `You pay ${amountLabel(value / h.asset.price, h.asset.symbol)}` : amountLabel(h.units, h.asset.symbol)}
+                    {selected && enough ? `You send ${amountLabel(value / h.asset.price, h.asset.symbol)}` : amountLabel(h.units, h.asset.symbol)}
                   </span>
                 </span>
                 <span className="font-mono text-[15px] font-semibold">{usd(h.value, { cents: true })}</span>
@@ -313,10 +312,11 @@ export function PayFlow() {
             <div className="flex items-center justify-between">
               <span className="text-muted">{first.first} gets</span>
               <span className="flex items-center gap-2 font-semibold">
-                <AssetDot symbol={store.receiveAssetFor(first.handle, chosen)} size={22} />
-                {assetOf(store.receiveAssetFor(first.handle, chosen)).name}
+                <AssetDot symbol={chosen} size={22} />
+                {amountLabel(value / assetOf(chosen).price, chosen)}
               </span>
             </div>
+            <p className="text-[13px] text-muted">{first.first} can keep it or sell it for dollars any time.</p>
             <div className="flex items-center justify-between">
               <span className="text-muted">Fee</span>
               <span className="font-semibold">under 1¢ (estimate)</span>

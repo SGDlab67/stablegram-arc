@@ -17,7 +17,7 @@ Nothing here has been built. Venmo's Me tab, settings and Crypto tab are describ
 | Cards tab | Left out for now. Friends takes its slot. |
 | Crypto tab | **Portfolio**: stocks, crypto and cash in one clean list |
 | Search pill "Find a person or business" with a QR button beside it | Same, "Find a person" |
-| Feed of cards: one big sentence with small inline avatars, a visual, an action row | Same, plus a chip for what was paid and what was received |
+| Feed of cards: one big sentence with small inline avatars, a visual, an action row | Same, plus a chip showing which asset was sent |
 | Audience line on each card: Public, Visible to friends, Only visible to you | Same three |
 | Action row: one black pill ("Pay again", "Say thanks", "Split"), comment, reactions with counts, add a reaction | Same |
 | Pay screen: avatar, "+" to add people, large dollar amount, note field, Request and Pay side by side | Same |
@@ -69,7 +69,7 @@ One idea per screen, a large heading, one purple button at the bottom.
 3. **Your name.** First name and last name. The feed shows "Wes K.", as Venmo does.
 4. **Pick a username.** An "@" prefix, lower case as you type, a suggestion from the name, and a live tick or "taken". Rules shown underneath: 3 to 20 letters, numbers or underscores.
 5. **Add a photo.** Camera or library, cropped to a circle, **Skip** allowed. The app shrinks it to 256 px before upload.
-6. **What do you want to get paid in?** Five large tiles with logo, name and price: four stocks and Dollars. "We'll start you with a little of it (demo). Change this any time." The choice becomes the starter grant and the "Get paid in" setting.
+6. **Pick your first stock.** Five large tiles with logo, name and price: four stocks and "Just dollars". "Your portfolio is what you pay friends with, so it starts with a little of something." The choice becomes the starter grant.
 7. **Who can see your payments?** Three rows with the same icons the feed uses: Public (selected), Friends, Private. Two grey lines: "You can change this on any payment." and "Your username is linked to a public wallet. Anyone can see its balances and payments on the blockchain."
 8. **Setting up.** A progress screen while the relayer signs the user up. On Arc with a connected wallet, one more step: **Turn on payments** (the one approval).
 9. **Find friends.** Suggested people (recent sign-ups, and anyone who has paid you), each with **Add**. **Done** goes to Home.
@@ -85,7 +85,7 @@ Returning users: **I already have an account** → connect, or use the wallet on
 Top to bottom:
 1. **Top bar.** A search pill, "Find a person", and a round QR button on its right. Both stay pinned while the feed scrolls under them.
 2. **People row.** The six people you pay most, as avatars with first names; tap one to open Pay/Request with them filled in. A new user sees suggested friends here.
-3. **Shortcut pills,** two across, in the place Venmo puts brand offers: "2 requests waiting" (only when true), "Get paid in: NVDA", "Add friends".
+3. **Shortcut pills,** two across, in the place Venmo puts brand offers: "Portfolio $367" (masked when amounts are hidden), and "2 requests waiting" when true, otherwise "Add friends".
 4. **Feed switch:** **Friends** and **Everyone**. Friends is the default once the user has a friend; before that, Everyone.
 5. **The feed** of cards (section 6). Pull to refresh. It loads 20 at a time.
 
@@ -99,7 +99,7 @@ Match `reference/venmo/01`, `02` and `05`.
 
 1. **Header line,** small and grey: an audience icon and label ("Public", "Visible to friends", "Only visible to you"), a dot, the age ("2h"). A "…" menu on the right: Copy link, View on explorer, and for the payer, Change who can see this.
 2. **The sentence,** large: [avatar] **Sabina O.** paid [avatar] **Wes K.** for **pizza and burgers**. The viewer is written "You" or "you". If the viewer is one of the two people, the amount follows the second name: "You paid Wes K. **$20** for Coffee". Nobody else ever sees an amount. A request that was paid reads the same as a payment.
-3. **Asset chip** under the sentence, ours and not Venmo's: "SOL → NVDA" with the two logos when the payment was converted, or one logo when it was not.
+3. **Asset chip** under the sentence, ours and not Venmo's: the logo and name of the asset that was sent ("NVIDIA"). The receiver got that same asset.
 4. **Visual,** when the note contains an emoji: a rounded tile in a bright colour with that emoji very large, where Venmo shows an illustration. No emoji, no tile. The colour comes from the emoji so the same emoji always looks the same.
 5. **Action row,** left to right:
    - one **black pill**, chosen by who is looking: **Pay again** on a payment you sent; **Say thanks** on one you received (it adds a 🙏 reaction and opens the comment box); **Split** on one you sent that is over $10. Nothing for strangers' payments.
@@ -113,6 +113,9 @@ Likes are open to anyone who can see the card. Comments need you to be a friend 
 ---
 
 ## 7. Pay/Request
+
+**No conversion.** The sender picks which holding to send; the receiver gets exactly that asset, and can keep it or tap **Sell for dollars** on the payment page or the asset page. A request is in dollars; whoever pays it picks the asset.
+
 
 The centre button opens a full-height sheet.
 
@@ -167,7 +170,7 @@ Clean, mostly white space. This is Venmo's Crypto tab widened to everything the 
 1. **Total value,** very large, with the change over the chosen range in dollars and percent, green or red. An eye button beside it masks every dollar figure on this tab and on Me, for when someone else is looking at the screen.
 2. A **line chart** of the total, with ranges 1D, 1W, 1M that switch the line and the change above it. Dragging along the line shows the value at that point in the big number. On day one this is today's holdings priced backwards; say "based on what you hold now" in small grey text.
 2a. **What you hold:** one bar split into stocks and real-world assets, crypto, and cash, with the percent of each. No advice and no prompts to buy.
-3. **Get paid in** card: the current choice with its logo and "Change". It opens a list of every asset, with "Whatever I'm sent" as the first option. Changing it is one transaction.
+3. **What you hold** bar (see 2a). There is no "Get paid in" setting: you receive whatever a friend sends, and sell it if you'd rather have dollars.
 4. **Holdings,** in three groups with a subtotal each:
    - **Stocks and real-world assets**
    - **Crypto**
@@ -176,7 +179,7 @@ Clean, mostly white space. This is Venmo's Crypto tab widened to everything the 
 5. **Explore,** under the holdings: everything else you could hold, each with its price and change.
 6. A grey line at the bottom: the wallet's short address and a link to the explorer.
 
-**Asset page,** as Venmo's coin page: name and logo, price, a chart with working 1D, 1W, 1M, 6M, 1Y and All ranges that can be dragged the same way, "You hold 0.0214 (about $3.02)", **Buy** and **Sell** against dollars, **Get paid in this**, a short description, and your activity in this asset. Demo assets say "Test token that follows the real price."
+**Asset page,** as Venmo's coin page: name and logo, price, a chart with working 1D, 1W, 1M, 6M, 1Y and All ranges that can be dragged the same way, "You hold 0.0214 (about $3.02)", **Buy** and **Sell** against dollars, **Send some to a friend** (opens Pay with this asset chosen), "$20 of this came from friends" when true, a short description, and your activity in this asset. Demo assets say "Test token that follows the real price."
 
 ---
 
@@ -192,7 +195,6 @@ Clean, mostly white space. This is Venmo's Crypto tab widened to everything the 
 **Settings:**
 - **Profile:** photo, name, username
 - **Privacy:** who sees future payments (Public, Friends, Private); "Make all past payments private"; who can see your friends list
-- **Get paid in**
 - **Wallet:** address, chain, explorer link, back up or export the key for a wallet made in the browser, the one-time approvals
 - **Sign out**
 
@@ -204,7 +206,7 @@ Clean, mostly white space. This is Venmo's Crypto tab widened to everything the 
 
 **`/u/[handle]`.** The photo, name, @username, **Pay or Request** (purple, full width), the friend button, a count of mutual friends, and then the payments this person shares that the viewer is allowed to see. Someone who is not signed in sees the profile and a **Sign up to pay @wes** button, and comes back here after signing up.
 
-**`/p/[ref]`.** The feed card at full size, then the details visible to the two people only (amount, what was paid, what was received, the fee in cents), an explorer link, every reaction with who gave it, and the comments with a box to add one.
+**`/p/[ref]`.** The feed card at full size, then the details visible to the two people only (amount, the asset and how much of it was sent, the fee in cents), a **Sell for dollars** button for the receiver while they still hold it, an explorer link, every reaction with who gave it, and the comments with a box to add one.
 
 ---
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { RangeTabs, Sparkline } from "@/components/chart";
@@ -14,7 +15,7 @@ const ASSET_RANGES: Range[] = ["1D", "1W", "1M", "6M", "1Y", "All"];
 
 export function AssetScreen() {
   const { symbol } = useParams<{ symbol: string }>();
-  const { holdings, payments, me, receivePref, setReceivePref, buy, sell } = useStore();
+  const { holdings, payments, me, buy, sell } = useStore();
   const [trade, setTrade] = useState<"buy" | "sell" | null>(null);
   const [range, setRange] = useState<Range>("1D");
   const [scrub, setScrub] = useState<number | null>(null);
@@ -32,8 +33,9 @@ export function AssetScreen() {
   const units = holdings[asset.symbol] ?? 0;
   const value = units * asset.price;
   const cash = holdings.USDC ?? 0;
-  const mine = payments.filter((p) => (p.from === me.handle && p.payAsset === asset.symbol) || (p.to === me.handle && p.receiveAsset === asset.symbol));
-  const isPref = receivePref === asset.symbol;
+  const mine = payments.filter((p) => (p.from === me.handle || p.to === me.handle) && p.asset === asset.symbol);
+  const fromFriends = mine.filter((p) => p.to === me.handle);
+  const fromFriendsUsd = fromFriends.reduce((sum, p) => sum + p.usd, 0);
   const isDollar = asset.symbol === "USDC";
 
   const series = sampleSeries(asset.symbol, 48, range);
@@ -89,13 +91,16 @@ export function AssetScreen() {
               </PrimaryButton>
             </div>
           )}
-          <button
-            type="button"
-            onClick={() => setReceivePref(isPref ? null : asset.symbol)}
-            className={`mt-3 flex h-12 w-full items-center justify-center rounded-full text-[16px] font-semibold ${isPref ? "bg-brand-soft text-brand" : "bg-chip text-ink"}`}
-          >
-            {isPref ? "✓ You get paid in this" : "Get paid in this"}
-          </button>
+          {units > 0 && (
+            <Link href={`/pay?asset=${asset.symbol}`} className="mt-3 flex h-12 w-full items-center justify-center rounded-full bg-chip text-[16px] font-semibold">
+              Send some to a friend
+            </Link>
+          )}
+          {fromFriends.length > 0 && (
+            <p className="mt-3 text-[14px] text-muted">
+              {usd(fromFriendsUsd, { cents: true })} of this came from friends, in {fromFriends.length} {fromFriends.length === 1 ? "payment" : "payments"}.
+            </p>
+          )}
         </Card>
 
         <Card>

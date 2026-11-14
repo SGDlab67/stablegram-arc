@@ -6,14 +6,13 @@ import { Check, Clock, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { ActivityRow, FeedCard } from "@/components/feed";
 import { BackHeader, Screen } from "@/components/shell";
-import { AssetDot, Avatar, Card, GhostButton, PrimaryButton, SectionTitle, Sheet } from "@/components/ui";
-import { assetOf } from "@/lib/data";
+import { Avatar, Card, GhostButton, PrimaryButton, SectionTitle, Sheet } from "@/components/ui";
 import { useStore } from "@/lib/store";
 
 export function ProfileScreen() {
   const params = useParams<{ handle: string }>();
   const handle = (params.handle ?? "").toLowerCase();
-  const { people, me, friends, payments, canSee, friendState, areFriends, addFriend, acceptFriend, unfriend, receivePrefOf } = useStore();
+  const { people, me, friends, payments, canSee, friendState, areFriends, addFriend, acceptFriend, unfriend } = useStore();
   const [removing, setRemoving] = useState(false);
   const person = people.find((p) => p.handle === handle);
 
@@ -27,7 +26,6 @@ export function ProfileScreen() {
   }
 
   const state = friendState(handle);
-  const pref = receivePrefOf(handle);
   const mutual = friends.filter((f) => f !== handle && areFriends(f, handle)).length;
   const between = payments.filter((p) => (p.from === me.handle && p.to === handle) || (p.from === handle && p.to === me.handle));
   const theirs = payments.filter((p) => canSee(p) && (p.from === handle || p.to === handle) && !between.includes(p)).slice(0, 5);
@@ -41,15 +39,6 @@ export function ProfileScreen() {
           {person.first} {person.last}
         </h1>
         <p className="text-[16px] text-muted">@{person.handle}</p>
-        <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[14px] font-semibold">
-          {pref ? (
-            <>
-              <AssetDot symbol={pref} size={22} /> Gets paid in {pref === "USDC" ? "dollars" : assetOf(pref).name}
-            </>
-          ) : (
-            "Gets paid in whatever you send"
-          )}
-        </div>
         {state !== "self" && mutual > 0 && (
           <p className="mt-2 text-[14px] text-muted">
             {mutual} {mutual === 1 ? "friend" : "friends"} in common

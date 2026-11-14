@@ -99,7 +99,7 @@ export function FeedCard({ p, linked = true }: { p: Payment; linked?: boolean })
       </div>
       <Sentence p={p} />
       <div className="mt-3">
-        <AssetChip pay={p.payAsset} receive={p.receiveAsset} />
+        <AssetChip symbol={p.asset} />
       </div>
       {emoji && (
         <div className="mt-4 flex h-44 items-center justify-center rounded-[22px] text-[92px] leading-none" style={{ background: tileColor(emoji) }}>
@@ -149,8 +149,7 @@ export function ActivityRow({ p }: { p: Payment }) {
       <div className="min-w-0 flex-1">
         <Sentence p={{ ...p }} size="sm" />
         <div className="mt-0.5 text-[13px] text-muted">
-          {agoLabel(p.ago)} · {p.payAsset}
-          {p.payAsset !== p.receiveAsset ? ` → ${p.receiveAsset}` : ""}
+          {agoLabel(p.ago)} · {p.asset}
         </div>
       </div>
       <span className={`font-mono text-[15px] font-semibold ${sent ? "text-ink" : "text-money"}`}>

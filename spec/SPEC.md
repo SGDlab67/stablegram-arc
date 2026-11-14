@@ -1,6 +1,6 @@
-# [NAME TBD] — Build Spec v3.1 (pay anyone, in anything)
+# stablegram — Build Spec v3.2 (send friends a slice of your portfolio)
 UBC 2026 Hackathon on Arc (build now, submit Fri Nov 20, 10:00 AM PT) and Monad Blitz Oregon (Sun Nov 15).
-Authors: Charlie Sneed, Huu Tai Le (Taihl). v3.1 written Fri Nov 13 2026 after an implementer review and a judge red-team (both in `reviews/`; v3.0 is in `reviews/v3.0/`).
+Authors: Charlie Sneed, Huu Tai Le (Taihl). v3.1 written Fri Nov 13 2026 after an implementer review and a judge red-team (both in `reviews/`). **v3.2, Sat Nov 14: no conversion.** The receiver gets exactly the asset the sender sent and can sell it for dollars any time; "Get paid in" is gone. v3.1 is in `reviews/v3.1/`.
 
 Nothing here has been compiled or run. Arc values were read from Arc's docs and its testnet RPC. One reviewer simulated the Memo design on Arc testnet with a read-only call; no transaction of ours has been mined on either chain. The spec is prose and tables with no source code.
 
@@ -26,19 +26,19 @@ Read this file, `SEED-DATA.md` and `UI-SPEC.md` in full before writing anything.
 
 ## 1. Product
 
-**One line:** pay or request by @username, in dollars. The sender pays from any asset they hold, the receiver gets the asset they picked, and it lands in their own wallet.
+**One line:** pay or request by @username, priced in dollars, and send it as any asset you hold: dollars, a stock, bitcoin. The receiver gets exactly that asset, in their own wallet, and can keep it or sell it for dollars any time.
 
-**The example that defines it:** "Send me ten bucks." "Sure, ten bucks in Solana." "I'll take it in Nvidia." One payment: the sender's Solana goes out, the receiver's Nvidia comes in.
+**The example that defines it:** "Send me ten bucks." "Sure." Charlie sends $10 of NVIDIA. Wes now holds $10 of NVIDIA. If Wes would rather have cash, he taps Sell. There is no conversion in the payment: what leaves one portfolio arrives in the other.
 
 **What it copies from Venmo, on purpose:** the feed with notes and emoji, reactions and comments, friends, pay and request from one button, a dollar keypad, QR codes, usernames, profile photos, and a privacy setting per payment.
 
 **What we do not claim.** A judge can check each of these in a minute:
 - That paying a username is new. Phantom, Krak, the Base app and Venmo do it, and Phantom's lands in the receiver's own wallet.
-- That choosing what you are paid in is new. Strike has a "receive currency" setting, and Moove and Yodl convert on the payer's side into the receiver's chosen coin.
+- That sending stock to a friend is new. Some brokers let you gift shares. We have not checked who lets you pay a friend back in stock by username; do that before the pitch.
 - That the demo stocks are real. They are test tokens with real prices, labelled "(demo)". Real tokenized stocks are not offered to US persons.
 - That "private" hides a payment on-chain. It hides it from feeds. A username is linked to a public wallet, and the app says so at sign-up.
 
-**What we say instead:** "Paying a username exists. Choosing the coin you settle in exists. We haven't found the version your friends would use: dollars on the keypad, a feed, and a stock on the list of things you can be paid in."
+**What we say instead:** "Venmo moves cash. This moves your portfolio. Pay a friend back in a slice of NVIDIA, they keep it or sell it, and it all happens in a feed your friends can see."
 
 **Words:** say "pay", "request", "portfolio". Do not say "exchange", "bank", "trade" or "deposit account".
 
@@ -52,10 +52,10 @@ Arc first. Each milestone ends with tests run, a commit, a push, a deploy, and i
 |---|---|---|
 | M0 | App live on Vercel: theme, tab bar, empty pages | Production URL returns 200 |
 | M1 | **Chain core.** Contracts in section 5 with tests, deployed to Arc testnet with development grants; `deployments.json`; assets listed and priced. Left for M4: the fuzz test, `topUp`, `sendToAddress`, the 8-decimal venue tests. | `forge test` green. The chain smoke (section 16) passes on Arc testnet. README has the addresses. |
-| M2 | **Sign up with a browser-made wallet.** Sign in, choose a username and what to get paid in, receive the grant, see the portfolio list | A script signs up three wallets through the deployed API (reusing them on later runs); each has a handle on-chain, and `/api/holdings` returns their balances |
-| M3 | **Pay.** Pick a person, dollar keypad, note, pay with any holding, receipt. Requests: create, list, pay. "My code" and pay links. | Script: A pays B $0.10 from a demo stock while B is set to dollars; B's dollars rose by exactly 0.10. B requests $0.05 and A pays it from dollars while B is set to a demo stock. Both are in `/api/feed`. |
+| M2 | **Sign up with a browser-made wallet.** Sign in, choose a username and a first stock, receive the grant, see the portfolio list | A script signs up three wallets through the deployed API (reusing them on later runs); each has a handle on-chain, and `/api/holdings` returns their balances |
+| M3 | **Pay.** Pick a person, dollar keypad, note, pay with any holding, receipt. Requests: create, list, pay. "My code" and pay links. | Script: A pays B $0.10 in a demo stock; B's balance of that stock rose by exactly `tokensForUsd(stock, 0.10)`. B requests $0.05 and A pays it in dollars; B's dollars rose by exactly 0.05. Both are in `/api/feed`. |
 | M4 | **Social, and everything Saturday skipped.** Friends, both feeds, reactions, comments, profiles and photos, audience per payment. Connected wallets (MetaMask, Rabby, Coinbase Wallet extension, Phantom). Decline, cancel, remind, split. Asset page with Buy and Sell. Camera scanner. `ensureFreshPrices`. The tests left out of M1. | Script: a Private payment is absent from Everyone and present in the payer's activity; two accounts become friends and a Friends payment shows for one and not for a stranger; a reaction and a comment appear |
-| M5 | **Arc-native.** Fee in cents on every receipt. Public notes through Arc's Memo contract. EURC, cirBTC and WETH as real holdings. Dollars to euros through Circle's Swap Kit. | Script: a receipt shows a fee under one cent; a Public note is in a mined `Memo` event; a payer holding USDC pays a user set to EURC and EURC arrives |
+| M5 | **Arc-native.** Fee in cents on every receipt. Public notes through Arc's Memo contract. EURC, cirBTC and WETH as real holdings that can be sent. Selling a received EURC or cirBTC for dollars through Circle's Swap Kit. | Script: a receipt shows a fee under one cent; a Public note is in a mined `Memo` event; A sends B EURC, B sells it through Swap Kit and USDC arrives |
 | M6 | **Streams,** kept small: one Stream on the router's `Paid` event, one webhook, the "you got paid" notification fired from it, a backfill, a README paragraph | A payment sent straight to the contract, with no call to our API, appears in the feed |
 | M7 | **Monad and the room.** A second deployment on Monad testnet. `/join` quick sign-up. `/room` big screen. | The chain smoke passes on Monad testnet. An 80-wallet load check from one IP passes. |
 | M8 | **No wallet, no seed phrase.** Sign in with email through Circle Wallets. Pay someone who has not signed up, by link. | A script-created email wallet completes M3's flow |
@@ -63,7 +63,7 @@ Arc first. Each milestone ends with tests run, a commit, a push, a deploy, and i
 | M10 | README final, Devpost answers, video, deck | Section 15 complete |
 
 **Never cut:** M1 to M4, and from M5 the fee display and the Memo notes.
-**Cut order after that, from the top:** M9 → M6 → M8 → the Swap Kit part of M5. Email sign-in and one real conversion are what the Consumer and Arc judges are told to look for; they go last.
+**Cut order after that, from the top:** M9 → M6 → M8 → the Swap Kit part of M5. Email sign-in and one Circle tool in the money path are what the Consumer and Arc judges are told to look for; they go last.
 
 Dates and who does what are in RUNBOOK.
 
@@ -119,49 +119,44 @@ Names, arguments, errors and events are in Appendix A. Every contract with roles
 The username registry. One handle per address and one address per handle.
 - A handle is 3 to 20 characters from `a–z`, `0–9` and `_`. The contract checks every byte.
 - `claim(handle)` by the user. `claimFor(account, handle)` by `REGISTRAR`; it respects the reserved list.
-- `setReceiveToken(token)` by the user sets "Get paid in". `setReceiveTokenFor(account, token)` by `REGISTRAR`, used once at sign-up. Zero means "whatever I'm sent". The contract does not validate the address; the router falls back when it cannot deliver that token.
 - `release()` frees the caller's handle; a released handle cannot be claimed for 30 days. The app has no button for it.
 - `reserve(handles[])` by admin.
-- `isAvailable` is false for an invalid, reserved, taken or cooling-down handle. `receiveTokenOf` survives `release`.
+- `isAvailable` is false for an invalid, reserved, taken or cooling-down handle.
 
 ### 5.2 `DemoAsset`
 One ERC-20 per demo asset. Name, symbol and decimals are constructor arguments; every deployed asset uses 18. Only the venue mints and burns. `allowance(owner, spender)` returns the maximum when `trusted[spender]` is true and the stored value otherwise; `setTrusted(spender, bool)` is admin-only. The deploy script trusts the router and the venue on every DemoAsset after the router exists.
 
 ### 5.3 `DemoVenue`
-The stand-in for a DEX. It prices assets in dollars and converts between the dollar token and demo assets.
+The stand-in for a DEX. It prices every asset in dollars (so a payment can be typed in dollars) and lets a holder buy or sell demo assets against the dollar token. Payments never go through it.
 - `listAsset(token, convertible, priceUsd6)` by admin. Demo assets are convertible. Arc's real tokens (EURC, cirBTC, WETH) are listed as priced only. **The dollar token is never listed** and is always exactly one dollar.
 - `setPrices(tokens[], pricesUsd6[])` by `PRICE_SETTER`. A price is the dollar value of one whole token with 6 decimals, stored with the time it was set.
 - `buy(token, dollarsIn, to)` pulls the dollar token from the caller and mints the asset to `to`. `sell(token, amount, to)` burns the asset from the caller and pays dollars to `to` from the reserve, or reverts `ReserveEmpty`.
 - Formulas, with OpenZeppelin `Math.mulDiv`: `tokensForUsd = ceil(usd6 × 10^dec / price6)`; `quoteBuy = floor(dollars6 × 10^dec / price6)`; `quoteSell = floor(amount × price6 / 10^dec)`.
 - A price older than `maxAge` (24 hours on testnet) makes `buy`, `sell`, `quoteBuy`, `quoteSell` and `tokensForUsd` revert `StalePrice`. `assetInfo` never reverts.
 - Every demo asset in existence was bought with dollars at the price of the moment, sign-up grants included. A price rise can still leave the reserve short; admin can add to it, and the README says so.
-- The router uses three venue functions: a quote, `buy` and `sell`. A venue backed by a real DEX would offer the same three. That adapter is described in the README, not built.
+- The router reads one venue function, `tokensForUsd`. The asset page uses `buy` and `sell`. A venue backed by a real DEX would offer the same three. That adapter is described in the README, not built.
 
 ### 5.4 `PayRouter`
-The only contract a user calls to pay. Constructor: `handles`, `venue`, `dollar`; it approves the venue for the dollar token at the maximum.
+The only contract a user calls to pay. Constructor: `handles`, `venue`, `dollar`. It moves tokens straight from sender to receiver and never converts.
 
-**`pay(handle, usdAmount6, payToken, maxPayIn, ref)`**
+**`pay(handle, usdAmount6, token, maxAmount, ref)`**
 1. Resolve the handle. Revert on an unknown handle, a payment to yourself, a zero amount, or a `ref` that is zero or already used (`RefUsed`).
-2. If `payToken` is the dollar token, `payIn = usdAmount6` and no price is read. Otherwise `payToken` must be listed (`NotListed`) and `payIn = venue.tokensForUsd(payToken, usdAmount6)`. Revert `MaxPayInExceeded` if `payIn > maxPayIn`.
-3. `receiveToken` is the recipient's "Get paid in". If that is zero, or is neither the dollar token nor listed, `receiveToken = payToken`.
-4. **Same token:** `transferFrom(sender, recipient, payIn)`. `receiveOut = payIn`, `converted = false`.
-5. **Different tokens, each either the dollar token or a convertible asset** (`converted = true`):
-   - dollar to asset: pull `payIn` to the router, then `venue.buy(receiveToken, payIn, recipient)`
-   - asset to dollar: pull, then `venue.sell(payToken, payIn, recipient)`; the recipient gets all the proceeds
-   - asset to asset: pull, `d = venue.sell(payToken, payIn, router)`, then `venue.buy(receiveToken, d, recipient)`
-6. **Anything else** (either side is priced only): as step 4, and the event reports `receiveToken = payToken`, `converted = false`.
+2. If `token` is the dollar token, `amount = usdAmount6` and no price is read. Otherwise `token` must be listed (`NotListed`) and `amount = venue.tokensForUsd(token, usdAmount6)`, which reverts on a stale price. Revert `MaxAmountExceeded` if `amount > maxAmount`.
+3. `transferFrom(sender, recipient, amount)`. The recipient gets exactly `amount` of `token`.
 
-**`send(handle, token, amount, ref)`** and **`sendToAddress(to, token, amount, ref)`** move an exact amount with no conversion. They accept the dollar token or a listed token only. Their `usdAmount6` is the amount's value at the venue's price, or 0 when that price is stale; they never revert on a stale price. The app always uses `pay`; `send` is for scripts and later features.
+**`send(handle, token, amount, ref)`** and **`sendToAddress(to, token, amount, ref)`** move an exact token amount. Their `usdAmount6` is the amount's value at the venue's price, or 0 when that price is stale; they never revert on a stale price. The app uses `pay`; `send` is for "send all of it" and for scripts.
 
-Every path emits `Paid`, with `from`, `to` and `ref` indexed. The router never keeps a balance: tests assert its balance of every token is zero after every call.
+Every path emits `Paid`, with `from`, `to` and `ref` indexed. The router never holds a balance: tests assert it is zero after every call.
 
-**The six cases the tests cover:** dollar same-token; asset same-token; dollar to asset; asset to dollar; asset to asset; no route, once with a priced-only pay token and once with a priced-only receive token.
+**Cases the tests cover:** dollar; demo asset; a priced-only real token (EURC); stale price reverts `pay` but not `send`; `maxAmount`.
 
-Requests are not on-chain. A request lives in the database, and paying it is an ordinary `pay` whose `ref` the server links to the request.
+**Note on the repo.** Taihl's `Stablegram.sendToken` already sends an exact amount to a username with a note. `pay` is the same move, typed in dollars. Merge the two rather than keeping both.
+
+Requests are not on-chain. A request lives in the database, and paying it is an ordinary `pay` whose `ref` the server links to the request. The payer chooses which asset to pay a request in.
 
 ### 5.5 `Onboarder`
 Constructor: `admin`, `handles`, `venue`, `dollar`; it approves the venue for the dollar token at the maximum.
-- `onboard(account, handle, firstAsset, setReceive)` by `RELAYER`, once per account. In one transaction: claims the handle for the account; if `firstAsset` is the dollar token, transfers the dollar grant plus the asset grant in dollars; otherwise transfers the dollar grant and buys the asset grant of `firstAsset` from the venue for the account; if `setReceive`, sets the account's "Get paid in" to `firstAsset`; on Monad, sends the gas grant from its own MON float.
+- `onboard(account, handle, firstAsset)` by `RELAYER`, once per account. In one transaction: claims the handle for the account; if `firstAsset` is the dollar token, transfers the dollar grant plus the asset grant in dollars; otherwise transfers the dollar grant and buys the asset grant of `firstAsset` from the venue for the account; on Monad, sends the gas grant from its own MON float.
 - `HandleTaken` and the other Handles errors bubble up unchanged.
 - `topUp(account)` by `RELAYER`: one more gas grant on Monad, once per account per hour (M4).
 - `setAmounts(dollarGrant, assetGrantUsd, gasGrantWei)` by admin. Development deployments use 0.50 and 0.50; SEED-DATA §4 has the amounts for the final one.
@@ -172,14 +167,14 @@ ERC-20, 6 decimals, `MINTER` mints. The same `trusted` allowance as DemoAsset; t
 
 ### 5.7 Approvals
 - Demo assets and the Monad test dollar never need one.
-- **On Arc, a user approves USDC twice, in one transaction:** a call to Multicall3From (`aggregate3`, no failures allowed) containing `approve(router, max)` and `approve(venue, max)`. The router needs it to pay; the venue needs it for Buy on the asset page. A browser-made wallet sends it silently right after `onboard`. A connected wallet sees one "Turn on payments" step.
-- EURC, cirBTC and WETH each need one approval of the router the first time they are sent.
+- **On Arc, a user approves USDC twice, in one transaction:** a call to Multicall3From (`aggregate3`, no failures allowed) containing `approve(router, max)` and `approve(venue, max)`. The router needs it to send USDC; the venue needs it for Buy on the asset page. A browser-made wallet sends it silently right after `onboard`. A connected wallet sees one "Turn on payments" step.
+- EURC, cirBTC and WETH each need one approval of the router the first time they are sent, and of Swap Kit's contract the first time they are sold.
 
 ### 5.8 Deploy
 One script per chain run, broadcasting with `ADMIN_PRIVATE_KEY`. Order: TestUSD (Monad only) → Handles → DemoVenue → one DemoAsset per row of SEED-DATA §1 → PayRouter → Onboarder. Then: role grants (Appendix A), `setTrusted` on every DemoAsset and on TestUSD, list and price every asset, list Arc's real tokens as priced only, reserve handles, `setAmounts`, fund the Onboarder and the reserve. **Before a redeploy, the script calls `withdrawReserve` and `withdrawToken` on the previous deployment** so testnet USDC is not stranded. It writes `web/src/config/deployments.json` and copies ABIs to `web/src/config/abi/`. Never use the default Anvil keys on Arc: the first test account is on Arc's blocklist test list.
 
 ### 5.9 Tests (minimum)
-Handle rules byte by byte; uniqueness; reserved names; release and cooldown; `claimFor` and `setReceiveTokenFor` only by the registrar. Venue: buy and sell rounding at 6 and 18 decimals, stale price, empty reserve. Router: the six cases with exact balances for both parties and a zero router balance; `maxPayIn`; unknown handle; self-payment; `RefUsed`; `send`. Onboarder: once only, handle taken, the dollar-token branch, float accounting. Trusted-spender allowance. Left for M4: 8-decimal venue tests, `sendToAddress`, `topUp`, and a fuzz test on `pay` asserting the recipient never receives less than the dollar amount minus one unit of rounding.
+Handle rules byte by byte; uniqueness; reserved names; release and cooldown; `claimFor` only by the registrar. Venue: buy and sell rounding at 6 and 18 decimals, stale price, empty reserve. Router: the cases in 5.4 with exact balances for both parties and a zero router balance; `maxAmount`; unknown handle; self-payment; `RefUsed`; `send`. Onboarder: once only, handle taken, the dollar-token branch, float accounting. Trusted-spender allowance. Left for M4: 8-decimal venue tests, `sendToAddress`, `topUp`, and a fuzz test on `pay` asserting the recipient's gain equals the sender's loss of that token, exactly.
 
 ---
 
@@ -213,8 +208,8 @@ One helper sends every relayer transaction, one at a time per key.
 
 ### 6.5 Sending a payment
 1. The app posts the draft: recipient, dollars, note, the payer's audience choice, a fresh random `ref`, and the request id if it is paying one. The server stores it and returns `{ ok, audience, firstTime }`, where `audience` is the effective one (section 10). A request can have one open draft at a time.
-2. The app shows the confirm sheet from `router.quote`, read from the chain.
-3. When the user taps Pay, the app reads the quote again, sets `maxPayIn` to `payIn` plus one percent, simulates `pay`, then sends. On `MaxPayInExceeded` the sheet shows "The price moved" with the new amount and waits for another tap.
+2. The app shows the confirm sheet: the holdings that cover the amount, and for the chosen one the token amount from `router.quote`, read from the chain. "Wes gets 0.0619 NVDA."
+3. When the user taps Pay, the app reads the quote again, sets `maxAmount` to `amount` plus one percent, simulates `pay`, then sends. On `MaxAmountExceeded` the sheet shows "The price moved" with the new amount and waits for another tap.
 4. The app saves `{ ref, hash }` in localStorage the moment it has the hash, posts it to confirm, and re-posts any unconfirmed ones on every load.
 5. **Confirm.** The server fetches the receipt and finds the `Paid` log **by its emitter, the router's address**, not by the transaction's `to` (a Public payment on Arc is sent to the Memo contract). It requires a successful receipt and that `ref`, `from` (the session address), `to` and `usdAmount6` match the draft. No receipt yet returns `{ ok, status: "pending" }` and the app retries each second for 30 s, then shows "Still pending". A reverted receipt marks the draft failed. Confirm is idempotent.
 6. Drafts are never deleted on a timer. Feeds ignore them. A read of a draft older than 30 s looks on-chain for a `Paid` log with that `ref` and confirms it if found. `/admin` can purge drafts older than a day.
@@ -225,12 +220,12 @@ One helper sends every relayer transaction, one at a time per key.
 
 ## 7. Pages outside UI-SPEC
 
-**`/join`** (M7). The room's QR opens it. One screen: a suggested username already filled in and editable, and a row of tiles, "Get paid in". One tap on a tile makes a wallet, signs in, signs up with `setReceive` true, and lands on Home. Display name is the username; photo and the rest can be added later.
+**`/join`** (M7). The room's QR opens it. One screen: a suggested username already filled in and editable, and a row of tiles, "Pick your first stock". One tap on a tile makes a wallet, signs in, signs up, and lands on Home. Display name is the username; photo and the rest can be added later.
 
 **`/room`** (M7). For a projector; it never needs to be left during a demo.
 - Left: a large QR and how many have joined. An admin control swaps it between the join code and a pay-me code for one username.
-- Centre: the live feed in large type. On each row **the asset chip is the largest text** ("dBTC → dNVDA"). A payment by the presenter's username pins to the top for 20 seconds.
-- Right: counters (people, payments, dollars moved, median confirmation time) and a chart of what the room chose to be paid in. No individual amounts.
+- Centre: the live feed in large type. On each row **the asset chip is the largest text** ("dNVDA"). A payment by the presenter's username pins to the top for 20 seconds.
+- Right: counters (people, payments, dollars moved, median confirmation time) and a chart of which assets the room is sending each other. No individual amounts.
 
 **`/admin`.** Passcode, compared in constant time. Balances of each relayer and the Onboarder; the age of on-chain prices and a "Push prices" button; pause sign-ups; the per-IP and global caps; each relayer's latest and pending counts; last 20 server errors; purge old drafts; the `/room` QR control.
 
@@ -247,7 +242,7 @@ Success is `{ ok: true, … }`; failure is `{ ok: false, error: { code, message 
 | `POST /api/auth/nonce`, `POST /api/auth/verify`, `POST /api/auth/logout`, `GET /api/auth/me` | B | Section 6.2 |
 | `GET /api/handles/check?h=` | B | Rules, reserved list, on-chain `isAvailable` |
 | `POST /api/signup` | A | Section 6.3 |
-| `PATCH /api/me`, `POST /api/me/avatar`, `GET /api/avatar/[handle]` | B | Names, default audience, photo. `PATCH` with `refreshReceiveToken` re-reads `receiveTokenOf` from the chain into the user row. |
+| `PATCH /api/me`, `POST /api/me/avatar`, `GET /api/avatar/[handle]` | B | Names, default audience, photo. |
 | `GET /api/users/search?q=`, `GET /api/users/[handle]` | B | A recipient must have a user row |
 | `GET /api/friends`, `POST /api/friends`, `POST /api/friends/accept`, `DELETE /api/friends` | B | Friends, incoming requests, suggestions |
 | `POST /api/payments` (draft) | B | Section 6.5 step 1 |
@@ -259,7 +254,7 @@ Success is `{ ok: true, … }`; failure is `{ ok: false, error: { code, message 
 | `GET /api/notifications` | B | |
 | `GET /api/holdings?address=`, `GET /api/portfolio/history?range=` | A | One multicall and `assetInfo`; never reverts on a stale price |
 | `GET /api/prices`, `GET /api/assets/[symbol]/chart` | A | Section 11 |
-| `GET /api/quote?payToken=&usd=&to=` | A | The router's `quote`; cached two seconds at the CDN |
+| `GET /api/quote?token=&usd=&to=` | A | The router's `quote`; cached two seconds at the CDN |
 | `GET /api/room` | A | Cached one second at the CDN |
 | `POST /api/streams` | A | M6 |
 | `POST /api/admin/{status,push-prices,pause-signups,set-caps,purge-drafts,room-qr}` | A | Passcode header |
@@ -304,7 +299,7 @@ Until M6 a payment enters the feed when the payer's app posts its hash and the s
 1. **Fee in cents** on the confirm sheet and every receipt, from the receipt. The Me page totals the user's fees.
 2. **Notes through Memo.** When the effective audience is Public, the app calls Arc's Memo contract with the router as the target, the `pay` call as the data, `ref` as the memo id, and exactly the UTF-8 bytes of the stored note as the memo. Arc runs the inner call with the user as the sender, so the router and the user's approval behave the same; a reviewer's simulation on Arc testnet confirmed that, and the first mined one is a deploy check. For Friends and Private the app calls the router directly. If `eth_getCode` of the user's address is not empty, it skips Memo.
 3. **Real Arc assets.** EURC, cirBTC and WETH show in the portfolio when held and are paid with the same dollar keypad. They are priced only: paying with one delivers that same token.
-4. **Dollars to euros, for real.** The Arc demo is: "I pay ten dollars, my friend is set to euros and receives EURC." When the recipient is set to EURC or cirBTC and the payer holds USDC, the app first swaps USDC to that token with Circle's Swap Kit (which works on Arc testnet for USDC, EURC and cirBTC), then calls `pay` with it. The confirm sheet shows it as two steps. Arc's docs say Swap Kit accepts a recipient address; we still swap to the payer and then pay, so that every payment has a `Paid` event.
+4. **Sell for dollars, for real.** A received EURC or cirBTC has a "Sell for dollars" button that swaps it to USDC with Circle's Swap Kit (which works on Arc testnet for USDC, EURC and cirBTC). Demo assets sell through the venue. The Arc demo: "Taihl sent me ten dollars of euros. One tap, and it's dollars." This is the Circle tool in the money path.
 5. **Later (M9):** USDC from other chains with the Bridge or Unified Balance kit.
 
 ---
@@ -322,7 +317,7 @@ In UI-SPEC sections 1 to 3. Layout and flows follow Venmo's current app; the nam
 
 ## 15. README (graded)
 
-In this order: what it is, in three sentences; live URL; how to run; **contract addresses per chain with explorer links**; architecture with a diagram and a paragraph per contract; the payment path, step by step, for the Solana-to-Nvidia example; **how it uses Arc**, under the hackathon guide's own four headings (payments and FX with USDC as gas; Circle tools used; simple fees and balances; what comes next); what is real and what is mocked, as a table (wallets, transfers and prices real; demo assets and the venue mocked; the euro conversion real); the three venue functions and what an adapter for a real DEX needs; **risks and limits** (irreversible payments and wrong recipients; username impersonation and the reserved list; the relayer's powers over prices and sign-up; a username is linked to a public wallet, so balances and amounts are readable on-chain; tokenized stocks are freely transferable but may not be offered to US persons, and that duty would be ours; a conversion spread could make the operator a money transmitter, so it is not switched on; paying with an appreciated asset is a taxable sale in the US; no moderation); a role table; measured fees; Streams; Monad; data sources; what is next.
+In this order: what it is, in three sentences; live URL; how to run; **contract addresses per chain with explorer links**; architecture with a diagram and a paragraph per contract; the payment path, step by step, for the $10-of-NVIDIA example; **how it uses Arc**, under the hackathon guide's own four headings (payments and FX with USDC as gas; Circle tools used; simple fees and balances; what comes next); what is real and what is mocked, as a table (wallets, transfers and prices real; demo assets and the venue mocked; selling EURC through Swap Kit real); the three venue functions and what an adapter for a real DEX needs; **risks and limits** (irreversible payments and wrong recipients; username impersonation and the reserved list; the relayer's powers over prices and sign-up; a username is linked to a public wallet, so balances and amounts are readable on-chain; tokenized stocks are freely transferable but may not be offered to US persons, and that duty would be ours; a spread on Buy and Sell could make the operator a money transmitter, so it is not switched on; sending an appreciated stock to a friend may be a gift or a sale for tax purposes; paying with an appreciated asset is a taxable sale in the US; no moderation); a role table; measured fees; Streams; Monad; data sources; what is next.
 
 ---
 
@@ -330,7 +325,7 @@ In this order: what it is, in three sentences; live URL; how to run; **contract 
 
 - **Foundry tests** as in 5.9.
 - **Scripts keep their wallets** in a gitignored `scripts/.wallets.json` and reuse them; a wallet already onboarded is skipped. On Arc a script run should cost cents, not a faucet claim.
-- **Chain smoke** (contracts only, both chains): three wallets are onboarded with handles; on Arc each sends the two-approval transaction; A pays B $0.10 from dollars while B has no preference; B sets "Get paid in" to a demo stock; A pays B $0.10 from a different demo asset; B pays C with `send`. **Assertions:** recipients' changes are exact. For the sender of a dollar payment on Arc, `before − after` is at least the amount and at most the amount plus 0.01, because the fee leaves the same balance; compare 6-decimal `balanceOf` only. The router's token balances and its native balance are zero. Prints pass or fail, gas per call, and on Arc the fee in dollars.
+- **Chain smoke** (contracts only, both chains): three wallets are onboarded with handles; on Arc each sends the two-approval transaction; A pays B $0.10 in dollars; A pays B $0.10 in a demo stock; B pays C with `send`; B sells the stock at the venue. **Assertions:** recipients' changes are exact. For the sender of a dollar payment on Arc, `before − after` is at least the amount and at most the amount plus 0.01, because the fee leaves the same balance; compare 6-decimal `balanceOf` only. The router's token balances and its native balance are zero. Prints pass or fail, gas per call, and on Arc the fee in dollars.
 - **API smoke:** the same through the deployed routes, with a request, a Private payment, a reaction and a comment.
 - **Load check before a room (Monad):** the API smoke with 80 wallets from one IP, with the passcode header, at the venue.
 
@@ -359,11 +354,11 @@ In this order: what it is, in three sentences; live URL; how to run; **contract 
 
 | Contract | Writes (role) | Views | Events | Errors |
 |---|---|---|---|---|
-| Handles | `claim(handle)`; `claimFor(account, handle)` (REGISTRAR); `release()`; `setReceiveToken(token)`; `setReceiveTokenFor(account, token)` (REGISTRAR); `reserve(handles[])` (admin) | `addressOf(handle) → address`; `handleOf(account) → string`; `receiveTokenOf(account) → address`; `isAvailable(handle) → bool`; `isReserved(handle) → bool` | `HandleClaimed(account, handle)`; `HandleReleased(account, handle)`; `ReceiveTokenSet(account, token)`; `HandlesReserved(handles)` | `InvalidHandle`, `HandleTaken`, `HandleReserved`, `HandleCoolingDown`, `AlreadyHasHandle`, `NoHandle` |
+| Handles | `claim(handle)`; `claimFor(account, handle)` (REGISTRAR); `release()`; `reserve(handles[])` (admin) | `addressOf(handle) → address`; `handleOf(account) → string`; `isAvailable(handle) → bool`; `isReserved(handle) → bool` | `HandleClaimed(account, handle)`; `HandleReleased(account, handle)`; `HandlesReserved(handles)` | `InvalidHandle`, `HandleTaken`, `HandleReserved`, `HandleCoolingDown`, `AlreadyHasHandle`, `NoHandle` |
 | DemoAsset | `mint(to, amount)`, `burn(from, amount)` (VENUE); `setTrusted(spender, bool)` (admin) | ERC-20; `trusted(spender) → bool` | `TrustedSet(spender, trusted)` | |
 | DemoVenue | `listAsset(token, convertible, priceUsd6)` (admin); `setPrices(tokens[], pricesUsd6[])` (PRICE_SETTER); `setMaxAge(seconds)` (admin); `buy(token, dollarsIn, to) → out`; `sell(token, amount, to) → dollarsOut`; `fundReserve(amount)`; `withdrawReserve(amount)` (admin) | `dollar()`; `assets() → address[]`; `assetInfo(token) → (listed, convertible, decimals, priceUsd6, updatedAt)`; `maxAge()`; `quoteBuy(token, dollarsIn)`; `quoteSell(token, amount)`; `tokensForUsd(token, usdAmount6)` | `AssetListed(token, convertible)`; `PricesSet(tokens, prices)`; `MaxAgeSet(seconds)`; `Bought(buyer, token, dollarsIn, out, to)`; `Sold(seller, token, amount, dollarsOut, to)`; `ReserveFunded(amount)`; `ReserveWithdrawn(amount)` | `NotListed`, `NotConvertible`, `StalePrice`, `ReserveEmpty`, `ZeroAmount`, `LengthMismatch` |
-| PayRouter | `pay(handle, usdAmount6, payToken, maxPayIn, ref) → paymentId`; `send(handle, token, amount, ref) → paymentId`; `sendToAddress(to, token, amount, ref) → paymentId` | `quote(handle, usdAmount6, payToken) → (to, payIn, receiveToken, receiveOut, converted)` (reverts on an unknown handle); `usedRef(ref) → bool`; `paymentCount()`; `handles()`; `venue()`; `dollar()` | `Paid(paymentId, from indexed, to indexed, ref indexed, usdAmount6, payToken, payIn, receiveToken, receiveOut, converted)` | `UnknownHandle`, `SelfPayment`, `ZeroAmount`, `MaxPayInExceeded`, `RefUsed`, `NotListed` |
-| Onboarder | `onboard(account, handle, firstAsset, setReceive)` (RELAYER); `topUp(account)` (RELAYER); `setAmounts(dollarGrant, assetGrantUsd, gasGrantWei)` (admin); `withdrawNative(amount)`, `withdrawToken(token, amount)` (admin); accepts native transfers | `onboarded(account) → bool`; `count()`; `dollarGrant()`; `assetGrantUsd()`; `gasGrantWei()`; `lastTopUp(account)` | `Onboarded(account, handle, firstAsset)`; `ToppedUp(account, amount)`; `AmountsSet(dollarGrant, assetGrantUsd, gasGrantWei)` | `AlreadyOnboarded`, `FloatEmpty`, `TopUpTooSoon` |
+| PayRouter | `pay(handle, usdAmount6, token, maxAmount, ref) → paymentId`; `send(handle, token, amount, ref) → paymentId`; `sendToAddress(to, token, amount, ref) → paymentId` | `quote(handle, usdAmount6, token) → (to, amount)` (reverts on an unknown handle); `usedRef(ref) → bool`; `paymentCount()`; `handles()`; `venue()`; `dollar()` | `Paid(paymentId, from indexed, to indexed, ref indexed, usdAmount6, token, amount)` | `UnknownHandle`, `SelfPayment`, `ZeroAmount`, `MaxAmountExceeded`, `RefUsed`, `NotListed` |
+| Onboarder | `onboard(account, handle, firstAsset)` (RELAYER); `topUp(account)` (RELAYER); `setAmounts(dollarGrant, assetGrantUsd, gasGrantWei)` (admin); `withdrawNative(amount)`, `withdrawToken(token, amount)` (admin); accepts native transfers | `onboarded(account) → bool`; `count()`; `dollarGrant()`; `assetGrantUsd()`; `gasGrantWei()`; `lastTopUp(account)` | `Onboarded(account, handle, firstAsset)`; `ToppedUp(account, amount)`; `AmountsSet(dollarGrant, assetGrantUsd, gasGrantWei)` | `AlreadyOnboarded`, `FloatEmpty`, `TopUpTooSoon` |
 | TestUSD (Monad) | `mint(to, amount)` (MINTER); `setTrusted(spender, bool)` (admin) | ERC-20, 6 decimals; `trusted(spender)` | `TrustedSet(spender, trusted)` | |
 
 **Role grants and funding in the deploy script**
@@ -383,8 +378,8 @@ In this order: what it is, in three sentences; live URL; how to run; **contract 
 ## Appendix B. Database and shapes
 
 **Tables**
-- `users`: address (key), handle (unique), first_name, last_name, avatar (256 px JPEG bytes, nullable), default_audience, receive_token, created_at
-- `payments`: id (serial key), ref (unique), payment_id (unique, null until confirmed), tx_hash, block_number, log_index, from_address, to_address, usd_amount, pay_token, pay_in, receive_token, receive_out, converted, note, audience, status (`draft` | `pending` | `confirmed` | `failed`), request_id, fee_native, fee_usd, confirm_ms, created_at, confirmed_at
+- `users`: address (key), handle (unique), first_name, last_name, avatar (256 px JPEG bytes, nullable), default_audience, created_at
+- `payments`: id (serial key), ref (unique), payment_id (unique, null until confirmed), tx_hash, block_number, log_index, from_address, to_address, usd_amount, token, amount, note, audience, status (`draft` | `pending` | `confirmed` | `failed`), request_id, fee_native, fee_usd, confirm_ms, created_at, confirmed_at
 - `requests`: id, split_id, requester, payer, usd_amount, note, audience, status (`open` | `paid` | `declined` | `cancelled`), payment_ref, reminded_at, created_at
 - `reactions`: payment_id, address, emoji, created_at; key (payment_id, address)
 - `comments`: id, payment_id, address, text, created_at
@@ -396,19 +391,19 @@ In this order: what it is, in three sentences; live URL; how to run; **contract 
 
 **Shapes**
 - Person: `handle`, `firstName`, `lastInitial`, `hasAvatar`
-- Feed item: `ref`, `from` and `to` (Person), `note`, `audience`, `payToken` and `receiveToken` (each `address`, `symbol`), `converted`, `createdAt`, `status`, `txHash`, `reactions[]` (`emoji`, `count`, `mine`), `commentCount`, `requestId`, and for the two people only: `usdAmount`, `payIn`, `receiveOut`, `feeUsd`
+- Feed item: `ref`, `from` and `to` (Person), `note`, `audience`, `token` (`address`, `symbol`), `createdAt`, `status`, `txHash`, `reactions[]` (`emoji`, `count`, `mine`), `commentCount`, `requestId`, and for the two people only: `usdAmount`, `amount`, `feeUsd`
 - `GET /api/feed` → `{ ok, items[], nextCursor }`
 - `GET /api/auth/me` → `{ ok, signedIn, address, user | null, needsApproval, openRequests, unread }`
-- `POST /api/signup` body `{ handle, firstName, lastName, firstAsset, setReceive, defaultAudience }` → `{ ok, hash, needsApproval }`
+- `POST /api/signup` body `{ handle, firstName, lastName, firstAsset, defaultAudience }` → `{ ok, hash, needsApproval }`
 - `POST /api/payments` body `{ ref, toHandle, usdAmount, note, audience, requestId? }` → `{ ok, audience, firstTime }`
 - `POST /api/payments/[ref]/confirm` body `{ hash, confirmMs }` → `{ ok, status, feeUsd }`; `confirmMs` is the time the app measured from sending to the receipt, shown as the median on `/room`
 - `GET /api/payments/[ref]` → `{ ok, item, comments[] }`, each comment `id`, `person`, `text`, `createdAt`
-- `GET /api/quote` → `{ ok, to, payIn, receiveToken, receiveOut, converted, priceAgeSeconds }`
-- `GET /api/holdings` → `{ ok, totalUsd, change24hUsd, receiveToken, assets[] }`, each asset `symbol`, `name`, `address`, `decimals`, `amount`, `usd`, `priceUsd`, `change24h`, `demo`, `group` (`stocks` | `crypto` | `cash`)
+- `GET /api/quote` → `{ ok, to, amount, priceAgeSeconds }`
+- `GET /api/holdings` → `{ ok, totalUsd, change24hUsd, assets[] }`, each asset also has `fromFriendsUsd`,, each asset `symbol`, `name`, `address`, `decimals`, `amount`, `usd`, `priceUsd`, `change24h`, `demo`, `group` (`stocks` | `crypto` | `cash`)
 - `GET /api/users/[handle]` → `{ ok, person, friendship: "none" | "requested" | "incoming" | "friends", mutualFriends, payments[] }`
 - `GET /api/friends` → `{ ok, friends[], incoming[], suggested[] }`
 - `POST /api/requests` body `{ people: [{ handle, usdAmount }], note, audience }` → `{ ok, ids[], splitId }`
 - `GET /api/requests` → `{ ok, incoming[], outgoing[] }`
-- `GET /api/room` → `{ ok, joined, items[], pinned | null, counters { people, payments, usdMoved, medianConfirmMs }, receiveMix[], qr { mode, handle | null } }`
+- `GET /api/room` → `{ ok, joined, items[], pinned | null, counters { people, payments, usdMoved, medianConfirmMs }, assetMix[], qr { mode, handle | null } }`
 
 Explorer links are `{explorer}/tx/{hash}` and `{explorer}/address/{address}` on both chains.

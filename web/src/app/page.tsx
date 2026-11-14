@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { FeedCard } from "@/components/feed";
 import { InstallHint } from "@/components/install-hint";
-import { Screen, SearchBar } from "@/components/shell";
-import { AssetDot, Avatar, PreviewNote } from "@/components/ui";
-import { personOf } from "@/lib/data";
+import { Mark, Screen, SearchBar } from "@/components/shell";
+import { Avatar, PreviewNote } from "@/components/ui";
+import { personOf, usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 export default function Home() {
-  const { payments, canSee, friends, me, people, requests, receivePref, incoming } = useStore();
+  const { payments, canSee, friends, me, people, requests, incoming, totalUsd, hideBalances } = useStore();
   const [scope, setScope] = useState<"friends" | "everyone">("friends");
   const openRequests = requests.filter((r) => r.payer === me.handle && r.status === "open").length;
 
@@ -41,12 +41,14 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 px-4 pt-4">
-        <Link href="/portfolio?paidin=1" className="flex items-center gap-3 rounded-[22px] bg-white p-4">
-          {receivePref ? <AssetDot symbol={receivePref} size={40} /> : <span className="flex h-10 w-10 items-center justify-center rounded-full bg-chip">↔</span>}
+        <Link href="/portfolio" className="flex items-center gap-3 rounded-[22px] bg-white p-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-soft text-brand">
+            <Mark size={22} />
+          </span>
           <span className="text-[15px] font-semibold leading-tight">
-            Get paid in
+            Portfolio
             <br />
-            <span className="text-brand">{receivePref ?? "anything"}</span>
+            <span className="text-brand">{hideBalances ? "$•••••" : usd(totalUsd)}</span>
           </span>
         </Link>
         {openRequests > 0 ? (

@@ -100,17 +100,19 @@ Checked by a reviewer against each product's own pages on Nov 13 (`reviews/judge
 | Cash App | $cashtags | No | In 2021, a gift could be taken as dollars | Stock gifts launched in 2021; current status unconfirmed | Bitcoin between $cashtags ended Dec 20 2024 |
 | Robinhood | No | — | — | — | Does not support sending assets to other people |
 
-**What this means.** Both halves of our first pitch line were wrong: receiver-chosen settlement exists, and so does a username that pays your own wallet. What the reviewer could not find, which is not proof it does not exist: a friends app with a feed, priced in dollars, where a **stock** is on the list of things you can be paid in.
+**Since v3.2 (no conversion)** the receiver-chooses column no longer describes us. The closest product is now **Cash App's stock gifts** (2021; current status unconfirmed): check it before the pitch. Our difference to defend: paying a friend back, by username, priced in dollars, in a feed, into the friend's own wallet, with crypto and stocks side by side.
+
+**What this meant for v3.1.** Both halves of our first pitch line were wrong: receiver-chosen settlement exists, and so does a username that pays your own wallet. What the reviewer could not find, which is not proof it does not exist: a friends app with a feed, priced in dollars, where a **stock** is on the list of things you can be paid in.
 
 ## 8. Lines for the pitch
 
 | Line | Why it holds |
 |---|---|
-| "Send me ten bucks. Sure, in Solana. I'll take it in Nvidia." | It is the product. Open with it, not with "Venmo for crypto". |
-| "Paying a username exists. Choosing the coin you settle in exists. We haven't found the version your friends would use: dollars on the keypad, a feed, and a stock on the list of things you can be paid in." | §7 |
+| "I owe you ten bucks. Here's ten bucks of Nvidia." | It is the product. Open with it, not with "Venmo for crypto". |
+| "Venmo moves cash. This moves your portfolio. Pay a friend back in a slice of Nvidia; they keep it or sell it." | §7. Check Cash App first. |
 | "It's in his wallet, not ours." | The router keeps no balance; a test asserts it |
 | "That payment cost under a cent, paid in the same dollars." | Arc; read the real fee off the receipt |
-| "I pay dollars. My friend in Lisbon is set to euros and gets euros." | The Arc demo, once the Swap Kit step ships |
+| "Taihl sent me ten dollars of euros. One tap, and it's dollars." | The Arc demo: selling EURC through Swap Kit, once it ships |
 | "On Thursday, Uniswap on Monad opened ten real stock markets. Tonight's stocks are test tokens. Those pools are where real ones come from." (Blitz) | §3 |
 | "The stocks are test tokens with real prices." | Say it before a judge asks |
 

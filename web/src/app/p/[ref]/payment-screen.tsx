@@ -5,7 +5,7 @@ import { ArrowUp } from "lucide-react";
 import { useState } from "react";
 import { FeedCard } from "@/components/feed";
 import { BackHeader, Screen } from "@/components/shell";
-import { AudienceLabel, Avatar, Card, SectionTitle } from "@/components/ui";
+import { AudienceLabel, Avatar, Card, PrimaryButton, SectionTitle, Sheet } from "@/components/ui";
 import { agoLabel, amountLabel, assetOf, feeLabel, personOf, shortName, usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
@@ -14,8 +14,10 @@ const THANKS = ["Thanks! 🙏", "You're the best", "Got it 👍"];
 export function PaymentScreen() {
   const { ref: payRef } = useParams<{ ref: string }>();
   const thanks = useSearchParams().get("thanks") === "1";
-  const { payments, canSee, me, people, comment } = useStore();
+  const { payments, canSee, me, people, comment, holdings, sell } = useStore();
   const [text, setText] = useState("");
+  const [selling, setSelling] = useState(false);
+  const [sold, setSold] = useState(false);
   const p = payments.find((x) => x.ref === payRef);
 
   if (!p || !canSee(p)) {
@@ -28,6 +30,11 @@ export function PaymentScreen() {
   }
 
   const mine = p.from === me.handle || p.to === me.handle;
+  const asset = assetOf(p.asset);
+  const units = p.usd / asset.price;
+  // What selling this payment would bring in now, capped at what is still held.
+  const sellable = Math.min(units, holdings[p.asset] ?? 0) * asset.price;
+  const canSell = p.to === me.handle && p.asset !== "USDC" && sellable >= 0.01;
   const send = (value: string) => {
     const clean = value.trim();
     if (!clean) return;
@@ -52,11 +59,15 @@ export function PaymentScreen() {
             <SectionTitle>Details</SectionTitle>
             <Card className="divide-y divide-line py-1">
               {row("Amount", usd(p.usd, { cents: true }))}
-              {row(p.from === me.handle ? "You paid with" : `${personOf(p.from, people).first} paid with`, amountLabel(p.usd / assetOf(p.payAsset).price, p.payAsset))}
-              {row(p.to === me.handle ? "You received" : `${personOf(p.to, people).first} received`, amountLabel(p.usd / assetOf(p.receiveAsset).price, p.receiveAsset))}
+              {row(p.from === me.handle ? "You sent" : `${personOf(p.from, people).first} sent`, amountLabel(units, p.asset))}
               {row("Fee", feeLabel(p.feeUsd))}
               {row("Who can see", <AudienceLabel audience={p.audience} />)}
             </Card>
+            {(canSell || sold) && (
+              <PrimaryButton className="mt-3" disabled={sold} onClick={() => setSelling(true)}>
+                {sold ? "Sold for dollars" : `Sell for dollars, about ${usd(sellable, { cents: true })}`}
+              </PrimaryButton>
+            )}
             <p className="px-2 pt-2 text-[13px] leading-relaxed text-muted">
               Only the two of you see the amount here. The transfer itself is on a public blockchain.
             </p>
@@ -83,6 +94,25 @@ export function PaymentScreen() {
         )}
         <div className="h-36" />
       </div>
+
+      <Sheet open={selling} onClose={() => setSelling(false)} title={`Sell ${asset.name}?`}>
+        <p className="-mt-2 text-[15px] leading-relaxed text-muted">
+          You get about {usd(sellable, { cents: true })} in dollars for {amountLabel(sellable / asset.price, p.asset)}. Or keep it: it stays in your portfolio.
+        </p>
+        <PrimaryButton
+          className="mt-5"
+          onClick={() => {
+            sell(p.asset, sellable);
+            setSold(true);
+            setSelling(false);
+          }}
+        >
+          Sell for {usd(sellable, { cents: true })}
+        </PrimaryButton>
+        <button type="button" onClick={() => setSelling(false)} className="mt-2 h-12 w-full text-[16px] font-semibold text-brand">
+          Keep it
+        </button>
+      </Sheet>
 
       <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 border-t border-line bg-white px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3">
         {thanks && p.comments.every((c) => c.by !== me.handle) && (
