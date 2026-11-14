@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, QrCode, Settings } from "lucide-react";
+import { Bell, QrCode, Settings, Share } from "lucide-react";
+import { useState } from "react";
 import { ActivityRow } from "@/components/feed";
 import { RequestCards } from "@/components/requests";
 import { Screen } from "@/components/shell";
@@ -10,7 +11,22 @@ import { usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 export default function Me() {
-  const { me, friends, totalUsd, payments, notices, hideBalances } = useStore();
+  const { me, friends, totalUsd, payments, notices, hideBalances, myPrivacy } = useStore();
+  const [copied, setCopied] = useState(false);
+  const share = async () => {
+    const url = `${window.location.origin}/u/${me.handle}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `@${me.handle}`, url });
+        return;
+      } catch {
+        // fall through to copy
+      }
+    }
+    await navigator.clipboard?.writeText(url);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  };
   const mine = payments.filter((p) => p.from === me.handle || p.to === me.handle);
   return (
     <Screen>
@@ -46,6 +62,27 @@ export default function Me() {
           <p className="text-[14px] font-medium text-muted">Portfolio</p>
           <p className="mt-1 font-mono text-[24px] font-semibold">{hideBalances ? "$•••••" : usd(totalUsd, { cents: true })}</p>
         </Link>
+      </div>
+
+      <div className="px-4 pt-3">
+        <div className="flex items-center gap-3 rounded-[22px] bg-white p-4">
+          <span className="flex-1">
+            <span className="block text-[15px] font-semibold">Your profile</span>
+            <span className="block text-[13px] text-muted">
+              {!myPrivacy.show ? "Portfolio hidden" : `Portfolio visible to ${myPrivacy.who === "everyone" ? "everyone" : "friends"}`}
+              {" · "}
+              <Link href="/me/settings#portfolio" className="font-semibold text-brand">
+                Edit
+              </Link>
+            </span>
+          </span>
+          <Link href={`/u/${me.handle}`} className="rounded-full bg-chip px-3.5 py-2 text-[14px] font-semibold">
+            View
+          </Link>
+          <button type="button" onClick={share} className="flex items-center gap-1.5 rounded-full bg-brand px-3.5 py-2 text-[14px] font-semibold text-white">
+            <Share size={15} /> {copied ? "Copied" : "Share"}
+          </button>
+        </div>
       </div>
 
       <div className="px-4">

@@ -190,6 +190,10 @@ function PayFlowInner() {
               {audience === "public" ? "Shows in feeds. The amount stays between you two." : "Only you and " + first.first + " see it in the app. The transfer is still on a public blockchain."}
             </p>
             <div className="flex items-center justify-between">
+              <span className="text-muted">Arrives</span>
+              <span className="font-semibold">In seconds, in {first.first}&apos;s wallet</span>
+            </div>
+            <div className="flex items-center justify-between">
               <span className="text-muted">Fee</span>
               <span className="font-semibold">under 1¢ (estimate)</span>
             </div>

@@ -60,7 +60,7 @@ export function Markets() {
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-money" />
           </span>
           <p className="text-[14px] leading-snug text-brand">
-            <span className="font-semibold">Open 24/7.</span> Everything here trades on-chain, so buys and sells fill nights and weekends too.
+            <span className="font-semibold">Open 24/7.</span> Everything here trades on-chain, so buys and sells fill and settle in seconds, nights and weekends too.
           </p>
         </div>
 

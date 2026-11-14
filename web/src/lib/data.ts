@@ -144,6 +144,52 @@ export const MY_HOLDINGS: Record<string, number> = {
   EURC: 12,
 };
 
+/** What a person shows of their portfolio on their profile. The wallet itself is always public on-chain; this controls the app. */
+export interface PortfolioPrivacy {
+  /** Master switch: show a portfolio section on my profile at all. */
+  show: boolean;
+  /** Who sees it. */
+  who: "everyone" | "friends";
+  /** The total value. */
+  total: boolean;
+  /** Which stocks and coins I hold. */
+  holdings: boolean;
+  /** How much of each: dollar values, share of the portfolio, or nothing. */
+  amounts: "dollars" | "percent" | "hidden";
+  /** Today's gain or loss. */
+  performance: boolean;
+  /** Which asset my public payments were sent in. */
+  activity: boolean;
+}
+
+export const DEFAULT_PRIVACY: PortfolioPrivacy = { show: true, who: "everyone", total: false, holdings: true, amounts: "percent", performance: true, activity: true };
+
+/** Sample portfolios for the other nine demo people, in token units. */
+export const PEOPLE_HOLDINGS: Record<string, Record<string, number>> = {
+  taihl: { ETH: 0.42, MON: 900, NVDA: 0.6, COIN: 0.25, USDC: 120 },
+  ana: { AAPL: 0.4, NFLX: 0.08, PAXG: 0.012, USDC: 35 },
+  wes: { TSLA: 0.35, BTC: 0.004, SOL: 3.2, USDC: 18 },
+  sabina: { MSFT: 0.2, USDY: 150, EURC: 40 },
+  maya: { META: 0.15, AMZN: 0.3, KAG: 1.5, USDC: 60 },
+  jordan: { BTC: 0.01, ETH: 0.2, SOL: 6, USDC: 25 },
+  dev: { NVDA: 1.1, GOOGL: 0.5, CRCL: 0.4, XAUT: 0.02, USDC: 75 },
+  priya: { AAPL: 0.25, PAXG: 0.03, BUIDL: 200, USDC: 50 },
+  zoe: { TSLA: 0.1, SOL: 1.2, MON: 400, USDC: 12 },
+};
+
+/** Each demo person's choices, picked so the demo shows every combination. */
+export const PEOPLE_PRIVACY: Record<string, PortfolioPrivacy> = {
+  taihl: { show: true, who: "everyone", total: true, holdings: true, amounts: "dollars", performance: true, activity: true },
+  ana: { show: true, who: "everyone", total: false, holdings: true, amounts: "percent", performance: true, activity: true },
+  wes: { show: true, who: "everyone", total: true, holdings: true, amounts: "hidden", performance: false, activity: true },
+  sabina: { show: false, who: "everyone", total: false, holdings: false, amounts: "hidden", performance: false, activity: false },
+  maya: { show: true, who: "friends", total: true, holdings: true, amounts: "dollars", performance: true, activity: true },
+  jordan: { show: true, who: "everyone", total: true, holdings: false, amounts: "hidden", performance: true, activity: false },
+  dev: { show: true, who: "everyone", total: true, holdings: true, amounts: "dollars", performance: true, activity: true },
+  priya: { show: true, who: "everyone", total: false, holdings: true, amounts: "percent", performance: false, activity: true },
+  zoe: { show: true, who: "everyone", total: false, holdings: true, amounts: "hidden", performance: true, activity: true },
+};
+
 export const FRIENDS: string[] = ["taihl", "ana", "wes", "sabina", "maya"];
 export const INCOMING_FRIEND_REQUESTS: string[] = ["jordan"];
 

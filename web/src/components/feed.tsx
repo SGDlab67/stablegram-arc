@@ -84,10 +84,12 @@ export function ReactionRow({ p }: { p: Payment }) {
 }
 
 export function FeedCard({ p, linked = true }: { p: Payment; linked?: boolean }) {
-  const { me, react } = useStore();
+  const { me, react, privacyOf } = useStore();
   const router = useRouter();
   const sent = p.from === me.handle;
   const received = p.to === me.handle;
+  // Which asset was sent shows to the two people, and to others only if both share their activity.
+  const showAsset = sent || received || (privacyOf(p.from).activity && privacyOf(p.to).activity);
   const other = sent ? p.to : p.from;
   const body = (
     <>
@@ -113,7 +115,7 @@ export function FeedCard({ p, linked = true }: { p: Payment; linked?: boolean })
         body
       )}
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <AssetChip symbol={p.asset} />
+        {showAsset && <AssetChip symbol={p.asset} />}
         {sent && (
           <Link href={`/pay?to=${other}&amount=${p.usd}&note=${encodeURIComponent(p.note)}`} className="inline-flex h-9 items-center rounded-full bg-ink px-4 text-[14px] font-semibold text-white">
             Pay again

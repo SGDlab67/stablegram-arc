@@ -11,6 +11,9 @@ import {
   OTHER_FRIENDSHIPS,
   PAYMENTS,
   PEOPLE,
+  PEOPLE_HOLDINGS,
+  PEOPLE_PRIVACY,
+  DEFAULT_PRIVACY,
   REQUESTS,
   STARTER_ASSET_USD,
   STARTER_DOLLARS,
@@ -20,6 +23,7 @@ import {
   type Notice,
   type Payment,
   type Person,
+  type PortfolioPrivacy,
 } from "./data";
 
 export type FriendState = "none" | "requested" | "incoming" | "friends" | "self";
@@ -61,6 +65,11 @@ interface Store {
   /** Dollar figures are masked, for when someone else is looking at the screen. */
   hideBalances: boolean;
   toggleHideBalances: () => void;
+  /** What I show of my portfolio on my profile. */
+  myPrivacy: PortfolioPrivacy;
+  setMyPrivacy: (patch: Partial<PortfolioPrivacy>) => void;
+  privacyOf: (handle: string) => PortfolioPrivacy;
+  holdingsOf: (handle: string) => Record<string, number>;
   friendState: (handle: string) => FriendState;
   areFriends: (a: string, b: string) => boolean;
   canSee: (p: Payment) => boolean;
@@ -102,6 +111,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [outgoing, setOutgoing] = useState<string[]>([]);
   const [hideBalances, setHideBalances] = useState(false);
   const toggleHideBalances = useCallback(() => setHideBalances((v) => !v), []);
+  const [myPrivacy, setMyPrivacyState] = useState<PortfolioPrivacy>(DEFAULT_PRIVACY);
+  const setMyPrivacy = useCallback((patch: Partial<PortfolioPrivacy>) => setMyPrivacyState((p) => ({ ...p, ...patch })), []);
+  const [others, setOthers] = useState<Record<string, Record<string, number>>>(PEOPLE_HOLDINGS);
 
   const me = useMemo(() => people.find((p) => p.handle === meHandle) ?? PEOPLE[0], [people, meHandle]);
   const isSample = meHandle === ME;
@@ -155,6 +167,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         feeUsd: 0.005,
       };
       setHoldings((h) => ({ ...h, [input.asset]: Math.max(0, (h[input.asset] ?? 0) - units) }));
+      // The friend receives exactly that asset.
+      setOthers((o) => ({ ...o, [input.to]: { ...(o[input.to] ?? {}), [input.asset]: (o[input.to]?.[input.asset] ?? 0) + units } }));
       setPayments((list) => [payment, ...list]);
       if (input.requestId) {
         setRequests((list) => list.map((r) => (r.id === input.requestId ? { ...r, status: "paid" } : r)));
@@ -256,6 +270,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setHoldings((h) => ({ ...h, USDC: (h.USDC ?? 0) + dollars, [symbol]: Math.max(0, (h[symbol] ?? 0) - dollars / price) }));
   }, []);
 
+  const privacyOf = useCallback(
+    (handle: string) => (handle === meHandle ? myPrivacy : (PEOPLE_PRIVACY[handle] ?? DEFAULT_PRIVACY)),
+    [meHandle, myPrivacy],
+  );
+  const holdingsOf = useCallback((handle: string) => (handle === meHandle ? holdings : (others[handle] ?? {})), [meHandle, holdings, others]);
+
   const totalUsd = useMemo(
     () => ASSETS.reduce((sum, a) => sum + (holdings[a.symbol] ?? 0) * a.price, 0),
     [holdings],
@@ -276,6 +296,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     totalUsd,
     hideBalances,
     toggleHideBalances,
+    myPrivacy,
+    setMyPrivacy,
+    privacyOf,
+    holdingsOf,
     friendState,
     areFriends,
     canSee,

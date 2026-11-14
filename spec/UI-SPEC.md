@@ -114,6 +114,16 @@ Likes are open to anyone who can see the card. Comments need you to be a friend 
 
 ## 7. Pay/Request
 
+**Profile portfolio + privacy (Charlie, Nov 14).**
+- **Profile card.** `/u/[handle]` shows "{Name}'s portfolio" under the Pay and Friends buttons. It holds:
+  - the Total (or "Hidden" with an eye-off icon) and today's change;
+  - a category bar, shown only when amounts are visible;
+  - rows with logo, name, symbol, and then $ value, %, or nothing, plus each row's change.
+- **Hidden states:** "{Name} keeps their portfolio private" (lock) and "{Name} only shows their portfolio to friends" (people icon).
+- **Your own profile** shows "Your portfolio, as others see it", with an Edit link.
+- **Settings controls,** in order: master switch; Everyone | Friends only; Total value; What I hold; How much of each (Dollars | Percent | Hide); Gains and losses; What I send and receive.
+- **Settings behaviour:** rows dim when they don't apply. A footnote says the wallet is still public on-chain.
+
 **Markets (Charlie, Nov 14).** `/markets` is reached from Portfolio ("See all" or a category chip). From top to bottom:
 1. A soft-blue banner with a pulsing green dot: "Open 24/7. Everything here trades on-chain, so buys and sells fill nights and weekends too."
 2. A search box.

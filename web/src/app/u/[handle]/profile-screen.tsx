@@ -7,12 +7,13 @@ import { useState } from "react";
 import { ActivityRow, FeedCard } from "@/components/feed";
 import { BackHeader, Screen } from "@/components/shell";
 import { Avatar, Card, GhostButton, PrimaryButton, SectionTitle, Sheet } from "@/components/ui";
+import { PublicPortfolio } from "@/components/public-portfolio";
 import { useStore } from "@/lib/store";
 
 export function ProfileScreen() {
   const params = useParams<{ handle: string }>();
   const handle = (params.handle ?? "").toLowerCase();
-  const { people, me, friends, payments, canSee, friendState, areFriends, addFriend, acceptFriend, unfriend } = useStore();
+  const { people, me, friends, payments, canSee, friendState, areFriends, addFriend, acceptFriend, unfriend, privacyOf, holdingsOf } = useStore();
   const [removing, setRemoving] = useState(false);
   const person = people.find((p) => p.handle === handle);
 
@@ -76,6 +77,25 @@ export function ProfileScreen() {
             )}
           </div>
         )}
+
+        <SectionTitle
+          right={
+            state === "self" ? (
+              <Link href="/me/settings#portfolio" className="text-[14px] font-semibold text-brand">
+                Edit
+              </Link>
+            ) : undefined
+          }
+        >
+          {state === "self" ? "Your portfolio, as others see it" : `${person.first}'s portfolio`}
+        </SectionTitle>
+        <PublicPortfolio
+          holdings={holdingsOf(handle)}
+          privacy={privacyOf(handle)}
+          firstName={person.first}
+          self={state === "self"}
+          canView={state === "self" || privacyOf(handle).who === "everyone" || state === "friends"}
+        />
 
         {state !== "self" && between.length > 0 && (
           <>

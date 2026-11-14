@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Check, ChevronRight } from "lucide-react";
 import { BackHeader, Screen } from "@/components/shell";
 import { AudienceLabel, Avatar, Card, SectionTitle } from "@/components/ui";
-import { type Audience } from "@/lib/data";
+import { type Audience, type PortfolioPrivacy } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 const AUDIENCES: { id: Audience; hint: string }[] = [
@@ -12,8 +12,55 @@ const AUDIENCES: { id: Audience; hint: string }[] = [
   { id: "private", hint: "Only you and the other person." },
 ];
 
+function Toggle({ on, onChange, label, hint, disabled = false }: { on: boolean; onChange: (v: boolean) => void; label: string; hint?: string; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      disabled={disabled}
+      onClick={() => onChange(!on)}
+      className="flex w-full items-center gap-3 py-3 text-left disabled:opacity-40"
+    >
+      <span className="flex-1">
+        <span className="block text-[16px] font-semibold">{label}</span>
+        {hint && <span className="block text-[13px] leading-snug text-muted">{hint}</span>}
+      </span>
+      <span className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${on ? "bg-brand" : "bg-line"}`}>
+        <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
+      </span>
+    </button>
+  );
+}
+
+function Segments<T extends string>({ value, options, onChange, disabled = false }: { value: T; options: { id: T; label: string }[]; onChange: (v: T) => void; disabled?: boolean }) {
+  return (
+    <div className={`grid rounded-full bg-chip p-1 ${disabled ? "opacity-40" : ""}`} style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
+      {options.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          disabled={disabled}
+          aria-pressed={value === o.id}
+          onClick={() => onChange(o.id)}
+          className={`h-9 rounded-full text-[14px] font-semibold ${value === o.id ? "bg-white text-ink shadow-sm" : "text-muted"}`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const AMOUNT_OPTIONS: { id: PortfolioPrivacy["amounts"]; label: string }[] = [
+  { id: "dollars", label: "Dollars" },
+  { id: "percent", label: "Percent" },
+  { id: "hidden", label: "Hide" },
+];
+
 export default function SettingsPage() {
-  const { me, updateMe, defaultAudience, setDefaultAudience } = useStore();
+  const { me, updateMe, defaultAudience, setDefaultAudience, myPrivacy, setMyPrivacy } = useStore();
+  const pv = myPrivacy;
   return (
     <Screen tabs={false}>
       <BackHeader title="Settings" fallback="/me" />
@@ -38,6 +85,45 @@ export default function SettingsPage() {
           </div>
           <p className="mt-3 text-[15px] text-muted">Username: @{me.handle}</p>
         </Card>
+
+        <div id="portfolio" className="scroll-mt-16" />
+        <SectionTitle
+          right={
+            <Link href={`/u/${me.handle}`} className="text-[14px] font-semibold text-brand">
+              Preview
+            </Link>
+          }
+        >
+          Your portfolio on your profile
+        </SectionTitle>
+        <Card className="!py-2">
+          <Toggle on={pv.show} onChange={(v) => setMyPrivacy({ show: v })} label="Show my portfolio" hint="People who open your profile see the parts you turn on below." />
+          <div className={`divide-y divide-line border-t border-line ${pv.show ? "" : "pointer-events-none opacity-40"}`}>
+            <div className="py-3">
+              <p className="mb-2 text-[16px] font-semibold">Who can see it</p>
+              <Segments
+                value={pv.who}
+                onChange={(v) => setMyPrivacy({ who: v })}
+                options={[
+                  { id: "everyone", label: "Everyone" },
+                  { id: "friends", label: "Friends only" },
+                ]}
+              />
+            </div>
+            <Toggle on={pv.total} onChange={(v) => setMyPrivacy({ total: v })} label="Total value" hint="The dollar total of everything you hold." />
+            <Toggle on={pv.holdings} onChange={(v) => setMyPrivacy({ holdings: v })} label="What I hold" hint="Which stocks, coins and other assets are in your wallet." />
+            <div className={`py-3 ${pv.holdings ? "" : "pointer-events-none opacity-40"}`}>
+              <p className="text-[16px] font-semibold">How much of each</p>
+              <p className="mb-2 text-[13px] text-muted">Dollar value, share of your portfolio, or names only.</p>
+              <Segments value={pv.amounts} onChange={(v) => setMyPrivacy({ amounts: v })} options={AMOUNT_OPTIONS} disabled={!pv.holdings} />
+            </div>
+            <Toggle on={pv.performance} onChange={(v) => setMyPrivacy({ performance: v })} label="Gains and losses" hint="How your portfolio and each holding moved today." />
+            <Toggle on={pv.activity} onChange={(v) => setMyPrivacy({ activity: v })} label="What I send and receive" hint="Which stock or coin your public payments were sent in." />
+          </div>
+        </Card>
+        <p className="px-3 pt-2 text-[12px] leading-snug text-muted">
+          These choices control what the app shows. Your wallet is on a public blockchain, so someone who knows its address can still look it up.
+        </p>
 
         <SectionTitle>Who sees your future payments</SectionTitle>
         <Card className="space-y-2">
@@ -66,6 +152,10 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between py-3 text-[16px]">
             <span className="font-semibold">Wallet</span>
             <span className="font-mono text-[14px] text-muted">0x71C4…9A3f (sample)</span>
+          </div>
+          <div className="py-3">
+            <p className="text-[16px] font-semibold">Your wallet, your money</p>
+            <p className="text-[13px] leading-snug text-muted">Self-custody: only you can move these funds. Not even we can. Payments settle on-chain in seconds.</p>
           </div>
           <div className="flex items-center justify-between py-3 text-[16px]">
             <span className="font-semibold">Back up this wallet</span>
