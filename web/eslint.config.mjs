@@ -9,6 +9,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    // Build output when .next is a link to a folder iCloud Drive skips (see .gitignore).
+    "**/*.nosync/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

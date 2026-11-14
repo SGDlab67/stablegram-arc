@@ -60,6 +60,9 @@ interface Store {
   incoming: string[];
   outgoing: string[];
   totalUsd: number;
+  /** Dollar figures are masked, for when someone else is looking at the screen. */
+  hideBalances: boolean;
+  toggleHideBalances: () => void;
   friendState: (handle: string) => FriendState;
   areFriends: (a: string, b: string) => boolean;
   canSee: (p: Payment) => boolean;
@@ -101,6 +104,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [friends, setFriends] = useState<string[]>(FRIENDS);
   const [incoming, setIncoming] = useState<string[]>(INCOMING_FRIEND_REQUESTS);
   const [outgoing, setOutgoing] = useState<string[]>([]);
+  const [hideBalances, setHideBalances] = useState(false);
+  const toggleHideBalances = useCallback(() => setHideBalances((v) => !v), []);
 
   const me = useMemo(() => people.find((p) => p.handle === meHandle) ?? PEOPLE[0], [people, meHandle]);
   const isSample = meHandle === ME;
@@ -288,6 +293,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     incoming,
     outgoing,
     totalUsd,
+    hideBalances,
+    toggleHideBalances,
     friendState,
     areFriends,
     canSee,

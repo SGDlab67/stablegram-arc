@@ -163,18 +163,19 @@ Adding a friend sends a request; they become a friend when it is accepted. A pro
 
 Clean, mostly white space. This is Venmo's Crypto tab widened to everything the wallet holds.
 
-1. **Total value,** very large, with today's change in dollars and percent, green or red.
-2. A **line chart** of the total, with ranges 1D, 1W, 1M. On day one this is today's holdings priced backwards; say "based on what you hold now" in small grey text.
+1. **Total value,** very large, with the change over the chosen range in dollars and percent, green or red. An eye button beside it masks every dollar figure on this tab and on Me, for when someone else is looking at the screen.
+2. A **line chart** of the total, with ranges 1D, 1W, 1M that switch the line and the change above it. Dragging along the line shows the value at that point in the big number. On day one this is today's holdings priced backwards; say "based on what you hold now" in small grey text.
+2a. **What you hold:** one bar split into stocks and real-world assets, crypto, and cash, with the percent of each. No advice and no prompts to buy.
 3. **Get paid in** card: the current choice with its logo and "Change". It opens a list of every asset, with "Whatever I'm sent" as the first option. Changing it is one transaction.
 4. **Holdings,** in three groups with a subtotal each:
    - **Stocks and real-world assets**
    - **Crypto**
    - **Cash** (USDC, and EURC on Arc)
-   Each row: logo, name, ticker, a "demo" tag where it applies, the amount, the dollar value, and the 24-hour change. Assets the user does not hold are not listed.
+   Each row: logo, name, ticker, a "demo" tag where it applies, the amount, the dollar value, and the 24-hour change. Largest holding first in each group. Assets the user does not hold are not listed.
 5. **Explore,** under the holdings: everything else you could hold, each with its price and change.
 6. A grey line at the bottom: the wallet's short address and a link to the explorer.
 
-**Asset page,** as Venmo's coin page: name and logo, price, a chart with 1D, 1W, 1M, 6M, 1Y and All, "You hold 0.0214 (about $3.02)", **Buy** and **Sell** against dollars, **Get paid in this**, a short description, and your activity in this asset. Demo assets say "Test token that follows the real price."
+**Asset page,** as Venmo's coin page: name and logo, price, a chart with working 1D, 1W, 1M, 6M, 1Y and All ranges that can be dragged the same way, "You hold 0.0214 (about $3.02)", **Buy** and **Sell** against dollars, **Get paid in this**, a short description, and your activity in this asset. Demo assets say "Test token that follows the real price."
 
 ---
 

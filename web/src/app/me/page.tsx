@@ -10,7 +10,7 @@ import { usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 export default function Me() {
-  const { me, friends, totalUsd, payments, notices } = useStore();
+  const { me, friends, totalUsd, payments, notices, hideBalances } = useStore();
   const mine = payments.filter((p) => p.from === me.handle || p.to === me.handle);
   return (
     <Screen>
@@ -44,7 +44,7 @@ export default function Me() {
         </Link>
         <Link href="/portfolio" className="rounded-[22px] bg-white p-4">
           <p className="text-[14px] font-medium text-muted">Portfolio</p>
-          <p className="mt-1 font-mono text-[24px] font-semibold">{usd(totalUsd, { cents: true })}</p>
+          <p className="mt-1 font-mono text-[24px] font-semibold">{hideBalances ? "$•••••" : usd(totalUsd, { cents: true })}</p>
         </Link>
       </div>
 

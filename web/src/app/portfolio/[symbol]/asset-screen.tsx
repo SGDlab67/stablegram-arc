@@ -2,19 +2,22 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { AssetChart, RangeTabs } from "@/components/chart";
+import { RangeTabs, Sparkline } from "@/components/chart";
 import { ActivityRow } from "@/components/feed";
 import { BackHeader, Screen } from "@/components/shell";
 import { AssetDot, Card, Change, GhostButton, PrimaryButton, SectionTitle, Sheet } from "@/components/ui";
-import { ASSETS, amountLabel, usd } from "@/lib/data";
+import { ASSETS, RANGES, agoLabel, amountLabel, sampleSeries, usd, type Range } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 const QUICK = [1, 5, 10, 25];
+const ASSET_RANGES: Range[] = ["1D", "1W", "1M", "6M", "1Y", "All"];
 
 export function AssetScreen() {
   const { symbol } = useParams<{ symbol: string }>();
   const { holdings, payments, me, receivePref, setReceivePref, buy, sell } = useStore();
   const [trade, setTrade] = useState<"buy" | "sell" | null>(null);
+  const [range, setRange] = useState<Range>("1D");
+  const [scrub, setScrub] = useState<number | null>(null);
   const asset = ASSETS.find((a) => a.symbol === symbol?.toUpperCase());
 
   if (!asset) {
@@ -33,6 +36,12 @@ export function AssetScreen() {
   const isPref = receivePref === asset.symbol;
   const isDollar = asset.symbol === "USDC";
 
+  const series = sampleSeries(asset.symbol, 48, range);
+  const point = scrub !== null && scrub < series.length ? scrub : null;
+  const shown = point !== null ? series[point] : asset.price;
+  const changePct = ((shown - series[0]) / series[0]) * 100;
+  const when = point !== null && point < series.length - 1 ? `${agoLabel((1 - point / (series.length - 1)) * RANGES[range].minutes)} ago` : RANGES[range].words;
+
   return (
     <Screen>
       <BackHeader title={asset.symbol} fallback="/portfolio" />
@@ -47,13 +56,22 @@ export function AssetScreen() {
             <p className="text-[14px] text-muted">{asset.symbol}</p>
           </div>
         </div>
-        <p className="mt-4 font-mono text-[40px] font-semibold leading-none tracking-tight">{usd(asset.price, { cents: true })}</p>
-        <Change pct={asset.change24h} className="mt-2 block text-[15px] font-semibold" />
+        <p className="mt-4 text-[40px] font-semibold tabular-nums leading-none tracking-tight">{usd(shown, { cents: true })}</p>
+        <p className="mt-2 text-[15px] font-semibold">
+          <Change pct={changePct} /> <span className="font-medium text-muted">{when}</span>
+        </p>
       </div>
       <div className="px-4 pt-4">
-        <AssetChart symbol={asset.symbol} up={asset.change24h >= 0} height={150} />
-        <RangeTabs ranges={["1D", "1W", "1M", "6M", "1Y", "All"]} active="1D" />
-        <p className="pt-1 text-center text-[12px] text-muted">Sample chart</p>
+        <Sparkline series={series} up={changePct >= 0} height={150} scrub={point} onScrub={setScrub} />
+        <RangeTabs
+          ranges={ASSET_RANGES}
+          active={range}
+          onChange={(r) => {
+            setRange(r);
+            setScrub(null);
+          }}
+        />
+        <p className="pt-1 text-center text-[12px] text-muted">{range === "1D" ? "Sample chart. Today's change is real; the line is drawn." : "Sample chart. Changes beyond one day are made up."}</p>
       </div>
 
       <div className="space-y-3 px-4 pt-5">

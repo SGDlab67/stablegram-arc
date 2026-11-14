@@ -234,22 +234,54 @@ export function amountLabel(amount: number, symbol: string): string {
   return `${amount.toLocaleString("en-US", { maximumFractionDigits: digits })} ${symbol}`;
 }
 
-/** A deterministic sample price path that ends at the asset's current price. */
-export function sampleSeries(symbol: string, points = 48): number[] {
-  const a = assetOf(symbol);
-  let seed = 0;
-  for (const ch of symbol) seed = (seed * 31 + ch.charCodeAt(0)) % 2147483647;
-  const rand = () => {
+export type Range = "1D" | "1W" | "1M" | "6M" | "1Y" | "All";
+
+/** How the change over each range is worded, and how many minutes the range covers. */
+export const RANGES: Record<Range, { words: string; minutes: number; swing: number; rough: number }> = {
+  "1D": { words: "today", minutes: 60 * 24, swing: 0, rough: 0.012 },
+  "1W": { words: "past week", minutes: 60 * 24 * 7, swing: 6, rough: 0.03 },
+  "1M": { words: "past month", minutes: 60 * 24 * 30, swing: 12, rough: 0.05 },
+  "6M": { words: "past 6 months", minutes: 60 * 24 * 182, swing: 30, rough: 0.09 },
+  "1Y": { words: "past year", minutes: 60 * 24 * 365, swing: 55, rough: 0.12 },
+  All: { words: "all time", minutes: 60 * 24 * 730, swing: 120, rough: 0.16 },
+};
+
+function seeded(text: string): () => number {
+  let seed = 7;
+  for (const ch of text) seed = (seed * 31 + ch.charCodeAt(0)) % 2147483647;
+  return () => {
     seed = (seed * 48271) % 2147483647;
     return seed / 2147483647;
   };
-  const start = a.price / (1 + a.change24h / 100);
+}
+
+/**
+ * Percent move over a range. "1D" is the real 24-hour change from the price snapshot.
+ * Longer ranges are made up, and fixed per asset so the chart does not jump between visits.
+ */
+export function sampleChange(symbol: string, range: Range = "1D"): number {
+  const a = assetOf(symbol);
+  if (range === "1D") return a.change24h;
+  const rand = seeded(`${symbol}:${range}:change`);
+  const move = (rand() - 0.42) * 2 * RANGES[range].swing;
+  return a.group === "cash" ? (symbol === "USDC" ? 0 : move * 0.05) : move;
+}
+
+/** A deterministic sample price path that ends at the asset's current price. */
+export function sampleSeries(symbol: string, points = 48, range: Range = "1D"): number[] {
+  const a = assetOf(symbol);
+  const rand = seeded(`${symbol}:${range}`);
+  const start = a.price / (1 + sampleChange(symbol, range) / 100);
+  // A random walk pinned to zero at both ends, so the line wanders but still lands on today's price.
+  const walk: number[] = [0];
+  for (let i = 1; i < points; i++) walk.push(walk[i - 1] + (rand() - 0.5));
+  const rough = a.group === "cash" ? (symbol === "USDC" ? 0 : RANGES[range].rough * 0.1) : RANGES[range].rough;
   const out: number[] = [];
   for (let i = 0; i < points; i++) {
     const t = i / (points - 1);
     const drift = start + (a.price - start) * t;
-    const wobble = a.group === "cash" ? 0 : (rand() - 0.5) * a.price * 0.012 * Math.sin(Math.PI * t);
-    out.push(drift + wobble);
+    const pinned = walk[i] - t * walk[points - 1];
+    out.push(Math.max(drift + a.price * rough * pinned, a.price * 0.02));
   }
   out[points - 1] = a.price;
   return out;

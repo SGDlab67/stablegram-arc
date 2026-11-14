@@ -14,8 +14,12 @@
 /coverage
 
 # next.js
-/.next/
+/.next
 /out/
+
+# Folders ending in .nosync are skipped by iCloud Drive. Used when the repo sits in a synced folder,
+# where iCloud otherwise duplicates build output ("chunks 2") and breaks the build.
+*.nosync
 
 # production
 /build
