@@ -1,0 +1,260 @@
+# UI-SPEC — the app, screen by screen
+For Charlie's build session. Written Fri Nov 13 2026 from Venmo's current app: three screens from its May 2026 redesign, two App Store screenshots (all saved in `reference/venmo/`), and Venmo's help centre. Sources are at the end.
+
+SPEC v3.1 covers the chain, the server and the data, and already includes the tables and routes this file needs. This file is the source for everything a user sees.
+
+Nothing here has been built. Venmo's Me tab, settings and Crypto tab are described from its help pages, not from screenshots, so those layouts are our reading of the text.
+
+---
+
+## 1. What we copy, what we change, what we leave out
+
+**Copy the layout and the flows. Do not copy the brand.** No Venmo name, no "V" logo, none of its blue, none of its illustrations. A judge should think "this works like Venmo", not "this is a Venmo knock-off".
+
+| Venmo | Ours |
+|---|---|
+| Tab bar: Home · Cards · Pay/Request · Crypto · Me | **Home · Friends · Pay/Request · Portfolio · Me** |
+| Cards tab | Left out for now. Friends takes its slot. |
+| Crypto tab | **Portfolio**: stocks, crypto and cash in one clean list |
+| Search pill "Find a person or business" with a QR button beside it | Same, "Find a person" |
+| Feed of cards: one big sentence with small inline avatars, a visual, an action row | Same, plus a chip for what was paid and what was received |
+| Audience line on each card: Public, Visible to friends, Only visible to you | Same three |
+| Action row: one black pill ("Pay again", "Say thanks", "Split"), comment, reactions with counts, add a reaction | Same |
+| Pay screen: avatar, "+" to add people, large dollar amount, note field, Request and Pay side by side | Same |
+| Split a request among several people | Same (requests are free for us) |
+| Friends you add, and their activity in your feed | Same |
+| Amounts hidden in the feed except to the two people | Same |
+| "Venmo me" QR code on your profile picture | Same, "My code" |
+| Pending requests at the top of your own activity | Same |
+| New users default to friends-only (May 2026) | **Public by default for now**, as Charlie asked. The control is there on every payment and in settings. |
+| Phone, email, bank, legal name, identity checks | None. A wallet and a username. |
+| Calculator keys on the keypad (÷ × − +) | Left out. Digits, a decimal point and delete. |
+| Business profiles, shout-outs, brand offers, rewards, teen accounts, scheduled payments, gifts | Left out |
+
+---
+
+## 2. Look
+
+- **Page:** light grey `#F3F3F3`. **Cards:** white, 28 px radius, no border, 12 px gap between cards, 16 px side margin.
+- **Type:** Inter. Feed sentences are large, about 26 px, tight line height, weight 500. Names are near-black; the joining words ("paid", "for") are mid-grey `#8A8A8A`. Small labels are 14 px grey.
+- **Colours:** ink `#111111`; our purple `#6E54FF` for the centre button, the Pay and Request buttons, links and active states; green `#1F9D55` for money in; red `#E5484D` only for the filled heart. The primary action inside a feed card is a **black pill with white text**, as on Venmo.
+- **Icon buttons** in a card: 56 px grey circles `#F0F0F0` with a dark outline icon.
+- **Avatars:** round photos. Inline in a feed sentence they are 28 px; on a profile 96 px. No photo: initials on one of eight colours picked from the username.
+- **Motion:** new feed cards slide in from the top; a sent payment ends on a full-screen tick with the sentence it will show in the feed; reactions pop.
+- **Shape of the app:** built at 390 px wide with safe-area padding. On a laptop it sits in a centred 430 px column on the grey page. Add a web app manifest and icons so "Add to Home Screen" opens it full screen.
+- No lightning bolt anywhere.
+
+---
+
+## 3. Tab bar
+
+White bar, hairline top border, five slots, labels under icons.
+1. **Home** (house)
+2. **Friends** (two people); a red dot when a friend request is waiting
+3. **Pay/Request**: a 64 px purple circle with our mark in white, raised so it overlaps the top edge of the bar, label underneath
+4. **Portfolio** (pie or chart icon)
+5. **Me**: the user's own avatar; a red dot when a money request is waiting
+
+The active label is black; inactive icons and labels are purple, as Venmo's are blue.
+
+---
+
+## 4. Welcome and sign-up
+
+One idea per screen, a large heading, one purple button at the bottom.
+
+1. **Welcome.** The wordmark, one line ("Pay friends in what you hold."), then **Get started** and a text link, "I already have an account".
+2. **How do you want to sign in?** Two big rows: **Start without a wallet** ("We'll make one on this device. You can back it up later.") and **Use my wallet** (lists what the browser found: MetaMask, Rabby, Coinbase Wallet, Phantom; a grey line says "Phantom: turn on Testnet Mode first"). On Saturday only the first row works; the second arrives Monday and email with M8.
+3. **Your name.** First name and last name. The feed shows "Wes K.", as Venmo does.
+4. **Pick a username.** An "@" prefix, lower case as you type, a suggestion from the name, and a live tick or "taken". Rules shown underneath: 3 to 20 letters, numbers or underscores.
+5. **Add a photo.** Camera or library, cropped to a circle, **Skip** allowed. The app shrinks it to 256 px before upload.
+6. **What do you want to get paid in?** Five large tiles with logo, name and price: four stocks and Dollars. "We'll start you with a little of it (demo). Change this any time." The choice becomes the starter grant and the "Get paid in" setting.
+7. **Who can see your payments?** Three rows with the same icons the feed uses: Public (selected), Friends, Private. Two grey lines: "You can change this on any payment." and "Your username is linked to a public wallet. Anyone can see its balances and payments on the blockchain."
+8. **Setting up.** A progress screen while the relayer signs the user up. On Arc with a connected wallet, one more step: **Turn on payments** (the one approval).
+9. **Find friends.** Suggested people (recent sign-ups, and anyone who has paid you), each with **Add**. **Done** goes to Home.
+
+**Quick join for a room** is a separate one-screen page, `/join`, described in SPEC section 7.
+
+Returning users: **I already have an account** → connect, or use the wallet on this device → sign one message → Home.
+
+---
+
+## 5. Home
+
+Top to bottom:
+1. **Top bar.** A search pill, "Find a person", and a round QR button on its right. Both stay pinned while the feed scrolls under them.
+2. **People row.** The six people you pay most, as avatars with first names; tap one to open Pay/Request with them filled in. A new user sees suggested friends here.
+3. **Shortcut pills,** two across, in the place Venmo puts brand offers: "2 requests waiting" (only when true), "Get paid in: NVDA", "Add friends".
+4. **Feed switch:** **Friends** and **Everyone**. Friends is the default once the user has a friend; before that, Everyone.
+5. **The feed** of cards (section 6). Pull to refresh. It loads 20 at a time.
+
+Empty Friends feed: "Add a few friends to see what they're paying for," with a button to the Friends tab.
+
+---
+
+## 6. The feed card
+
+Match `reference/venmo/01`, `02` and `05`.
+
+1. **Header line,** small and grey: an audience icon and label ("Public", "Visible to friends", "Only visible to you"), a dot, the age ("2h"). A "…" menu on the right: Copy link, View on explorer, and for the payer, Change who can see this.
+2. **The sentence,** large: [avatar] **Sabina O.** paid [avatar] **Wes K.** for **pizza and burgers**. The viewer is written "You" or "you". If the viewer is one of the two people, the amount follows the second name: "You paid Wes K. **$20** for Coffee". Nobody else ever sees an amount. A request that was paid reads the same as a payment.
+3. **Asset chip** under the sentence, ours and not Venmo's: "SOL → NVDA" with the two logos when the payment was converted, or one logo when it was not.
+4. **Visual,** when the note contains an emoji: a rounded tile in a bright colour with that emoji very large, where Venmo shows an illustration. No emoji, no tile. The colour comes from the emoji so the same emoji always looks the same.
+5. **Action row,** left to right:
+   - one **black pill**, chosen by who is looking: **Pay again** on a payment you sent; **Say thanks** on one you received (it adds a 🙏 reaction and opens the comment box); **Split** on one you sent that is over $10. Nothing for strangers' payments.
+   - a comment button, with a count when there are comments
+   - one pill per reaction already given, emoji and count; yours is filled
+   - an add-reaction button that opens a row of six: ❤️ 😂 🔥 🙏 💸 ✨
+6. Tapping the card opens the payment page (section 12).
+
+Likes are open to anyone who can see the card. Comments need you to be a friend of one of the two people, or one of them, as on Venmo.
+
+---
+
+## 7. Pay/Request
+
+The centre button opens a full-height sheet.
+
+**Step 1, who.** A search field ("Name or @username") with a Scan button. Under it: Top people, then Friends A to Z. Typing searches everyone. Tapping a person moves to step 2. The "+" beside the chosen avatar adds more people, which turns the screen into a split (section 8).
+
+**Step 2, how much.** Match `reference/venmo/03`.
+- the recipient's avatar, centred, with the "+" circle beside it, and their name and @username under it
+- the amount, very large, with a small raised "$" and a clear button
+- a note field in an outlined box, "What's it for?", required, with an emoji button
+- an audience pill showing the current choice and icon; tap to change it. When Private is chosen it shows: "Hidden from feeds. The transfer is still visible on the blockchain." The server may return a stricter audience than the one chosen; the confirm sheet then says "Private because @wes keeps payments private".
+- **Request** and **Pay**, side by side, both purple, disabled until there is an amount and a note
+- a number pad: digits, a decimal point, delete
+
+**Step 3, Pay only: confirm.** A half-sheet.
+- "Pay Wes K. $20"
+- **Pay with:** your holdings, largest first, each with its dollar value and a radio button; anything too small is greyed out
+- "Wes gets it as NVDA", with the logo. If he has no preference: "Wes gets SOL."
+- the fee in cents; on Arc, a Public payment also says "The note will be public on the blockchain."
+- "First time paying @wes" when true
+- "The price moved" with the new amount, when the quote changed between opening the sheet and tapping Pay
+- a purple **Pay $20** button
+
+**Step 4, done.** A full-screen tick, the sentence as the feed will show it, and **Done**. If the wallet is rejected or the transaction fails, stay on step 3 with one plain line saying why.
+
+Request skips step 3 and goes straight to "Requested $20 from Wes K."
+
+---
+
+## 8. Requests and splits
+
+- **Incoming requests** sit at the top of the Me tab and behind the Home shortcut pill. Each is a card: "**Wes K.** requests **$20** for Coffee", with **Pay** (opens step 3) and **Decline**.
+- **Outgoing requests** show under them: **Remind** and **Cancel**.
+- **Split.** Match `reference/venmo/04`. Add several people in step 1. Step 2 shows "Total amount", then one row per person with an amount box, yourself included by default; the total divides evenly and any box can be edited. One note for all. **Request** sends one request to each person. Splitting a payment to several people at once comes later.
+
+---
+
+## 9. Friends
+
+1. A search field, "Find people".
+2. **Requests,** when there are any: avatar, name, **Accept** and **Ignore**.
+3. **Suggested:** people who have paid you or been paid by you, friends of friends, then recent sign-ups. Each with **Add**.
+4. **Your friends,** A to Z, with a count. Tap for their profile.
+
+Adding a friend sends a request; they become a friend when it is accepted. A profile button reads **Add friend**, then **Requested**, then **Friends** (tap for Unfriend).
+
+---
+
+## 10. Portfolio
+
+Clean, mostly white space. This is Venmo's Crypto tab widened to everything the wallet holds.
+
+1. **Total value,** very large, with today's change in dollars and percent, green or red.
+2. A **line chart** of the total, with ranges 1D, 1W, 1M. On day one this is today's holdings priced backwards; say "based on what you hold now" in small grey text.
+3. **Get paid in** card: the current choice with its logo and "Change". It opens a list of every asset, with "Whatever I'm sent" as the first option. Changing it is one transaction.
+4. **Holdings,** in three groups with a subtotal each:
+   - **Stocks and real-world assets**
+   - **Crypto**
+   - **Cash** (USDC, and EURC on Arc)
+   Each row: logo, name, ticker, a "demo" tag where it applies, the amount, the dollar value, and the 24-hour change. Assets the user does not hold are not listed.
+5. **Explore,** under the holdings: everything else you could hold, each with its price and change.
+6. A grey line at the bottom: the wallet's short address and a link to the explorer.
+
+**Asset page,** as Venmo's coin page: name and logo, price, a chart with 1D, 1W, 1M, 6M, 1Y and All, "You hold 0.0214 (about $3.02)", **Buy** and **Sell** against dollars, **Get paid in this**, a short description, and your activity in this asset. Demo assets say "Test token that follows the real price."
+
+---
+
+## 11. Me
+
+1. **Header.** A settings gear top right and a bell beside it. The profile photo, large, with a small QR badge on its corner; display name; @username.
+2. **Tiles,** two across: **Friends** with the count, and **Portfolio** with the total value.
+3. **Requests** waiting, as cards (section 8).
+4. **Your activity:** every payment you are in, newest first, in a compact row: the other person's avatar, the sentence, the age, and the amount at the right, green "+ $20" or plain "− $20".
+
+**My code** (the QR badge, or the QR button on Home): two tabs, **Scan** and **My code**. My code shows the user's photo in the centre of the QR, the @username, **Share** and **Copy link**. Scan opens the camera, with a button to pick an image instead. A scanned code opens that person's profile, or step 2 already filled in when the code carries an amount.
+
+**Settings:**
+- **Profile:** photo, name, username
+- **Privacy:** who sees future payments (Public, Friends, Private); "Make all past payments private"; who can see your friends list
+- **Get paid in**
+- **Wallet:** address, chain, explorer link, back up or export the key for a wallet made in the browser, the one-time approvals
+- **Sign out**
+
+**Notifications** (the bell): friend requests, money requests, payments received, reactions and comments on your payments. A list, newest first. No push notifications.
+
+---
+
+## 12. Other people's profiles and the payment page
+
+**`/u/[handle]`.** The photo, name, @username, **Pay or Request** (purple, full width), the friend button, a count of mutual friends, and then the payments this person shares that the viewer is allowed to see. Someone who is not signed in sees the profile and a **Sign up to pay @wes** button, and comes back here after signing up.
+
+**`/p/[ref]`.** The feed card at full size, then the details visible to the two people only (amount, what was paid, what was received, the fee in cents), an explorer link, every reaction with who gave it, and the comments with a box to add one.
+
+---
+
+## 13. Words
+
+- Buttons: Pay, Request, Pay again, Say thanks, Split, Add friend, Accept, Decline, Remind, Cancel, Done.
+- Money always has a dollar sign and two decimals above the keypad stage: "$20.00" on receipts, "$20" in sentences when it is a whole number.
+- Errors are one sentence and say what to do: "You don't have enough SOL. Pick something else to pay with." "That username is taken." "The price moved. Try again." "@wes hasn't signed up yet."
+- Never show an address where a name exists. Never say "transaction hash", "gas" or "token" outside Settings and the payment page; say "fee" and "asset".
+
+---
+
+## 14. Privacy, as built this week
+
+- Every new account starts on **Public**, and the sign-up screen says so and lets the user change it.
+- The audience control is on every payment and in settings.
+- The stricter of the two people's settings wins, as on Venmo.
+- Friends-only payments are visible to friends of either person.
+- Amounts are never shown to anyone but the two people.
+- Private hides a payment from feeds and profiles. It does not hide the transfer on the chain, and the app says so at the moment of choosing.
+
+---
+
+## 15. Data and routes
+Merged into SPEC v3.1: tables and shapes in Appendix B, routes in section 8, the sharing rules in section 10. Build against those.
+
+## 16. Build order for this session
+
+| Step | When | Deliverable | Check |
+|---|---|---|---|
+| U0 | Sat | App live on Vercel: tab bar, grey page, white cards, fonts, the five empty tabs, manifest. Schema, session helper and shared types committed. | Production URL returns 200 on a phone |
+| U1 | Sat | Home, the feed card, from fixture data with all three audiences, both pill types, reactions and an emoji tile | A screenshot beside `reference/venmo/01` has the same structure |
+| U2 | Sat | Sign-up with a browser-made wallet: screens 1, 2 (first row only), 3, 4, 6, 7, 8. Initials for avatars. | A new browser profile reaches Home with a username |
+| U3 | Sat | Pay/Request steps 1 to 4 with real quotes; requests: create, list, pay; "My code" and pay links (no camera yet) | A real payment between two test accounts appears in both feeds |
+| U4 | Mon | Friends tab, friend requests, profiles, photos, both feeds, reactions and comments on real data, the payment page | Two accounts become friends and see each other's payment |
+| U5 | Mon | "Use my wallet": MetaMask, Rabby, Coinbase Wallet, Phantom, with the "Turn on payments" step | A MetaMask account signs up and pays |
+| U6 | Mon–Tue | Portfolio chart, the asset page with Buy and Sell, Me, settings, notifications, decline, cancel, remind, split, the camera scanner | A scanned code opens a filled-in payment; a split makes one request per person |
+| U7 | Wed | Polish on a real iPhone and a real Android phone: safe areas, keyboard over the note field, pull to refresh | — |
+
+On Sunday the room uses `/join` and `/room` (SPEC section 7), which Session A builds.
+
+## 17. Sources
+
+- Venmo's redesign, with the three feed screens: TechCrunch, May 11 2026, `https://techcrunch.com/2026/05/11/venmos-biggest-makeover-in-years-comes-at-a-very-interesting-time/`
+- Friends-only as the new default: The Verge, `https://www.theverge.com/tech/927503/venmo-app-redesign-privacy-posts` (from the search result; not read in full)
+- Pay and request steps, top people on Home, paying several people: `https://help.venmo.com/cs/articles/sending-requesting-money-vhel171`
+- Audiences, hidden amounts, the stricter setting wins, comments need friendship: `https://help.venmo.com/cs/articles/who-can-see-my-venmo-payments-vhel351`
+- Friends list, Add Friend, Unfriend: `https://help.venmo.com/cs/articles/adding-removing-friends-vhel249`
+- QR codes, Scan, "Venmo me": `https://help.venmo.com/cs/articles/personal-qr-codes-on-venmo-faq-vhel316`
+- Usernames (5 to 30 characters, hyphen and underscore): `https://help.venmo.com/cs/articles/check-or-edit-your-username-vhel208`
+- Notes required, 280 characters: `https://help.venmo.com/cs/articles/customize-your-payment-vhel147`
+- Crypto tab, chart ranges: `https://help.venmo.com/cs/articles/holding-cryptocurrency-on-venmo-vhel184`
+- App Store screenshots of the pay and split screens: `https://apps.apple.com/us/app/venmo/id351727428`
+
+The images in `reference/venmo/` are Venmo's. Use them to build from. Do not commit them to the public repo.
