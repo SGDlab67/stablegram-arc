@@ -135,10 +135,16 @@ questions.
 
 ## Deployed addresses
 
-| Network | Chain ID | Addresses |
-| --- | --- | --- |
-| Arc testnet | 5042002 | to be filled on first deploy |
-| Monad testnet | 10143 | to be filled at Monad Blitz |
+Arc testnet, chain ID 5042002, deployed in block 72245663. Explorer:
+`explorer.testnet.arc.io`.
+
+| Contract | Address |
+| --- | --- |
+| `Stablegram` | `0x1EfA8bF4c206503Edd598D35B7E0F8d32C353ab2` |
+| `UsernameRegistry` | `0x9100A33057302d106850D42Eb09f2896480ea3Ee` |
+| `MockShare` | `0x7cb45eB5C729061295f84C69e0eb3961f28a9f64` |
+
+Monad testnet, chain ID 10143: to be deployed at Monad Blitz on 2026-11-15.
 
 ## Run it
 
