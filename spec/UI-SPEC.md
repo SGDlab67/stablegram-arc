@@ -95,13 +95,13 @@ Empty Friends feed: "Add a few friends to see what they're paying for," with a b
 
 ## 6. The feed card
 
-Match `reference/venmo/01`, `02` and `05`.
+Compact, not Venmo-sized (Charlie, Nov 14): about 155 px tall, 16 px padding, no picture. The structure still follows `reference/venmo/01`, `02` and `05`.
 
 1. **Header line,** small and grey: an audience icon and label ("Public", "Visible to friends", "Only visible to you"), a dot, the age ("2h"). A "…" menu on the right: Copy link, View on explorer, and for the payer, Change who can see this.
-2. **The sentence,** large: [avatar] **Sabina O.** paid [avatar] **Wes K.** for **pizza and burgers**. The viewer is written "You" or "you". If the viewer is one of the two people, the amount follows the second name: "You paid Wes K. **$20** for Coffee". Nobody else ever sees an amount. A request that was paid reads the same as a payment.
-3. **Asset chip** under the sentence, ours and not Venmo's: the logo and name of the asset that was sent ("NVIDIA"). The receiver got that same asset.
-4. **Visual,** when the note contains an emoji: a rounded tile in a bright colour with that emoji very large, where Venmo shows an illustration. No emoji, no tile. The colour comes from the emoji so the same emoji always looks the same.
-5. **Action row,** left to right:
+2. **The sentence,** 17 px with 22 px avatars: [avatar] **Sabina O.** paid [avatar] **Wes K.** for **🍕 pizza and burgers**, with the note's emoji kept small and inline. The viewer is written "You" or "you". If the viewer is one of the two people, the amount follows the second name: "You paid Wes K. **$20** for Coffee". Nobody else ever sees an amount. A request that was paid reads the same as a payment.
+3. **Asset chip,** first in the action row, ours and not Venmo's: the logo and name of the asset that was sent ("NVIDIA"). The receiver got that same asset.
+4. **No picture tile.** Venmo shows an illustration; we leave it out to keep the feed dense.
+5. **Action row,** 36 px tall buttons, left to right after the chip:
    - one **black pill**, chosen by who is looking: **Pay again** on a payment you sent; **Say thanks** on one you received (it adds a 🙏 reaction and opens the comment box); **Split** on one you sent that is over $10. Nothing for strangers' payments.
    - a comment button, with a count when there are comments
    - one pill per reaction already given, emoji and count; yours is filled

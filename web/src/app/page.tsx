@@ -85,7 +85,7 @@ export default function Home() {
         ))}
       </div>
 
-      <div className="space-y-3 px-4 pt-3">
+      <div className="space-y-2.5 px-4 pt-3">
         {feed.map((p) => (
           <div key={p.ref} className={p.ago === 0 ? "slide-up" : ""}>
             <FeedCard p={p} />

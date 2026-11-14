@@ -44,7 +44,7 @@ export function AssetDot({ symbol, size = 36 }: { symbol: string; size?: number 
 export function AssetChip({ symbol, large = false }: { symbol: string; large?: boolean }) {
   const a = assetOf(symbol);
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full bg-chip font-medium text-ink ${large ? "px-3 py-1.5 text-base" : "px-2.5 py-1 text-sm"}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full bg-chip font-medium text-ink ${large ? "px-3 py-1.5 text-base" : "h-9 px-2.5 text-[13px]"}`}>
       <AssetDot symbol={symbol} size={large ? 26 : 20} />
       {symbol === "USDC" ? "Dollars" : a.name}
     </span>

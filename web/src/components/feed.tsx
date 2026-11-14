@@ -4,17 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageCircle, SmilePlus } from "lucide-react";
 import { useState } from "react";
-import { REACTION_CHOICES, agoLabel, emojiOf, personOf, shortName, textOf, tileColor, usd, type Payment } from "@/lib/data";
+import { REACTION_CHOICES, agoLabel, personOf, shortName, textOf, usd, type Payment } from "@/lib/data";
 import { useStore } from "@/lib/store";
-import { AssetChip, AudienceLabel, Avatar, BlackPill, Card } from "./ui";
+import { AssetChip, AudienceLabel, Avatar, Card } from "./ui";
 
-export function Sentence({ p, size = "lg" }: { p: Payment; size?: "lg" | "sm" }) {
+export function Sentence({ p, size = "lg" }: { p: Payment; size?: "lg" | "md" | "sm" }) {
   const { me, people } = useStore();
   const mine = p.from === me.handle || p.to === me.handle;
   const from = personOf(p.from, people);
   const to = personOf(p.to, people);
   const big = size === "lg";
-  const av = big ? 28 : 20;
+  const av = big ? 28 : size === "md" ? 22 : 20;
   const name = (handle: string, label: string, capital: boolean) =>
     handle === me.handle ? (
       <span className="font-semibold text-ink">{capital ? "You" : "you"}</span>
@@ -27,9 +27,9 @@ export function Sentence({ p, size = "lg" }: { p: Payment; size?: "lg" | "sm" })
       </span>
     );
   return (
-    <p className={`${big ? "text-[26px] leading-[1.22]" : "text-[15px] leading-snug"} font-medium tracking-tight text-muted`}>
+    <p className={`${big ? "text-[26px] leading-[1.22]" : size === "md" ? "text-[17px] leading-snug" : "text-[15px] leading-snug"} font-medium tracking-tight text-muted`}>
       {name(p.from, shortName(from), true)} paid {name(p.to, shortName(to), false)}
-      {mine && <span className="font-semibold text-ink"> {usd(p.usd)}</span>} for <span className="font-semibold text-ink">{textOf(p.note)}</span>
+      {mine && <span className="font-semibold text-ink"> {usd(p.usd)}</span>} for <span className="font-semibold text-ink">{size === "md" ? p.note : textOf(p.note)}</span>
     </p>
   );
 }
@@ -47,7 +47,7 @@ export function ReactionRow({ p }: { p: Payment }) {
             key={emoji}
             type="button"
             onClick={() => react(p.ref, emoji)}
-            className={`pop inline-flex h-12 items-center gap-1.5 rounded-full px-4 text-[17px] font-semibold ${mine ? "bg-brand-soft text-brand ring-1 ring-brand/40" : "bg-chip text-ink"}`}
+            className={`pop inline-flex h-9 items-center gap-1 rounded-full px-3 text-[14px] font-semibold ${mine ? "bg-brand-soft text-brand ring-1 ring-brand/40" : "bg-chip text-ink"}`}
           >
             <span>{emoji}</span>
             {who.length}
@@ -58,9 +58,9 @@ export function ReactionRow({ p }: { p: Payment }) {
         type="button"
         aria-label="Add a reaction"
         onClick={() => setPicking((v) => !v)}
-        className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-chip"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-chip"
       >
-        <SmilePlus size={22} />
+        <SmilePlus size={18} />
       </button>
       {picking && (
         <div className="slide-up flex w-full gap-2 pt-1">
@@ -72,7 +72,7 @@ export function ReactionRow({ p }: { p: Payment }) {
                 react(p.ref, emoji);
                 setPicking(false);
               }}
-              className="flex h-12 flex-1 items-center justify-center rounded-2xl bg-chip text-2xl active:scale-90"
+              className="flex h-10 flex-1 items-center justify-center rounded-2xl bg-chip text-xl active:scale-90"
             >
               {emoji}
             </button>
@@ -86,30 +86,21 @@ export function ReactionRow({ p }: { p: Payment }) {
 export function FeedCard({ p, linked = true }: { p: Payment; linked?: boolean }) {
   const { me, react } = useStore();
   const router = useRouter();
-  const emoji = emojiOf(p.note);
   const sent = p.from === me.handle;
   const received = p.to === me.handle;
   const other = sent ? p.to : p.from;
   const body = (
     <>
-      <div className="mb-3 flex items-center gap-2 text-[14px] text-muted">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[12px] text-muted">
         <AudienceLabel audience={p.audience} verbose />
         <span>·</span>
         <span>{agoLabel(p.ago)}</span>
       </div>
-      <Sentence p={p} />
-      <div className="mt-3">
-        <AssetChip symbol={p.asset} />
-      </div>
-      {emoji && (
-        <div className="mt-4 flex h-44 items-center justify-center rounded-[22px] text-[92px] leading-none" style={{ background: tileColor(emoji) }}>
-          <span className="drop-shadow-sm">{emoji}</span>
-        </div>
-      )}
+      <Sentence p={p} size="md" />
     </>
   );
   return (
-    <Card>
+    <Card className="!p-4">
       {linked ? (
         <Link href={`/p/${p.ref}`} className="block">
           {body}
@@ -117,20 +108,27 @@ export function FeedCard({ p, linked = true }: { p: Payment; linked?: boolean })
       ) : (
         body
       )}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {sent && <BlackPill href={`/pay?to=${other}&amount=${p.usd}&note=${encodeURIComponent(p.note)}`}>Pay again</BlackPill>}
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        <AssetChip symbol={p.asset} />
+        {sent && (
+          <Link href={`/pay?to=${other}&amount=${p.usd}&note=${encodeURIComponent(p.note)}`} className="inline-flex h-9 items-center rounded-full bg-ink px-4 text-[14px] font-semibold text-white">
+            Pay again
+          </Link>
+        )}
         {received && (
-          <BlackPill
+          <button
+            type="button"
             onClick={() => {
               if (!p.reactions["🙏"]?.includes(me.handle)) react(p.ref, "🙏");
               router.push(`/p/${p.ref}?thanks=1`);
             }}
+            className="inline-flex h-9 items-center rounded-full bg-ink px-4 text-[14px] font-semibold text-white"
           >
             Say thanks
-          </BlackPill>
+          </button>
         )}
-        <Link href={`/p/${p.ref}`} aria-label="Comments" className="inline-flex h-12 min-w-12 items-center justify-center gap-1.5 rounded-full bg-chip px-3.5 text-[17px] font-semibold">
-          <MessageCircle size={22} />
+        <Link href={`/p/${p.ref}`} aria-label="Comments" className="inline-flex h-9 min-w-9 items-center justify-center gap-1 rounded-full bg-chip px-2.5 text-[14px] font-semibold">
+          <MessageCircle size={18} />
           {p.comments.length > 0 && p.comments.length}
         </Link>
         <ReactionRow p={p} />
