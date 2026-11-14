@@ -11,7 +11,13 @@ import { useStore } from "@/lib/store";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"];
 
+/** Remount on every new link (e.g. coming back from Buy) so no old sheet or step is left open. */
 export function PayFlow() {
+  const params = useSearchParams();
+  return <PayFlowInner key={params.toString()} />;
+}
+
+function PayFlowInner() {
   const router = useRouter();
   const params = useSearchParams();
   const store = useStore();
@@ -20,7 +26,7 @@ export function PayFlow() {
   const presetTo = params.get("to");
   const requestId = params.get("request") ?? undefined;
   const [recipients, setRecipients] = useState<string[]>(presetTo ? [presetTo] : []);
-  const [step, setStep] = useState<"who" | "amount" | "confirm" | "done">(presetTo ? "amount" : "who");
+  const [step, setStep] = useState<"who" | "amount" | "confirm" | "done">(presetTo ? (params.get("confirm") === "1" && params.get("asset") && params.get("amount") ? "confirm" : "amount") : "who");
   const [adding, setAdding] = useState(false);
   const [query, setQuery] = useState("");
   const [amount, setAmount] = useState(params.get("amount") ?? "");
@@ -56,7 +62,7 @@ export function PayFlow() {
   );
   // Holdings that cover the amount come first, largest first; the rest are listed but greyed out.
   const choices = [...funded].sort((a, b) => Number(b.value >= value) - Number(a.value >= value) || b.value - a.value);
-  const chosen = payAsset && funded.some((h) => h.asset.symbol === payAsset && h.value >= value) ? payAsset : null;
+  const chosen = payAsset && funded.some((h) => h.asset.symbol === payAsset && h.value + 0.005 >= value) ? payAsset : null;
 
   const startPay = () => {
     // Coming from an asset's "Send some" button, that asset is already picked: go straight to confirm.
@@ -348,7 +354,7 @@ export function PayFlow() {
         <p className="-mt-2 mb-3 text-[14px] text-muted">Pick what to send from your portfolio.</p>
         <div className="space-y-2">
           {choices.map((h) => {
-            const enough = h.value >= value;
+            const enough = h.value + 0.005 >= value;
             return (
               <button
                 key={h.asset.symbol}
@@ -367,6 +373,15 @@ export function PayFlow() {
             );
           })}
         </div>
+        {first && (
+          <Link
+            href={`/buy?amount=${value}&to=${first.handle}&note=${encodeURIComponent(note)}`}
+            className="mt-3 flex h-12 w-full items-center justify-center gap-1.5 rounded-full border border-line text-[15px] font-semibold text-brand"
+          >
+            <Plus size={17} strokeWidth={2.5} />
+            Buy something to send
+          </Link>
+        )}
       </Sheet>
     </div>
   );

@@ -83,9 +83,9 @@ export function AssetScreen() {
           <p className="text-[15px] text-muted">about {usd(value, { cents: true })}</p>
           {!isDollar && (
             <div className="mt-4 flex gap-3">
-              <PrimaryButton className="h-12 flex-1" onClick={() => setTrade("buy")}>
+              <Link href={`/buy?asset=${asset.symbol}`} className="flex h-12 flex-1 items-center justify-center rounded-full bg-brand text-[17px] font-semibold text-white">
                 Buy
-              </PrimaryButton>
+              </Link>
               <PrimaryButton className="h-12 flex-1" disabled={units === 0} onClick={() => setTrade("sell")}>
                 Sell
               </PrimaryButton>

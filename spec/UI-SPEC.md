@@ -114,6 +114,14 @@ Likes are open to anyone who can see the card. Comments need you to be a friend 
 
 ## 7. Pay/Request
 
+**Buy (Charlie, Nov 14).** `/buy` is a full-screen flow in four steps:
+1. Pick an asset, grouped Stocks / Crypto / Dollars and euros. Skipped when you start from an asset page.
+2. Type the amount on a keypad, with $10 / $25 / $50 / $100 shortcuts. A "Pay with" row opens a sheet listing Apple Pay, debit card, Venmo, PayPal, Cash App, bank account, wallet and "Your dollars", each with a one-line hint.
+3. Review: what you get, how you pay, "Goes to: your own wallet", and fees ("Shown by the partner first"). With Apple Pay the button is black: "Buy with Apple Pay".
+4. Done: "Send some to a friend", or "Send it to Wes now" when the flow started from paying someone.
+
+Every screen carries "Demo: no real money moves". The buy entry points are listed in DECISIONS 65.
+
 **Who can see it: Public or Private only (Charlie, Nov 14).** No audience pill in the corner of the pay screen. The confirm screen has a "Who can see it" row with a Public | Private toggle, preset from the default in Settings, and one grey line under it explaining the choice. Feed cards show only the age for public payments, and "· 🔒 Private" for private ones (seen only by the two people). Sign-up and Settings offer the same two choices.
 
 **Pay with → Confirm (Charlie, Nov 14).** Tapping Pay opens a list of holdings, the ones that cover the amount first; tapping one goes straight to a full **Confirm** screen: the person's photo, "Pay Wes Kim", the dollar amount very large, "with" and the chosen asset's logo, name and token amount, then For / Wes gets / Who can see it / Fee, the first-time warning, and one button, "Pay $20 with Bitcoin", with "Pay with something else" under it. No selecting-then-scrolling. Coming from an asset's "Send some to a friend", the list is skipped.

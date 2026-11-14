@@ -79,6 +79,8 @@ interface Store {
   setDefaultAudience: (a: Audience) => void;
   updateMe: (patch: Partial<Person>) => void;
   buy: (symbol: string, dollars: number) => void;
+  /** Buy with outside money (Apple Pay, card, Venmo…): adds the asset without touching the dollar balance. */
+  buyWithOutside: (symbol: string, dollars: number) => void;
   sell: (symbol: string, dollars: number) => void;
 }
 
@@ -244,6 +246,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setHoldings((h) => ({ ...h, USDC: Math.max(0, (h.USDC ?? 0) - dollars), [symbol]: (h[symbol] ?? 0) + dollars / price }));
   }, []);
 
+  const buyWithOutside = useCallback((symbol: string, dollars: number) => {
+    const price = assetOf(symbol).price;
+    setHoldings((h) => ({ ...h, [symbol]: (h[symbol] ?? 0) + dollars / price }));
+  }, []);
+
   const sell = useCallback((symbol: string, dollars: number) => {
     const price = assetOf(symbol).price;
     setHoldings((h) => ({ ...h, USDC: (h.USDC ?? 0) + dollars, [symbol]: Math.max(0, (h[symbol] ?? 0) - dollars / price) }));
@@ -287,6 +294,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setDefaultAudience,
     updateMe,
     buy,
+    buyWithOutside,
     sell,
   };
 
