@@ -169,6 +169,32 @@ forge script script/Deploy.s.sol:Deploy \
 Never pass a private key on the command line. The keystore prompts for the
 password and nothing lands in shell history.
 
+## The phone app
+
+`web/index.html` is the whole client: one file, ethers from a CDN, no build
+step, no framework. Serve it, open it in Safari, then Share and Add to Home
+Screen for a full screen app with no browser chrome.
+
+```bash
+cd web && python3 -m http.server 8000
+```
+
+It carries two throwaway testnet accounts instead of a wallet connector,
+because mobile wallet deep linking is what breaks live demos. A judge picks
+"as alice" or "as bob" and sends. Those keys live in `web/demo-keys.js`, which
+is gitignored and holds nothing of value.
+
+Rehearsed end to end on Arc testnet on 2026-11-13: both usernames claimed, a
+0.25 mCRCL send and a 1.5 USDC native send, each with a note, both in the feed.
+
+| What | Transaction | Cost |
+| --- | --- | --- |
+| Send a quarter share with a note | `0xc8c3f9fbeef8b443c94b0d174a1ba53edf669a7e9c5d45b6a5a3f0a2259d6712` | 0.0025 USDC |
+| Send 1.5 dollars with a note | `0xaa4c5e89a4feda0fc85efa9a81a579c84c3a5ad98a520b1da877621e4a8e5471` | 0.0011 USDC |
+
+Gas is paid in USDC, so those are literal fractions of a cent, and the
+recipient never needs a separate gas token.
+
 ## What is real and what is mocked
 
 Judges mark down a demo that hides its mocks, so here they are.
