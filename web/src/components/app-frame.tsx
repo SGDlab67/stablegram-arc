@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { Suspense, useEffect, useRef, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import { APP_NAME } from "@/lib/data";
+import { Mark } from "./shell";
 
 const noSubscribe = () => () => {};
 
@@ -22,7 +23,10 @@ function PhonePanel() {
   const local = /\/\/(localhost|127\.0\.0\.1|\[::1\])(:|$)/.test(origin);
   return (
     <aside className="aside">
-      <p className="text-[28px] font-bold tracking-tight text-brand">{APP_NAME}</p>
+      <p className="flex items-center gap-2.5 text-[28px] font-bold tracking-tight text-brand">
+        <Mark size={34} />
+        {APP_NAME}
+      </p>
       <h1 className="mt-3 text-[30px] font-semibold leading-[1.1] tracking-tight">This is a phone app.</h1>
       <p className="mt-3 text-[16px] leading-relaxed text-[#5b544a]">
         Scan the code with your phone&apos;s camera to open it there. The frame on the left is the same app at phone size.

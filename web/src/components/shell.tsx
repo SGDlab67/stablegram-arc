@@ -2,24 +2,32 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChartPie, ChevronLeft, House, QrCode, Search, Users } from "lucide-react";
+import { ChartLine, ChevronLeft, House, QrCode, Search, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { APP_NAME } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { Avatar } from "./ui";
 
-function Mark({ size = 28 }: { size?: number }) {
-  // The app's own mark: two overlapping coins. Not Venmo's "V".
+/**
+ * The app's mark, "The Slice": a portfolio with one slice pulled out, for paying a friend a slice of what you hold.
+ * Drawn in the current text colour, so it works on navy, beige or white.
+ */
+export function Mark({ size = 28, className = "" }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden>
-      <circle cx="12" cy="16" r="8" stroke="white" strokeWidth="3" />
-      <circle cx="20" cy="16" r="8" stroke="white" strokeWidth="3" />
+    <svg width={size} height={size} viewBox="8 8 48 48" className={className} aria-hidden>
+      <path d="M30 34 L30 14 A20 20 0 1 0 47.3 44 Z" fill="currentColor" />
+      <path d="M35 30 L35 10 A20 20 0 0 1 52.3 40 Z" fill="currentColor" opacity={0.55} />
     </svg>
   );
 }
 
-export function Wordmark({ className = "" }: { className?: string }) {
-  return <span className={`font-bold tracking-tight text-brand ${className}`}>{APP_NAME}</span>;
+export function Wordmark({ className = "", mark = false }: { className?: string; mark?: boolean }) {
+  return (
+    <span className={`inline-flex items-center gap-2 font-bold tracking-tight text-brand ${className}`}>
+      {mark && <Mark size={30} />}
+      {APP_NAME}
+    </span>
+  );
 }
 
 export function TabBar() {
@@ -42,11 +50,11 @@ export function TabBar() {
         {tab("/friends", "Friends", <Users size={24} />, pathname.startsWith("/friends"), incoming.length > 0)}
         <Link href="/pay" className="-mt-7 flex w-20 flex-col items-center gap-1 text-[11px] font-medium text-brand">
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-brand shadow-lg shadow-brand/30 ring-4 ring-white">
-            <Mark />
+            <Mark size={30} className="text-white" />
           </span>
           Pay/Request
         </Link>
-        {tab("/portfolio", "Portfolio", <ChartPie size={24} />, pathname.startsWith("/portfolio"))}
+        {tab("/portfolio", "Portfolio", <ChartLine size={24} />, pathname.startsWith("/portfolio"))}
         {tab("/me", "Me", <Avatar handle={me.handle} size={26} />, pathname.startsWith("/me"), openRequests > 0)}
       </div>
     </nav>

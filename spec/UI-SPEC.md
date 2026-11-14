@@ -42,6 +42,7 @@ Nothing here has been built. Venmo's Me tab, settings and Crypto tab are describ
 - **Avatars:** round photos. Inline in a feed sentence they are 28 px; on a profile 96 px. No photo: initials on one of eight colours picked from the username.
 - **Motion:** new feed cards slide in from the top; a sent payment ends on a full-screen tick with the sentence it will show in the feed; reactions pop.
 - **Shape of the app: a phone app, never a website.** Built at 390 px wide with safe-area padding. Added to the Home Screen it opens from its own icon, full screen, with no browser bar (a manifest, icons, and the standalone setting). On a computer it does not stretch: it shows inside a phone-sized frame beside a QR code that sends people to their phone. No landing page, no desktop layout, no hover-only controls. On a phone in a browser tab, Home shows one dismissible card explaining how to add it to the Home Screen. It is installed from a link or a QR code, not from the App Store or Play Store; a store build would be a wrapper around this same app and is not planned for this week.
+- **Logo: "The Slice"** (Charlie's pick, Nov 14): a pie with one slice pulled out, for paying a friend a slice of what you hold. Beige on navy for the app icon, navy on beige elsewhere, white inside the centre Pay/Request button. Because of it, the Portfolio tab uses a line-chart icon, not a pie. Options considered: `design/logo-options.html`.
 - No lightning bolt anywhere.
 
 ---

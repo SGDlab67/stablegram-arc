@@ -132,7 +132,7 @@ export default function Welcome() {
       <div className="flex flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)] pt-2">
         {step === "intro" && (
           <>
-            <Wordmark className="text-[30px]" />
+            <Wordmark className="text-[30px]" mark />
             <div className="flex flex-1 flex-col justify-center py-6">
               <div className="rounded-[28px] bg-white p-5">
                 <p className="text-[15px] font-medium text-muted">You pay</p>
