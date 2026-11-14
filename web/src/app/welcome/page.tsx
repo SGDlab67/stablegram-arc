@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowRight, Camera, Check, ChevronLeft, Sparkles, Wallet } from "lucide-react";
-import { useRef, useState } from "react";
+import { ArrowRight, Camera, Check, ChevronLeft, ImageIcon, Sparkles, Wallet } from "lucide-react";
+import { useState } from "react";
 import { Wordmark } from "@/components/shell";
 import { AssetChip, AssetDot, AudienceLabel, PrimaryButton, Sheet } from "@/components/ui";
 import {
@@ -16,6 +16,7 @@ import {
   usd,
   type Audience,
 } from "@/lib/data";
+import { PhotoPicker } from "@/components/photo-picker";
 import { useStore } from "@/lib/store";
 
 const STEPS = ["intro", "signin", "name", "username", "photo", "first", "audience", "done"] as const;
@@ -26,19 +27,6 @@ const AUDIENCES: { id: Audience; hint: string }[] = [
   { id: "public", hint: "Shows in feeds: names and the note. Never the amount." },
   { id: "private", hint: "Only you and the other person see it in the app." },
 ];
-
-/** Crops to a square and shrinks, so a phone photo becomes a small profile picture. */
-async function toAvatar(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const side = Math.min(bitmap.width, bitmap.height);
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 256;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("This browser cannot resize the photo.");
-  ctx.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 256, 256);
-  return canvas.toDataURL("image/jpeg", 0.85);
-}
 
 export default function Welcome() {
   const router = useRouter();
@@ -51,10 +39,8 @@ export default function Welcome() {
   const [handle, setHandle] = useState("");
   const [color, setColor] = useState(AVATAR_COLORS[0]);
   const [photo, setPhoto] = useState<string | undefined>(undefined);
-  const [photoError, setPhotoError] = useState("");
   const [firstAsset, setFirstAsset] = useState(STARTER_CHOICES[0]);
   const [audience, setAudience] = useState<Audience>("public");
-  const fileInput = useRef<HTMLInputElement>(null);
 
   const index = STEPS.indexOf(step);
   const go = (to: Step) => setStep(to);
@@ -271,36 +257,39 @@ export default function Welcome() {
 
         {step === "photo" && (
           <>
-            {title("Add a photo", "It helps friends check they are paying the right person.")}
+            {title("Add a photo", "Pick one from your camera roll or take a selfie. It helps friends know they're paying the right person.")}
             <div className="mt-8 flex flex-col items-center">
-              <button type="button" onClick={() => fileInput.current?.click()} className="relative" aria-label="Choose a photo">
-                {preview(132)}
-                <span className="absolute -bottom-1 -right-1 flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white ring-4 ring-page">
-                  <Camera size={20} />
-                </span>
-              </button>
-              <input
-                ref={fileInput}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setPhotoError("");
-                  toAvatar(file).then(setPhoto, () => setPhotoError("That file could not be read as a photo. Try another."));
-                }}
-              />
+              <PhotoPicker hasPhoto={!!photo} onChange={setPhoto}>
+                {(open) => (
+                  <button type="button" onClick={open} className="relative" aria-label="Choose a photo">
+                    {preview(132)}
+                    <span className="absolute -bottom-1 -right-1 flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white ring-4 ring-page">
+                      <Camera size={20} />
+                    </span>
+                  </button>
+                )}
+              </PhotoPicker>
               <p className="mt-4 text-[20px] font-semibold">
                 {first} {last}
               </p>
               <p className="text-[15px] text-muted">@{handle}</p>
-              {photoError && <p className="mt-3 text-center text-[14px] text-down">{photoError}</p>}
               {photo ? (
-                <button type="button" onClick={() => setPhoto(undefined)} className="mt-5 h-10 rounded-full bg-white px-4 text-[15px] font-semibold">
-                  Remove photo
-                </button>
+                <PhotoPicker hasPhoto onChange={setPhoto}>
+                  {(open) => (
+                    <button type="button" onClick={open} className="mt-5 h-10 rounded-full bg-white px-4 text-[15px] font-semibold">
+                      Change photo
+                    </button>
+                  )}
+                </PhotoPicker>
               ) : (
+                <>
+                  <PhotoPicker hasPhoto={false} onChange={setPhoto}>
+                    {(open) => (
+                      <button type="button" onClick={open} className="mt-5 flex h-12 items-center gap-2 rounded-full bg-ink px-5 text-[16px] font-semibold text-white">
+                        <ImageIcon size={18} /> Choose from your photos
+                      </button>
+                    )}
+                  </PhotoPicker>
                 <>
                   <p className="mt-6 text-[13px] font-semibold uppercase tracking-wide text-muted">Or pick a colour</p>
                   <div className="mt-3 flex flex-wrap justify-center gap-3">
@@ -315,6 +304,7 @@ export default function Welcome() {
                       />
                     ))}
                   </div>
+                </>
                 </>
               )}
             </div>

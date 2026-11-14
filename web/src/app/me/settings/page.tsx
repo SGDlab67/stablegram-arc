@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Check, ChevronRight } from "lucide-react";
+import { Camera, Check, ChevronRight } from "lucide-react";
 import { BackHeader, Screen } from "@/components/shell";
 import { AudienceLabel, Avatar, Card, SectionTitle } from "@/components/ui";
 import { type Audience, type PortfolioPrivacy } from "@/lib/data";
+import { PhotoPicker } from "@/components/photo-picker";
 import { useStore } from "@/lib/store";
 
 const AUDIENCES: { id: Audience; hint: string }[] = [
@@ -68,10 +69,21 @@ export default function SettingsPage() {
         <SectionTitle>Profile</SectionTitle>
         <Card>
           <div className="flex items-center gap-4">
-            <Avatar handle={me.handle} size={64} />
-            <button type="button" className="rounded-full bg-chip px-4 py-2 text-[15px] font-semibold">
-              Change photo
-            </button>
+            <PhotoPicker hasPhoto={!!me.photo} onChange={(photo) => updateMe({ photo })}>
+              {(open) => (
+                <>
+                  <button type="button" onClick={open} aria-label="Change photo" className="relative">
+                    <Avatar handle={me.handle} size={72} />
+                    <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white ring-[3px] ring-white">
+                      <Camera size={15} />
+                    </span>
+                  </button>
+                  <button type="button" onClick={open} className="rounded-full bg-chip px-4 py-2 text-[15px] font-semibold">
+                    {me.photo ? "Change photo" : "Add a photo"}
+                  </button>
+                </>
+              )}
+            </PhotoPicker>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <label className="block">
