@@ -92,9 +92,13 @@ export function FeedCard({ p, linked = true }: { p: Payment; linked?: boolean })
   const body = (
     <>
       <div className="mb-1.5 flex items-center gap-1.5 text-[12px] text-muted">
-        <AudienceLabel audience={p.audience} verbose />
-        <span>·</span>
         <span>{agoLabel(p.ago)}</span>
+        {p.audience === "private" && (
+          <>
+            <span>·</span>
+            <AudienceLabel audience="private" />
+          </>
+        )}
       </div>
       <Sentence p={p} size="md" />
     </>

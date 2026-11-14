@@ -114,6 +114,8 @@ Likes are open to anyone who can see the card. Comments need you to be a friend 
 
 ## 7. Pay/Request
 
+**Who can see it: Public or Private only (Charlie, Nov 14).** No audience pill in the corner of the pay screen. The confirm screen has a "Who can see it" row with a Public | Private toggle, preset from the default in Settings, and one grey line under it explaining the choice. Feed cards show only the age for public payments, and "· 🔒 Private" for private ones (seen only by the two people). Sign-up and Settings offer the same two choices.
+
 **Pay with → Confirm (Charlie, Nov 14).** Tapping Pay opens a list of holdings, the ones that cover the amount first; tapping one goes straight to a full **Confirm** screen: the person's photo, "Pay Wes Kim", the dollar amount very large, "with" and the chosen asset's logo, name and token amount, then For / Wes gets / Who can see it / Fee, the first-time warning, and one button, "Pay $20 with Bitcoin", with "Pay with something else" under it. No selecting-then-scrolling. Coming from an asset's "Send some to a friend", the list is skipped.
 
 **No conversion.** The sender picks which holding to send; the receiver gets exactly that asset, and can keep it or tap **Sell for dollars** on the payment page or the asset page. A request is in dollars; whoever pays it picks the asset.

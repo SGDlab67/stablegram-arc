@@ -9,7 +9,6 @@ import { useStore } from "@/lib/store";
 
 const AUDIENCES: { id: Audience; hint: string }[] = [
   { id: "public", hint: "Anyone can see your payments in feeds. Amounts stay hidden." },
-  { id: "friends", hint: "Your friends, and the other person's friends." },
   { id: "private", hint: "Only you and the other person." },
 ];
 

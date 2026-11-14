@@ -23,9 +23,8 @@ type Step = (typeof STEPS)[number];
 
 const WALLETS = ["MetaMask", "Phantom", "Rabby", "Coinbase Wallet"];
 const AUDIENCES: { id: Audience; hint: string }[] = [
-  { id: "public", hint: "Anyone can see the names and the note." },
-  { id: "friends", hint: "Your friends, and the other person's friends." },
-  { id: "private", hint: "Only you and the other person." },
+  { id: "public", hint: "Shows in feeds: names and the note. Never the amount." },
+  { id: "private", hint: "Only you and the other person see it in the app." },
 ];
 
 /** Crops to a square and shrinks, so a phone photo becomes a small profile picture. */

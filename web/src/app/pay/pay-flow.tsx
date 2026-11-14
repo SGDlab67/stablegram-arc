@@ -5,16 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronLeft, Delete, Plus, QrCode, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Sentence } from "@/components/feed";
-import { AssetDot, AudienceLabel, Avatar, PrimaryButton, Sheet } from "@/components/ui";
+import { AssetDot, AudienceToggle, Avatar, PrimaryButton, Sheet } from "@/components/ui";
 import { ASSETS, NOTE_SHORTCUTS, amountLabel, assetOf, feeLabel, personOf, shortName, usd, type Audience, type Payment } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"];
-const AUDIENCES: { id: Audience; hint: string }[] = [
-  { id: "public", hint: "Anyone can see it in feeds" },
-  { id: "friends", hint: "Your friends and theirs" },
-  { id: "private", hint: "Hidden from feeds. The transfer is still visible on the blockchain." },
-];
 
 export function PayFlow() {
   const router = useRouter();
@@ -31,7 +26,6 @@ export function PayFlow() {
   const [amount, setAmount] = useState(params.get("amount") ?? "");
   const [note, setNote] = useState(params.get("note") ?? "");
   const [audience, setAudience] = useState<Audience>(defaultAudience);
-  const [audienceOpen, setAudienceOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [payAsset, setPayAsset] = useState<string | null>(params.get("asset"));
   const [done, setDone] = useState<{ kind: "paid"; payment: Payment } | { kind: "requested"; each: number } | null>(null);
@@ -184,8 +178,11 @@ export function PayFlow() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted">Who can see it</span>
-              <AudienceLabel audience={audience} className="font-semibold" />
+              <AudienceToggle value={audience} onChange={setAudience} />
             </div>
+            <p className="text-[12px] leading-snug text-muted">
+              {audience === "public" ? "Shows in feeds. The amount stays between you two." : "Only you and " + first.first + " see it in the app. The transfer is still on a public blockchain."}
+            </p>
             <div className="flex items-center justify-between">
               <span className="text-muted">Fee</span>
               <span className="font-semibold">under 1¢ (estimate)</span>
@@ -271,9 +268,7 @@ export function PayFlow() {
         <button type="button" aria-label="Close" onClick={() => router.push("/")} className="flex h-10 w-10 items-center justify-center rounded-full bg-chip">
           <X size={20} />
         </button>
-        <button type="button" onClick={() => setAudienceOpen(true)} className="flex h-10 items-center rounded-full bg-chip px-4 text-[15px] font-semibold">
-          <AudienceLabel audience={audience} />
-        </button>
+        <span className="w-10" />
       </div>
 
       <div className="flex flex-col items-center px-6 pt-2">
@@ -348,27 +343,6 @@ export function PayFlow() {
         </div>
       </div>
 
-      <Sheet open={audienceOpen} onClose={() => setAudienceOpen(false)} title="Who can see this?">
-        <div className="space-y-2">
-          {AUDIENCES.map((a) => (
-            <button
-              key={a.id}
-              type="button"
-              onClick={() => {
-                setAudience(a.id);
-                setAudienceOpen(false);
-              }}
-              className={`flex w-full items-start gap-3 rounded-2xl p-4 text-left ${audience === a.id ? "bg-brand-soft" : "bg-chip"}`}
-            >
-              <span className="flex-1">
-                <AudienceLabel audience={a.id} className="text-[17px] font-semibold" />
-                <span className="mt-0.5 block text-[14px] text-muted">{a.hint}</span>
-              </span>
-              {audience === a.id && <Check size={20} className="text-brand" />}
-            </button>
-          ))}
-        </div>
-      </Sheet>
 
       <Sheet open={confirmOpen} onClose={() => setConfirmOpen(false)} title={first ? `Pay ${shortName(first)} ${usd(value)} with…` : "Pay with…"}>
         <p className="-mt-2 mb-3 text-[14px] text-muted">Pick what to send from your portfolio.</p>

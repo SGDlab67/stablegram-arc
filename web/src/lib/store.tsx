@@ -131,10 +131,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     (p: Payment) => {
       if (p.from === meHandle || p.to === meHandle) return true;
       if (p.audience === "public") return true;
-      if (p.audience === "friends") return friends.includes(p.from) || friends.includes(p.to);
       return false;
     },
-    [friends, meHandle],
+    [meHandle],
   );
 
   const pay = useCallback(

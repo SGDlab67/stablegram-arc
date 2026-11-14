@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Globe, Lock, UsersRound } from "lucide-react";
+import { Globe, Lock } from "lucide-react";
 import type { ReactNode } from "react";
 import { assetOf, initials, personOf, type Audience } from "@/lib/data";
 import { useStore } from "@/lib/store";
@@ -63,8 +63,7 @@ export function AssetChip({ symbol, large = false }: { symbol: string; large?: b
 
 const AUDIENCE: Record<Audience, { label: string; viewerLabel: string; Icon: typeof Globe }> = {
   public: { label: "Public", viewerLabel: "Public", Icon: Globe },
-  friends: { label: "Friends", viewerLabel: "Visible to friends", Icon: UsersRound },
-  private: { label: "Private", viewerLabel: "Only visible to you", Icon: Lock },
+  private: { label: "Private", viewerLabel: "Private", Icon: Lock },
 };
 
 export function AudienceLabel({ audience, verbose = false, className = "" }: { audience: Audience; verbose?: boolean; className?: string }) {
@@ -74,6 +73,30 @@ export function AudienceLabel({ audience, verbose = false, className = "" }: { a
       <Icon size={15} strokeWidth={2} />
       {verbose ? viewerLabel : label}
     </span>
+  );
+}
+
+/** Public or Private, as two side-by-side buttons. */
+export function AudienceToggle({ value, onChange }: { value: Audience; onChange: (a: Audience) => void }) {
+  return (
+    <div className="inline-flex rounded-full bg-chip p-1">
+      {(["public", "private"] as const).map((a) => {
+        const { Icon, label } = AUDIENCE[a];
+        const on = value === a;
+        return (
+          <button
+            key={a}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(a)}
+            className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[14px] font-semibold ${on ? "bg-white text-ink shadow-sm" : "text-muted"}`}
+          >
+            <Icon size={14} strokeWidth={2.2} />
+            {label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

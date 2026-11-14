@@ -5,7 +5,8 @@
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "stablegram";
 
-export type Audience = "public" | "friends" | "private";
+/** Who can see a payment in feeds. Two choices only: everyone, or just the two people. */
+export type Audience = "public" | "private";
 export type AssetGroup = "stocks" | "crypto" | "cash";
 
 export interface Asset {
@@ -128,7 +129,7 @@ export const MY_HOLDINGS: Record<string, number> = {
 export const FRIENDS: string[] = ["taihl", "ana", "wes", "sabina", "maya"];
 export const INCOMING_FRIEND_REQUESTS: string[] = ["jordan"];
 
-/** Who the other sample people are friends with, for the Friends audience. */
+/** Who the other sample people are friends with, for the Friends feed and friends in common. */
 export const OTHER_FRIENDSHIPS: [string, string][] = [
   ["ana", "wes"],
   ["sabina", "wes"],
@@ -141,14 +142,14 @@ export const OTHER_FRIENDSHIPS: [string, string][] = [
 
 export const PAYMENTS: Payment[] = [
   { ref: "p10", from: "sabina", to: "wes", usd: 34, note: "🍕 pizza and burgers", audience: "public", asset: "BTC", ago: 4, reactions: { "❤️": ["ana", "maya"], "😂": ["taihl"] }, comments: [{ id: "c1", by: "ana", text: "save me a slice", ago: 3 }], feeUsd: 0.004 },
-  { ref: "p9", from: "taihl", to: "charlie", usd: 20, note: "☕ coffee run", audience: "friends", asset: "NVDA", ago: 38, reactions: { "🙏": ["charlie"] }, comments: [], feeUsd: 0.005 },
+  { ref: "p9", from: "taihl", to: "charlie", usd: 20, note: "☕ coffee run", audience: "public", asset: "NVDA", ago: 38, reactions: { "🙏": ["charlie"] }, comments: [], feeUsd: 0.005 },
   { ref: "p8", from: "charlie", to: "ana", usd: 48.5, note: "🎟️ Ducks tickets", audience: "public", asset: "NVDA", ago: 95, reactions: { "🔥": ["wes", "taihl", "maya"] }, comments: [{ id: "c2", by: "ana", text: "go ducks", ago: 90 }], feeUsd: 0.005 },
   { ref: "p7", from: "maya", to: "taihl", usd: 12, note: "🌮 taco tuesday", audience: "public", asset: "TSLA", ago: 160, reactions: { "😂": ["ana"] }, comments: [], feeUsd: 0.005 },
   { ref: "p6", from: "dev", to: "priya", usd: 60, note: "✈️ Lisbon hostel", audience: "public", asset: "USDC", ago: 240, reactions: { "✨": ["zoe"] }, comments: [], feeUsd: 0.006 },
   { ref: "p5", from: "wes", to: "charlie", usd: 15, note: "⛽ gas money", audience: "private", asset: "BTC", ago: 420, reactions: {}, comments: [], feeUsd: 0.005 },
   { ref: "p4", from: "priya", to: "zoe", usd: 25, note: "🎂 birthday dinner", audience: "public", asset: "ETH", ago: 600, reactions: { "❤️": ["dev"] }, comments: [], feeUsd: 0.005 },
-  { ref: "p3", from: "charlie", to: "sabina", usd: 9, note: "🍻 last night", audience: "friends", asset: "USDC", ago: 1500, reactions: { "😂": ["sabina"] }, comments: [], feeUsd: 0.004 },
-  { ref: "p2", from: "ana", to: "maya", usd: 400, note: "🏠 rent", audience: "friends", asset: "AAPL", ago: 2900, reactions: {}, comments: [], feeUsd: 0.005 },
+  { ref: "p3", from: "charlie", to: "sabina", usd: 9, note: "🍻 last night", audience: "public", asset: "USDC", ago: 1500, reactions: { "😂": ["sabina"] }, comments: [], feeUsd: 0.004 },
+  { ref: "p2", from: "ana", to: "maya", usd: 400, note: "🏠 rent", audience: "private", asset: "AAPL", ago: 2900, reactions: {}, comments: [], feeUsd: 0.005 },
   { ref: "p1", from: "zoe", to: "jordan", usd: 18, note: "🛒 groceries", audience: "public", asset: "SOL", ago: 4300, reactions: {}, comments: [], feeUsd: 0.004 },
 ];
 
