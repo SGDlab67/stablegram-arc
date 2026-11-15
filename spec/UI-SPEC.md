@@ -114,6 +114,8 @@ Likes are open to anyone who can see the card. Comments need you to be a friend 
 
 ## 7. Pay/Request
 
+**Sign-in, Face ID and backup (Nov 14).** Screens in DECISIONS 72. `<FaceScan state>` in `feel.tsx` shows a rounded-square Face ID glyph that pulses while scanning and turns into a green check. The backup words sit in a 3-column grid, blurred until tapped. The word check uses 3-option rows: green when right, red with a shake when wrong.
+
 **Splash (Charlie, Nov 14).** The opening screen is navy, the only dark screen in the app. Everything after it is beige. See DECISIONS 71. Sheets force `text-ink` so they stay readable over dark screens.
 
 **Sign-up v2 (Charlie, Nov 14).**

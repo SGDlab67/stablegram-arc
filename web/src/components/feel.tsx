@@ -129,3 +129,27 @@ export function useCountUp(value: number, ms = 700): number {
   }, [ms]);
   return k === null ? value : value * k;
 }
+
+/** A Face ID style scan: a pulsing ring while scanning, then a green check. */
+export function FaceScan({ state, size = 120 }: { state: "idle" | "scanning" | "done"; size?: number }) {
+  return (
+    <span className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      {state === "scanning" && <span className="absolute inset-0 animate-ping rounded-[32%] bg-brand/20" />}
+      <span
+        className={`relative flex items-center justify-center rounded-[32%] transition-colors duration-300 ${state === "done" ? "bg-money text-white" : "bg-brand-soft text-brand"}`}
+        style={{ width: size, height: size }}
+      >
+        {state === "done" ? (
+          <svg width={size * 0.45} height={size * 0.45} viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" className="draw-check" />
+          </svg>
+        ) : (
+          <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" aria-hidden>
+            <path d="M3 8V6a3 3 0 0 1 3-3h2M16 3h2a3 3 0 0 1 3 3v2M21 16v2a3 3 0 0 1-3 3h-2M8 21H6a3 3 0 0 1-3-3v-2" />
+            <path d="M9 9v1.5M15 9v1.5M12 9v4h-1M9 16.2c1.8 1.2 4.2 1.2 6 0" />
+          </svg>
+        )}
+      </span>
+    </span>
+  );
+}

@@ -49,3 +49,7 @@ Everything wallet-related in the app goes through `web/src/lib/wallet.ts` → `c
 | `other` | Demo address. | WalletConnect / Reown AppKit. |
 
 Sign-up then calls `signUp({ handle, first, last, photo, country, address })` in `web/src/lib/store.tsx`; that is where the registry call goes.
+
+## Face ID sign-in and recovery phrase (for Taihl)
+- `web/src/lib/passkey.ts`: `createPasskey(username)` and `signInWithPasskey()` already call WebAuthn on https/localhost (real Face ID / Touch ID prompt) and fall back to an animation. Next: make the passkey the wallet's signer (Circle Modular Wallets, passkey-owned smart accounts; check Arc testnet support) and map credential id → account.
+- `web/src/lib/recovery.ts`: demo words only. Swap in viem `generateMnemonic(english)`, `mnemonicToAccount`, `validateMnemonic`. The phrase never leaves the phone.

@@ -62,7 +62,7 @@ const AMOUNT_OPTIONS: { id: PortfolioPrivacy["amounts"]; label: string }[] = [
 ];
 
 export default function SettingsPage() {
-  const { me, updateMe, defaultAudience, setDefaultAudience, myPrivacy, setMyPrivacy } = useStore();
+  const { me, updateMe, defaultAudience, setDefaultAudience, myPrivacy, setMyPrivacy, backedUp } = useStore();
   const pv = myPrivacy;
   return (
     <Screen tabs={false}>
@@ -174,9 +174,16 @@ export default function SettingsPage() {
             <p className="text-[16px] font-semibold">Your wallet, your money</p>
             <p className="text-[13px] leading-snug text-muted">Self-custody: only you can move these funds. Not even we can. Payments settle on-chain in seconds.</p>
           </div>
+          <Link href="/me/backup" className="flex items-center justify-between py-3 text-[16px]">
+            <span className="font-semibold">Back up your wallet</span>
+            <span className="flex items-center gap-1.5 text-[14px]">
+              {backedUp ? <span className="font-semibold text-money">Backed up</span> : <span className="font-semibold text-down">Not yet</span>}
+              <ChevronRight size={18} className="text-muted" />
+            </span>
+          </Link>
           <div className="flex items-center justify-between py-3 text-[16px]">
-            <span className="font-semibold">Back up this wallet</span>
-            <ChevronRight size={18} className="text-muted" />
+            <span className="font-semibold">Sign in with</span>
+            <span className="text-[14px] text-muted">Face ID</span>
           </div>
         </Card>
 

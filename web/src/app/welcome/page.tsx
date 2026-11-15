@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Camera, Check, UserRound, ChevronLeft, ChevronRight, Globe2, Search, Sparkles, Wallet } from "lucide-react";
+import { Camera, Check, KeyRound, ShieldAlert, UserRound, ChevronLeft, ChevronRight, Globe2, Search, Sparkles, Wallet } from "lucide-react";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Mark } from "@/components/shell";
 import { Flag, PrimaryButton, Sheet } from "@/components/ui";
@@ -9,17 +9,22 @@ import { APP_NAME, AVATAR_COLORS, HANDLE_RULE, RESERVED_HANDLES, STARTER_ASSET, 
 import { COUNTRY_CODES, POPULAR_COUNTRIES, countryName, flagOf, guessCountry } from "@/lib/countries";
 import { WALLET_INFO, connectWallet, shortAddress, type ConnectedWallet, type WalletKind } from "@/lib/wallet";
 import { PhotoPicker } from "@/components/photo-picker";
-import { Confetti, haptic } from "@/components/feel";
+import { Confetti, FaceScan, haptic, toast } from "@/components/feel";
+import { createPasskey, signInWithPasskey } from "@/lib/passkey";
+import { looksLikePhrase, toWords } from "@/lib/recovery";
 import { useStore } from "@/lib/store";
 
 /*
- * Sign-up, no ID checks:
+ * Sign-up, no ID checks and no password:
  *   1. intro   – navy splash with the logo: "Create a wallet" or "Connect a wallet" (Phantom / MetaMask / other)
  *   2. profile – photo, name or nickname, @username, country flag (all on one screen)
+ *   3. passkey – lock the new wallet with Face ID / Touch ID (only for "Create a wallet"; a connected wallet signs for itself)
  *   then done.
+ * Coming back ("I already have an account"):
+ *   signin  – Face ID, or connect Phantom / MetaMask, or…
+ *   restore – type or paste the 12-word recovery phrase.
  */
-const STEPS = ["intro", "profile", "done"] as const;
-type Step = (typeof STEPS)[number];
+type Step = "intro" | "profile" | "passkey" | "done" | "signin" | "restore";
 
 const noSubscribe = () => () => {};
 
@@ -72,7 +77,6 @@ export default function Welcome() {
   const [countryQuery, setCountryQuery] = useState("");
   const [connectOpen, setConnectOpen] = useState(false);
 
-  const index = STEPS.indexOf(step);
 
   // Match the phone's status bar to the navy splash, then back to beige.
   useEffect(() => {
@@ -85,7 +89,18 @@ export default function Welcome() {
     };
   }, [step]);
   const go = (to: Step) => setStep(to);
-  const back = () => setStep(STEPS[Math.max(index - 1, 0)]);
+  const back = () => setStep(step === "passkey" ? "profile" : step === "restore" ? "signin" : "intro");
+  const [scan, setScan] = useState<"idle" | "scanning" | "done">("idle");
+  const [phrase, setPhrase] = useState<string[]>(Array(12).fill(""));
+  const [phraseLength, setPhraseLength] = useState<12 | 24>(12);
+
+  // Coming back: in the demo every way in opens the sample account (@charlie).
+  const welcomeBack = (how: string) => {
+    haptic("success");
+    resetToSample();
+    toast(`Welcome back, Charlie · ${how}`);
+    router.replace("/");
+  };
 
   const clean = (v: string) => v.toLowerCase().replace(/[^a-z0-9_]/g, "");
   const [first, ...rest] = name.trim().split(/\s+/);
@@ -122,8 +137,9 @@ export default function Welcome() {
     try {
       const w = await connectWallet(kind);
       if (w) {
-        setWallet(w);
         setConnectOpen(false);
+        if (step === "signin") return welcomeBack(WALLET_INFO[kind].name);
+        setWallet(w);
         haptic("success");
         go("profile");
       }
@@ -134,11 +150,41 @@ export default function Welcome() {
     }
   };
 
-  const create = () => {
-    if (!wallet || !ready) return;
+  const finish = () => {
+    if (!wallet) return;
     signUp({ handle: shownHandle, first: first ?? "", last, color, photo, country, address: wallet.address });
     haptic("success");
     go("done");
+  };
+  const create = () => {
+    if (!wallet || !ready) return;
+    // A wallet we made needs a lock; a connected wallet already has its own.
+    if (wallet.kind === "created") go("passkey");
+    else finish();
+  };
+  const turnOnFaceId = async () => {
+    setScan("scanning");
+    try {
+      await createPasskey(`@${shownHandle}`);
+      setScan("done");
+      haptic("success");
+      window.setTimeout(finish, 700);
+    } catch {
+      // Cancelled at the Face ID prompt.
+      setScan("idle");
+      toast("Face ID was cancelled. Try again or skip for now.");
+    }
+  };
+  const faceIdSignIn = async () => {
+    setScan("scanning");
+    try {
+      await signInWithPasskey();
+      setScan("done");
+      window.setTimeout(() => welcomeBack("Face ID"), 600);
+    } catch {
+      setScan("idle");
+      toast("Face ID was cancelled.");
+    }
   };
 
   const preview = (size: number) => (
@@ -202,10 +248,7 @@ export default function Welcome() {
           </button>
           <button
             type="button"
-            onClick={() => {
-              resetToSample();
-              router.replace("/");
-            }}
+            onClick={() => go("signin")}
             className="mt-3 h-11 w-full text-[15px] font-semibold text-[#F3EEE5]/75"
           >
             I already have an account
@@ -252,8 +295,8 @@ export default function Welcome() {
             <button type="button" aria-label="Back" onClick={back} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
               <ChevronLeft size={22} />
             </button>
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
-              <div className="h-full rounded-full bg-brand transition-all duration-300 ease-out" style={{ width: index >= 1 ? "66%" : "0%" }} />
+            <div className={`h-1.5 flex-1 overflow-hidden rounded-full ${step === "profile" || step === "passkey" ? "bg-line" : "opacity-0"}`}>
+              <div className="h-full rounded-full bg-brand transition-all duration-300 ease-out" style={{ width: step === "profile" ? (wallet?.kind === "created" ? "45%" : "70%") : step === "passkey" ? "85%" : "0%" }} />
             </div>
             <span className="w-10" />
           </>
@@ -400,6 +443,131 @@ export default function Welcome() {
               </button>
             </Sheet>
           </>
+        )}
+
+        {step === "passkey" && (
+          <div className="flex flex-1 flex-col">
+            {title("Lock your wallet with Face ID", "No password to remember. Your face approves payments.")}
+            <div className="flex flex-1 flex-col items-center justify-center py-6">
+              <FaceScan state={scan} size={128} />
+              <p className="mt-4 h-5 text-[15px] font-semibold text-muted">{scan === "scanning" ? "Look at your phone…" : scan === "done" ? "Face ID is on" : ""}</p>
+            </div>
+            <div className="space-y-3 rounded-[22px] bg-white p-4">
+              {[
+                ["Only you can open it", "The key stays locked on this phone behind Face ID or Touch ID."],
+                ["Nothing to write down now", "Back up a recovery phrase later in Settings, whenever you like."],
+                ["New phone? Still yours", "On iPhone it comes back through iCloud Keychain."],
+              ].map(([h, t]) => (
+                <div key={h} className="flex gap-3">
+                  <Check size={18} className="mt-0.5 shrink-0 text-money" />
+                  <p className="text-[14px] leading-snug">
+                    <span className="font-semibold">{h}.</span> <span className="text-muted">{t}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+            <PrimaryButton className="mt-5" disabled={scan !== "idle"} onClick={turnOnFaceId}>
+              Turn on Face ID
+            </PrimaryButton>
+            <button type="button" disabled={scan !== "idle"} onClick={finish} className="mt-1 h-12 text-[15px] font-semibold text-muted">
+              Skip for now
+            </button>
+          </div>
+        )}
+
+        {step === "signin" && (
+          <div className="flex flex-1 flex-col">
+            {title("Welcome back", "Sign in the same way you set up.")}
+            <button
+              type="button"
+              disabled={scan !== "idle" || !!connecting}
+              onClick={faceIdSignIn}
+              className="mt-6 flex w-full items-center gap-4 rounded-[22px] bg-white p-4 text-left ring-2 ring-brand disabled:opacity-80"
+            >
+              <FaceScan state={scan} size={52} />
+              <span className="flex-1">
+                <span className="block text-[17px] font-semibold">Sign in with Face ID</span>
+                <span className="block text-[14px] leading-snug text-muted">{scan === "scanning" ? "Look at your phone…" : "For wallets made in this app."}</span>
+              </span>
+              <ChevronRight size={20} className="text-muted" />
+            </button>
+            <p className="px-1 pb-2 pt-5 text-[13px] font-semibold uppercase tracking-wide text-muted">Or use your wallet</p>
+            <div className="divide-y divide-line rounded-[22px] bg-white">
+              {(["phantom", "metamask", "other"] as const).map((k) => (
+                <button key={k} type="button" disabled={!!connecting || scan !== "idle"} onClick={() => connect(k)} className="flex w-full items-center gap-4 p-4 text-left disabled:opacity-60">
+                  <WalletBadge kind={k} size={40} />
+                  <span className="flex-1 text-[16px] font-semibold">{WALLET_INFO[k].name}</span>
+                  {connecting === k ? <Spinner /> : <ChevronRight size={20} className="text-muted" />}
+                </button>
+              ))}
+            </div>
+            {walletError && <p className="mt-2 px-1 text-[14px] font-medium text-down">{walletError}</p>}
+            <button type="button" onClick={() => go("restore")} className="mt-5 flex h-12 items-center justify-center gap-2 rounded-full bg-chip text-[15px] font-semibold">
+              <KeyRound size={17} /> Restore with recovery phrase
+            </button>
+            <div className="flex-1" />
+            <p className="pt-6 text-center text-[14px] text-muted">
+              New here?{" "}
+              <button type="button" onClick={() => go("intro")} className="font-semibold text-brand">
+                Create a wallet
+              </button>
+            </p>
+          </div>
+        )}
+
+        {step === "restore" && (
+          <div className="flex flex-1 flex-col">
+            {title("Restore your wallet", "Type or paste the recovery phrase you wrote down.")}
+            <div className="mt-4 flex gap-2">
+              {([12, 24] as const).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => {
+                    setPhraseLength(n);
+                    setPhrase((p) => [...p, ...Array(24).fill("")].slice(0, n));
+                  }}
+                  className={`h-9 rounded-full px-4 text-[14px] font-semibold ${phraseLength === n ? "bg-ink text-white" : "bg-white"}`}
+                >
+                  {n} words
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {phrase.map((word, i) => (
+                <label key={i} className="flex h-11 items-center gap-1.5 rounded-xl border border-[#ddd5c8] bg-white px-2.5 focus-within:border-brand">
+                  <span className="w-5 text-right text-[12px] font-semibold text-muted">{i + 1}</span>
+                  <input
+                    value={word}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    autoComplete="off"
+                    spellCheck={false}
+                    onChange={(e) => {
+                      const words = toWords(e.target.value);
+                      setPhrase((p) => {
+                        const next = [...p];
+                        // Pasting the whole phrase into any box fills every box from there.
+                        if (words.length > 1) words.forEach((w, k) => i + k < next.length && (next[i + k] = w));
+                        else next[i] = words[0] ?? "";
+                        return next;
+                      });
+                    }}
+                    className="selectable w-full min-w-0 bg-transparent text-[15px] outline-none"
+                  />
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 flex gap-2 rounded-xl bg-brand-soft px-3 py-2.5 text-[13px] leading-snug text-brand">
+              <ShieldAlert size={16} className="mt-0.5 shrink-0" />
+              Never share these words. We will never ask for them anywhere except this screen, and never by message or call.
+            </p>
+            <div className="flex-1" />
+            <PrimaryButton className="mt-5" disabled={!looksLikePhrase(phrase)} onClick={() => welcomeBack("wallet restored")}>
+              Restore wallet
+            </PrimaryButton>
+            <p className="mt-2 text-center text-[12px] text-muted">Demo: any {phraseLength} words open the sample account.</p>
+          </div>
         )}
 
         {step === "done" && (

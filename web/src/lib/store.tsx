@@ -70,6 +70,9 @@ interface Store {
   hideBalances: boolean;
   toggleHideBalances: () => void;
   /** What I show of my portfolio on my profile. */
+  /** Has this wallet's recovery phrase been written down? Drives the backup nudge. */
+  backedUp: boolean;
+  markBackedUp: () => void;
   myPrivacy: PortfolioPrivacy;
   setMyPrivacy: (patch: Partial<PortfolioPrivacy>) => void;
   privacyOf: (handle: string) => PortfolioPrivacy;
@@ -115,6 +118,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [outgoing, setOutgoing] = useState<string[]>([]);
   const [hideBalances, setHideBalances] = useState(false);
   const toggleHideBalances = useCallback(() => setHideBalances((v) => !v), []);
+  const [backedUp, setBackedUp] = useState(false);
+  const markBackedUp = useCallback(() => setBackedUp(true), []);
   const [myPrivacy, setMyPrivacyState] = useState<PortfolioPrivacy>(DEFAULT_PRIVACY);
   const setMyPrivacy = useCallback((patch: Partial<PortfolioPrivacy>) => setMyPrivacyState((p) => ({ ...p, ...patch })), []);
   const [others, setOthers] = useState<Record<string, Record<string, number>>>(PEOPLE_HOLDINGS);
@@ -261,6 +266,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // A small demo starter so a new account can try paying straight away. No questions asked for it.
     setHoldings({ USDC: STARTER_DOLLARS, [STARTER_ASSET]: STARTER_ASSET_USD / assetOf(STARTER_ASSET).price });
     setDefaultAudience("public");
+    setBackedUp(false);
   }, []);
 
   const resetToSample = useCallback(() => {
@@ -318,6 +324,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     totalUsd,
     hideBalances,
     toggleHideBalances,
+    backedUp,
+    markBackedUp,
     myPrivacy,
     setMyPrivacy,
     privacyOf,

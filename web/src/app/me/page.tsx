@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, QrCode, Settings, Share } from "lucide-react";
+import { Bell, ChevronRight, QrCode, Settings, Share, ShieldCheck } from "lucide-react";
 import { ActivityRow } from "@/components/feed";
 import { RequestCards } from "@/components/requests";
 import { Screen } from "@/components/shell";
@@ -11,7 +11,7 @@ import { toast } from "@/components/feel";
 import { useStore } from "@/lib/store";
 
 export default function Me() {
-  const { me, friends, totalUsd, payments, notices, hideBalances, myPrivacy } = useStore();
+  const { me, friends, totalUsd, payments, notices, hideBalances, myPrivacy, backedUp } = useStore();
   const share = async () => {
     const url = `${window.location.origin}/u/${me.handle}`;
     if (navigator.share) {
@@ -62,6 +62,20 @@ export default function Me() {
         </Link>
       </div>
 
+      {!backedUp && (
+        <div className="px-4 pt-3">
+          <Link href="/me/backup" className="flex items-center gap-3 rounded-[22px] bg-[#0F2C4D] p-4 text-[#F3EEE5]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F3EEE5]/15">
+              <ShieldCheck size={20} />
+            </span>
+            <span className="flex-1">
+              <span className="block text-[15px] font-semibold">Back up your wallet</span>
+              <span className="block text-[13px] text-[#F3EEE5]/70">One minute. The only way back in if you lose your phone.</span>
+            </span>
+            <ChevronRight size={18} className="text-[#F3EEE5]/70" />
+          </Link>
+        </div>
+      )}
       <div className="px-4 pt-3">
         <div className="flex items-center gap-3 rounded-[22px] bg-white p-4">
           <span className="flex-1">
