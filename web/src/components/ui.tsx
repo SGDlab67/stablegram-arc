@@ -210,7 +210,7 @@ export function Sheet({ open, onClose, children, title }: { open: boolean; onClo
     <div className="fixed inset-0 z-50 mx-auto flex max-w-[430px] items-end" role="dialog" aria-modal="true" aria-label={title}>
       <button type="button" aria-label="Close" className="no-press fade-in absolute inset-0 bg-black/40" style={{ opacity: 1 - Math.min(dragY / 400, 0.6) }} onClick={onClose} />
       <div
-        className="slide-up relative max-h-sheet w-full overflow-y-auto rounded-t-[28px] bg-white p-5 pb-[max(env(safe-area-inset-bottom),32px)]"
+        className="slide-up relative max-h-sheet w-full overflow-y-auto rounded-t-[28px] bg-white p-5 text-ink pb-[max(env(safe-area-inset-bottom),32px)]"
         style={{ transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}
       >
         <div {...grab} className="-mx-5 -mt-5 mb-1 flex cursor-grab touch-none justify-center pb-3 pt-3">

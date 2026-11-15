@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowRight, Camera, Check, ChevronLeft, ChevronRight, Globe2, Search, ShieldCheck, Sparkles, Wallet, Zap } from "lucide-react";
-import { useMemo, useState, useSyncExternalStore } from "react";
-import { Wordmark } from "@/components/shell";
-import { AssetChip, Flag, PrimaryButton, Sheet } from "@/components/ui";
-import { AVATAR_COLORS, HANDLE_RULE, RESERVED_HANDLES, STARTER_ASSET, STARTER_ASSET_USD, STARTER_DOLLARS, assetOf, usd } from "@/lib/data";
+import { Camera, Check, UserRound, ChevronLeft, ChevronRight, Globe2, Search, Sparkles, Wallet } from "lucide-react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { Mark } from "@/components/shell";
+import { Flag, PrimaryButton, Sheet } from "@/components/ui";
+import { APP_NAME, AVATAR_COLORS, HANDLE_RULE, RESERVED_HANDLES, STARTER_ASSET, STARTER_ASSET_USD, STARTER_DOLLARS, assetOf, usd } from "@/lib/data";
 import { COUNTRY_CODES, POPULAR_COUNTRIES, countryName, flagOf, guessCountry } from "@/lib/countries";
 import { WALLET_INFO, connectWallet, shortAddress, type ConnectedWallet, type WalletKind } from "@/lib/wallet";
 import { PhotoPicker } from "@/components/photo-picker";
@@ -13,13 +13,12 @@ import { Confetti, haptic } from "@/components/feel";
 import { useStore } from "@/lib/store";
 
 /*
- * Sign-up in three screens, no ID checks:
- *   1. intro   – what the app is
- *   2. wallet  – create one on the spot, or connect Phantom / MetaMask / another wallet
- *   3. profile – photo, name or nickname, @username, country flag (all on one screen)
+ * Sign-up, no ID checks:
+ *   1. intro   – navy splash with the logo: "Create a wallet" or "Connect a wallet" (Phantom / MetaMask / other)
+ *   2. profile – photo, name or nickname, @username, country flag (all on one screen)
  *   then done.
  */
-const STEPS = ["intro", "wallet", "profile", "done"] as const;
+const STEPS = ["intro", "profile", "done"] as const;
 type Step = (typeof STEPS)[number];
 
 const noSubscribe = () => () => {};
@@ -71,8 +70,20 @@ export default function Welcome() {
   const country = pickedCountry ?? suggestedCountry;
   const [countryOpen, setCountryOpen] = useState(false);
   const [countryQuery, setCountryQuery] = useState("");
+  const [connectOpen, setConnectOpen] = useState(false);
 
   const index = STEPS.indexOf(step);
+
+  // Match the phone's status bar to the navy splash, then back to beige.
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) return;
+    const before = meta.getAttribute("content");
+    meta.setAttribute("content", step === "intro" ? "#0F2C4D" : "#f3eee5");
+    return () => {
+      if (before) meta.setAttribute("content", before);
+    };
+  }, [step]);
   const go = (to: Step) => setStep(to);
   const back = () => setStep(STEPS[Math.max(index - 1, 0)]);
 
@@ -112,6 +123,7 @@ export default function Welcome() {
       const w = await connectWallet(kind);
       if (w) {
         setWallet(w);
+        setConnectOpen(false);
         haptic("success");
         go("profile");
       }
@@ -139,7 +151,7 @@ export default function Welcome() {
         ...(photo ? { backgroundImage: `url(${photo})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: color }),
       }}
     >
-      {photo ? null : `${first?.[0] ?? ""}${last[0] ?? first?.[1] ?? ""}`.toUpperCase() || <Camera size={size * 0.3} />}
+      {photo ? null : `${first?.[0] ?? ""}${last[0] ?? first?.[1] ?? ""}`.toUpperCase() || <UserRound size={size * 0.42} />}
     </span>
   );
 
@@ -158,6 +170,80 @@ export default function Welcome() {
     .filter((x) => !q || x.n.toLowerCase().includes(q) || x.c.toLowerCase() === q)
     .sort((a, b) => a.n.localeCompare(b.n));
 
+  // The first screen: navy, the logo in the middle, and the two ways in. Everything after it is beige.
+  if (step === "intro") {
+    return (
+      <div className="relative flex min-h-app flex-col overflow-hidden bg-[#0F2C4D] text-[#F3EEE5]">
+        <div aria-hidden className="pointer-events-none absolute left-1/2 top-[34%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(91,140,201,0.35)_0%,rgba(15,44,77,0)_65%)]" />
+        <div className="relative flex flex-1 flex-col items-center justify-center px-8 text-center">
+          <span className="pop flex h-28 w-28 items-center justify-center rounded-[34px] bg-[#F3EEE5]/10 ring-1 ring-[#F3EEE5]/15">
+            <Mark size={68} className="text-[#F3EEE5]" />
+          </span>
+          <p className="screen-in mt-6 text-[40px] font-bold tracking-tight">{APP_NAME}</p>
+          <p className="screen-in mt-2 text-[17px] text-[#F3EEE5]/70">Pay friends in stocks and crypto.</p>
+        </div>
+
+        <div className="relative px-6 pb-[max(env(safe-area-inset-bottom),28px)]">
+          <button
+            type="button"
+            disabled={!!connecting}
+            onClick={() => connect("created")}
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#F3EEE5] text-[17px] font-semibold text-[#0F2C4D] disabled:opacity-70"
+          >
+            {connecting === "created" ? <Spinner dark /> : "Create a wallet"}
+          </button>
+          <button
+            type="button"
+            disabled={!!connecting}
+            onClick={() => setConnectOpen(true)}
+            className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-full text-[17px] font-semibold text-[#F3EEE5] ring-1 ring-[#F3EEE5]/35 disabled:opacity-70"
+          >
+            <Wallet size={19} /> Connect a wallet
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              resetToSample();
+              router.replace("/");
+            }}
+            className="mt-3 h-11 w-full text-[15px] font-semibold text-[#F3EEE5]/75"
+          >
+            I already have an account
+          </button>
+          <p className="mt-1 text-center text-[12px] text-[#F3EEE5]/45">No ID needed. Your money stays in your own wallet.</p>
+          {walletError && <p className="mt-2 text-center text-[13px] font-medium text-[#FFB4AE]">{walletError}</p>}
+        </div>
+
+        <Sheet open={connectOpen} onClose={() => setConnectOpen(false)} title="Connect a wallet">
+          <div className="divide-y divide-line">
+            {(["phantom", "metamask", "other"] as const).map((k) => (
+              <button key={k} type="button" disabled={!!connecting} onClick={() => connect(k)} className="flex w-full items-center gap-4 py-3.5 text-left disabled:opacity-60">
+                <WalletBadge kind={k} size={44} />
+                <span className="flex-1">
+                  <span className="block text-[17px] font-semibold">{WALLET_INFO[k].name}</span>
+                  <span className="block text-[13px] leading-snug text-muted">{WALLET_INFO[k].hint}</span>
+                </span>
+                {connecting === k ? <Spinner /> : <ChevronRight size={20} className="text-muted" />}
+              </button>
+            ))}
+          </div>
+          {walletError && <p className="mt-2 text-[14px] font-medium text-down">{walletError}</p>}
+          <p className="mt-3 text-[13px] leading-relaxed text-muted">
+            No wallet yet?{" "}
+            <a href={WALLET_INFO.phantom.download} target="_blank" rel="noreferrer" className="font-semibold text-brand">
+              Get Phantom
+            </a>{" "}
+            or{" "}
+            <a href={WALLET_INFO.metamask.download} target="_blank" rel="noreferrer" className="font-semibold text-brand">
+              MetaMask
+            </a>
+            , or close this and tap Create a wallet.
+          </p>
+        </Sheet>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-app flex flex-col bg-page">
       <div className="flex h-14 items-center gap-3 px-3 pt-1">
@@ -167,116 +253,14 @@ export default function Welcome() {
               <ChevronLeft size={22} />
             </button>
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
-              <div className="h-full rounded-full bg-brand transition-all duration-300 ease-out" style={{ width: `${(index / (STEPS.length - 1)) * 100}%` }} />
+              <div className="h-full rounded-full bg-brand transition-all duration-300 ease-out" style={{ width: index >= 1 ? "66%" : "0%" }} />
             </div>
-            <span className="w-10 text-right text-[13px] font-semibold text-muted">
-              {index}/{STEPS.length - 2}
-            </span>
+            <span className="w-10" />
           </>
         )}
       </div>
 
       <div key={step} className="screen-in flex flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)] pt-2">
-        {step === "intro" && (
-          <>
-            <Wordmark className="text-[30px]" mark />
-            <div className="flex flex-1 flex-col justify-center py-5">
-              <div className="rounded-[28px] bg-white p-5">
-                <p className="flex items-center gap-1.5 text-[15px] font-medium text-muted">
-                  You send @dev <Flag code="IN" size={15} />
-                </p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-[30px] font-semibold tracking-tight">$10</span>
-                  <AssetChip symbol="NVDA" large />
-                </div>
-                <div className="my-3 flex items-center gap-2 text-muted">
-                  <span className="h-px flex-1 bg-line" />
-                  <ArrowRight size={18} />
-                  <span className="h-px flex-1 bg-line" />
-                </div>
-                <p className="text-[15px] font-medium text-muted">Dev gets $10 of NVIDIA in Mumbai</p>
-                <p className="mt-1 text-[15px] leading-snug text-muted">In seconds, in his own wallet. No bank in between.</p>
-              </div>
-            </div>
-            {title("Pay anyone, anywhere.", "Send a slice of your portfolio to a friend down the street or across the world. Just a username.")}
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {[
-                { icon: <ShieldCheck size={18} />, text: "No ID checks" },
-                { icon: <Wallet size={18} />, text: "Your own wallet" },
-                { icon: <Zap size={18} />, text: "Settles in seconds" },
-              ].map((x) => (
-                <div key={x.text} className="flex flex-col items-center gap-1 rounded-2xl bg-white px-2 py-3 text-center text-[12px] font-semibold leading-tight">
-                  <span className="text-brand">{x.icon}</span>
-                  {x.text}
-                </div>
-              ))}
-            </div>
-            <PrimaryButton className="mt-5" onClick={() => go("wallet")}>
-              Get started
-            </PrimaryButton>
-            <button
-              type="button"
-              onClick={() => {
-                resetToSample();
-                router.replace("/");
-              }}
-              className="mt-1 h-12 text-[16px] font-semibold text-brand"
-            >
-              I already have an account
-            </button>
-          </>
-        )}
-
-        {step === "wallet" && (
-          <>
-            {title("Your wallet", "This is where your money lives. Only you control it. No ID, no bank account, no forms.")}
-            <div className="mt-6 space-y-3">
-              <button
-                type="button"
-                disabled={!!connecting}
-                onClick={() => connect("created")}
-                className="flex w-full items-center gap-4 rounded-[22px] bg-white p-4 text-left ring-2 ring-brand disabled:opacity-60"
-              >
-                <WalletBadge kind="created" />
-                <span className="flex-1">
-                  <span className="flex items-center gap-2 text-[17px] font-semibold">
-                    {WALLET_INFO.created.name}
-                    <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-bold uppercase text-brand">Fastest</span>
-                  </span>
-                  <span className="block text-[14px] leading-snug text-muted">{WALLET_INFO.created.hint}</span>
-                </span>
-                {connecting === "created" ? <Spinner /> : <ChevronRight size={20} className="text-muted" />}
-              </button>
-
-              <p className="px-1 pt-2 text-[13px] font-semibold uppercase tracking-wide text-muted">Or connect yours</p>
-              <div className="divide-y divide-line rounded-[22px] bg-white">
-                {(["phantom", "metamask", "other"] as const).map((k) => (
-                  <button key={k} type="button" disabled={!!connecting} onClick={() => connect(k)} className="flex w-full items-center gap-4 p-4 text-left disabled:opacity-60">
-                    <WalletBadge kind={k} size={40} />
-                    <span className="flex-1">
-                      <span className="block text-[16px] font-semibold">{WALLET_INFO[k].name}</span>
-                      <span className="block text-[13px] leading-snug text-muted">{WALLET_INFO[k].hint}</span>
-                    </span>
-                    {connecting === k ? <Spinner /> : <ChevronRight size={20} className="text-muted" />}
-                  </button>
-                ))}
-              </div>
-              {walletError && <p className="px-1 text-[14px] font-medium text-down">{walletError}</p>}
-              <p className="px-1 text-[13px] leading-relaxed text-muted">
-                No Phantom yet?{" "}
-                <a href={WALLET_INFO.phantom.download} target="_blank" rel="noreferrer" className="font-semibold text-brand">
-                  Get Phantom
-                </a>{" "}
-                or{" "}
-                <a href={WALLET_INFO.metamask.download} target="_blank" rel="noreferrer" className="font-semibold text-brand">
-                  MetaMask
-                </a>
-                , or let us make one for you above. You can move it to another wallet later.
-              </p>
-            </div>
-          </>
-        )}
-
         {step === "profile" && (
           <>
             {title("Make it yours", "Friends use these to find you and check it's really you.")}
@@ -453,6 +437,11 @@ export default function Welcome() {
   );
 }
 
-function Spinner() {
-  return <span aria-label="Connecting" className="h-5 w-5 animate-spin rounded-full border-[2.5px] border-brand/25 border-t-brand" />;
+function Spinner({ dark = false }: { dark?: boolean }) {
+  return (
+    <span
+      aria-label="Connecting"
+      className={`h-5 w-5 animate-spin rounded-full border-[2.5px] ${dark ? "border-[#0F2C4D]/25 border-t-[#0F2C4D]" : "border-brand/25 border-t-brand"}`}
+    />
+  );
 }
