@@ -261,4 +261,94 @@ contract FlowTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Stablegram.OverPerSendLimit.selector, 1e18, 0));
         gram.sendAsAgent(alice, IERC20(address(other)), "bob", 1e18, MEMO);
     }
+
+    // --- standing orders ---
+
+    uint48 constant WEEK = 7 days;
+
+    function _weeklyOrder() private returns (uint256 id) {
+        vm.startPrank(alice);
+        share.approve(address(gram), type(uint256).max);
+        id = gram.createOrder(IERC20(address(share)), "bob", 1e18, uint48(block.timestamp + WEEK), WEEK, MEMO);
+        vm.stopPrank();
+    }
+
+    function test_anyoneRunsADueOrderAndItPaysWhatTheUserWrote() public {
+        uint256 id = _weeklyOrder();
+
+        vm.prank(mallory);
+        vm.expectRevert(abi.encodeWithSelector(Stablegram.NotDue.selector, block.timestamp + WEEK));
+        gram.runOrder(id);
+
+        skip(WEEK);
+        vm.expectEmit();
+        emit Stablegram.Sent(address(share), alice, bob, "bob", 1e18, MEMO, true);
+        vm.prank(mallory); // a stranger, who gains nothing and chooses nothing
+        gram.runOrder(id);
+
+        assertEq(share.balanceOf(bob), 1e18);
+        assertEq(share.balanceOf(mallory), 0);
+        assertEq(share.balanceOf(address(gram)), 0);
+    }
+
+    function test_orderPaysOncePerPeriod() public {
+        uint256 id = _weeklyOrder();
+        skip(WEEK);
+        gram.runOrder(id);
+
+        vm.expectRevert(abi.encodeWithSelector(Stablegram.NotDue.selector, block.timestamp + WEEK));
+        gram.runOrder(id);
+    }
+
+    function test_missedPeriodsAreSkippedNotPaidLater() public {
+        uint256 id = _weeklyOrder();
+        uint256 firstAt = block.timestamp + WEEK;
+
+        skip(WEEK * 5 + 1 days); // due at week 1, nobody ran it until week 5 and a day
+        gram.runOrder(id);
+        assertEq(share.balanceOf(bob), 1e18);
+
+        // The next slot is week 6, still on the original weekday.
+        vm.expectRevert(abi.encodeWithSelector(Stablegram.NotDue.selector, firstAt + WEEK * 5));
+        gram.runOrder(id);
+    }
+
+    function test_onlyTheWriterCancelsAndACancelledOrderIsDead() public {
+        uint256 id = _weeklyOrder();
+
+        vm.prank(mallory);
+        vm.expectRevert(Stablegram.NotYourOrder.selector);
+        gram.cancelOrder(id);
+
+        vm.prank(alice);
+        gram.cancelOrder(id);
+
+        skip(WEEK);
+        vm.expectRevert(Stablegram.NoSuchOrder.selector);
+        gram.runOrder(id);
+    }
+
+    function test_orderNeedsARealRecipientAndInterval() public {
+        vm.startPrank(alice);
+        vm.expectRevert(UsernameRegistry.NoSuchName.selector);
+        gram.createOrder(IERC20(address(share)), "nobody", 1e18, 0, WEEK, MEMO);
+        vm.expectRevert(Stablegram.BadInterval.selector);
+        gram.createOrder(IERC20(address(share)), "bob", 1e18, 0, 0, MEMO);
+        vm.expectRevert(Stablegram.BadInterval.selector);
+        gram.createOrder(IERC20(address(share)), "bob", 1e18, 0, type(uint48).max, MEMO);
+        vm.expectRevert(Stablegram.NothingToSend.selector);
+        gram.createOrder(IERC20(address(share)), "bob", 0, 0, WEEK, MEMO);
+        vm.stopPrank();
+    }
+
+    function test_revokingTheAllowanceStopsAnOrder() public {
+        uint256 id = _weeklyOrder();
+        vm.prank(alice);
+        share.approve(address(gram), 0);
+
+        skip(WEEK);
+        vm.expectRevert();
+        gram.runOrder(id);
+        assertEq(share.balanceOf(bob), 0);
+    }
 }

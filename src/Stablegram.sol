@@ -15,6 +15,8 @@ import {UsernameRegistry} from "./UsernameRegistry.sol";
 ///      live in the event log, which is the feed.
 ///   3. Let one agent send on a user's behalf, capped per send and per day,
 ///      per token, and revocable at any moment.
+///   4. Hold standing orders: a send the user writes once and anyone may
+///      trigger when it falls due. Whoever triggers it chooses nothing.
 ///
 /// This contract holds no balance and has no owner. It moves value in the
 /// same transaction it receives the instruction, so there is nothing here
@@ -41,7 +43,23 @@ contract Stablegram {
         uint208 amount;
     }
 
+    /// A repeating send written by `from`. Every field is fixed by the user
+    /// at creation; running it changes only `nextAt`.
+    struct Order {
+        address from;
+        uint48 nextAt;
+        uint48 every;
+        IERC20 token;
+        address to;
+        uint256 value;
+        string name;
+        string memo;
+    }
+
     UsernameRegistry public immutable usernames;
+
+    /// Standing orders, by id. A cancelled order is zeroed in place.
+    Order[] public orders;
 
     /// user => the one address allowed to send on their behalf
     mapping(address => address) public agentOf;
@@ -63,6 +81,8 @@ contract Stablegram {
     );
     event AgentAuthorized(address indexed user, address indexed agent);
     event LimitSet(address indexed user, address indexed token, uint128 perSend, uint128 perDay);
+    event OrderCreated(uint256 indexed id, address indexed from, address indexed to, uint48 firstAt, uint48 every);
+    event OrderCancelled(uint256 indexed id);
 
     error NothingToSend();
     error NativeSendFailed();
@@ -70,6 +90,10 @@ contract Stablegram {
     error NotAgent();
     error OverPerSendLimit(uint256 value, uint256 limit);
     error OverDailyLimit(uint256 wouldBe, uint256 limit);
+    error BadInterval();
+    error NotYourOrder();
+    error NoSuchOrder();
+    error NotDue(uint256 nextAt);
 
     constructor(UsernameRegistry usernames_) {
         usernames = usernames_;
@@ -134,7 +158,67 @@ contract Stablegram {
         emit Sent(address(token), user, to, name, value, memo, true);
     }
 
+    // --- standing orders ---
+
+    /// Write a repeating send: `value` of `token` to `name`, first at
+    /// `firstAt` and then every `every` seconds. Approve this contract for
+    /// the token, as with sendToken. Cancel it at any time.
+    // ponytail: fixed-second interval, so "every birthday" is every 365 days
+    // and drifts a day per leap year. Calendar schedules belong off-chain:
+    // cancel and re-create, or add a schedule type if that gets old.
+    function createOrder(
+        IERC20 token,
+        string calldata name,
+        uint256 value,
+        uint48 firstAt,
+        uint48 every,
+        string calldata memo
+    ) external returns (uint256 id) {
+        if (every == 0 || every > 36500 days) revert BadInterval(); // keeps nextAt inside uint48
+        address to = _resolve(name, value, memo);
+        id = orders.length;
+        orders.push(
+            Order({
+                from: msg.sender,
+                nextAt: firstAt,
+                every: every,
+                token: token,
+                to: to,
+                value: value,
+                name: name,
+                memo: memo
+            })
+        );
+        emit OrderCreated(id, msg.sender, to, firstAt, every);
+    }
+
+    /// Stop an order for good. Only the user who wrote it.
+    function cancelOrder(uint256 id) external {
+        if (orders[id].from != msg.sender) revert NotYourOrder();
+        delete orders[id];
+        emit OrderCancelled(id);
+    }
+
+    /// Carry out a due order. Anyone may call this, an agent or a stranger,
+    /// because the caller decides nothing: recipient, amount and schedule
+    /// are the user's. One payment per call and one per period, so a period
+    /// nobody triggered is skipped, never paid twice later.
+    function runOrder(uint256 id) external returns (address to) {
+        Order storage o = orders[id];
+        if (o.from == address(0)) revert NoSuchOrder();
+        if (block.timestamp < o.nextAt) revert NotDue(o.nextAt);
+        o.nextAt += o.every * uint48((block.timestamp - o.nextAt) / o.every + 1);
+
+        to = o.to;
+        o.token.safeTransferFrom(o.from, to, o.value);
+        emit Sent(address(o.token), o.from, to, o.name, o.value, o.memo, true);
+    }
+
     // --- views ---
+
+    function orderCount() external view returns (uint256) {
+        return orders.length;
+    }
 
     /// What the agent may still move for `user` of `token` today.
     function remainingToday(address user, address token) external view returns (uint256) {

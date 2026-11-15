@@ -38,6 +38,10 @@ set.
 4. **Or tell your agent.** Authorize one agent, cap it per send and per day
    per token, and text it. It can never exceed the caps, never reach an
    unclaimed name, and you can revoke it in one transaction.
+5. **Or write it once.** `createOrder(share, "alice", 0.25e18, firstAt,
+   7 days, "weekly quarter share")` is a standing order. Anyone may trigger
+   it when it falls due, your agent or a stranger, and whoever does chooses
+   nothing: the recipient, the amount and the schedule are yours.
 
 Every send emits the same `Sent` event with the note attached. That event
 log is the feed.
@@ -77,6 +81,25 @@ contract rather than in the prompt.
 
 The agent chooses the recipient and the amount. It never chooses the
 limits.
+
+## Standing orders
+
+A standing order is the safest thing an agent can do for you, because it
+takes the agent's judgement out entirely. You write the order; the agent
+only presses the button when it is due.
+
+| Rule | Enforced by |
+| --- | --- |
+| Only you write or cancel your order | `createOrder`, `cancelOrder` (`NotYourOrder`) |
+| It can only reach a claimed name | The name is resolved when the order is written |
+| It pays once per period at most | `runOrder` reverts with `NotDue` until the next slot |
+| A period nobody triggered is skipped, never paid twice later | `nextAt` jumps to the next future slot |
+| You can stop it without touching the order | Lower the token allowance and `runOrder` reverts |
+
+Orders are for tokens only, because nothing can pull the native balance.
+The interval is a fixed number of seconds, so "every birthday" is every 365
+days; a calendar-aware schedule is the agent's job, by cancelling and
+re-creating.
 
 ## The agent's decision loop
 
@@ -138,9 +161,14 @@ questions.
 Arc testnet, chain ID 5042002, deployed in block 72245663. Explorer:
 `explorer.testnet.arc.io`.
 
+`Stablegram` was redeployed on 2026-11-15 in block 72458620 to add standing
+orders. The registry and the share did not move, so every username carried
+over. The first deployment, `0x1EfA8bF4c206503Edd598D35B7E0F8d32C353ab2`,
+still holds the two rehearsal sends from 2026-11-13 listed below.
+
 | Contract | Address |
 | --- | --- |
-| `Stablegram` | `0x1EfA8bF4c206503Edd598D35B7E0F8d32C353ab2` |
+| `Stablegram` | `0xBaDF08F324D5B4eaac5E33Ae30cA57C1096e5dBA` |
 | `UsernameRegistry` | `0x9100A33057302d106850D42Eb09f2896480ea3Ee` |
 | `MockShare` | `0x7cb45eB5C729061295f84C69e0eb3961f28a9f64` |
 
@@ -198,6 +226,16 @@ Rehearsed end to end on Arc testnet on 2026-11-13: both usernames claimed, a
 | --- | --- | --- |
 | Send a quarter share with a note | `0xc8c3f9fbeef8b443c94b0d174a1ba53edf669a7e9c5d45b6a5a3f0a2259d6712` | 0.0025 USDC |
 | Send 1.5 dollars with a note | `0xaa4c5e89a4feda0fc85efa9a81a579c84c3a5ad98a520b1da877621e4a8e5471` | 0.0011 USDC |
+
+Standing orders, rehearsed on 2026-11-15 against the current deployment: a
+weekly quarter share to alice, written, run once, refused on a second run in
+the same period, then cancelled.
+
+| What | Transaction | Cost |
+| --- | --- | --- |
+| Write the order | `0xc0e6a32c76ec3999aa57b21cbc9db06b9414aa1125ab0d54e83e85a35afbdaac` | 0.0077 USDC |
+| Run it | `0xda35f8d0ee3610165f4925426e73dcfa5867b1750640d2c73e555642d08295b4` | 0.0022 USDC |
+| Cancel it | `0xfff4adf01d003b6cee22e70444e2d7cedf72c50dedc50ecdf351c4724be23fb5` | 0.0017 USDC |
 
 Gas is paid in USDC, so those are literal fractions of a cent, and the
 recipient never needs a separate gas token.

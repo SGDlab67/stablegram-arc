@@ -66,8 +66,21 @@
   </div>
   <label for="memo">What it was for</label>
   <input id="memo" maxlength="140" placeholder="quarter share, happy birthday">
+  <label for="every">Repeat</label>
+  <select id="every">
+    <option value="0">just once</option>
+    <option value="60">every minute (demo)</option>
+    <option value="604800">every week</option>
+    <option value="2592000">every 30 days</option>
+    <option value="31536000">every year</option>
+  </select>
   <button id="send">Send</button>
   <p id="status"></p>
+</div>
+
+<div class="card">
+  <label>Standing orders</label>
+  <div id="orders" class="who">none yet</div>
 </div>
 
 <div class="card">
@@ -85,9 +98,9 @@ const CHAINS = {
     name: "Arc testnet", id: 5042002, rpc: "https://rpc.testnet.arc.io",
     symbol: "USDC", explorer: "https://explorer.testnet.arc.io",
     usernames: "0x9100A33057302d106850D42Eb09f2896480ea3Ee",
-    gram: "0x1EfA8bF4c206503Edd598D35B7E0F8d32C353ab2",
+    gram: "0xBaDF08F324D5B4eaac5E33Ae30cA57C1096e5dBA",
     share: "0x7cb45eB5C729061295f84C69e0eb3961f28a9f64",
-    fromBlock: 72245663
+    fromBlock: 72458620
   },
   monad: {
     name: "Monad testnet", id: 10143, rpc: "https://testnet-rpc.monad.xyz",
@@ -109,6 +122,11 @@ const ABI = {
   gram: [
     "function sendToken(address token, string name, uint256 value, string memo) returns (address)",
     "function sendNative(string name, string memo) payable returns (address)",
+    "function createOrder(address token, string name, uint256 value, uint48 firstAt, uint48 every, string memo) returns (uint256)",
+    "function runOrder(uint256 id) returns (address)",
+    "function cancelOrder(uint256 id)",
+    "function orderCount() view returns (uint256)",
+    "function orders(uint256) view returns (address from, uint48 nextAt, uint48 every, address token, address to, uint256 value, string name, string memo)",
     "event Sent(address indexed token, address indexed from, address indexed to, string name, uint256 value, string memo, bool byAgent)"
   ],
   erc20: [
@@ -159,7 +177,39 @@ async function refresh() {
     + `${ethers.formatUnits(bal, shareMeta.decimals)} ${shareMeta.symbol} &middot; `
     + `${(+ethers.formatEther(gas)).toFixed(4)} ${cfg.symbol} for gas`;
   loadFeed();
+  loadOrders();
 }
+
+// Anyone may run a due order, so Run shows for every account; only the
+// writer may cancel. Showing the last 20 is plenty for a demo.
+async function loadOrders() {
+  const n = Number(await gram.orderCount().catch(() => 0n));
+  const ids = Array.from({ length: Math.min(n, 20) }, (_, i) => n - 1 - i);
+  const all = await Promise.all(ids.map(i => gram.orders(i)));
+  const now = Date.now() / 1000;
+  const html = all.map((o, k) => {
+    if (o.from === ethers.ZeroAddress) return ""; // cancelled
+    const due = Number(o.nextAt) <= now;
+    return `<div class="item"><div class="memo">${esc(o.memo) || "(no note)"}</div>`
+      + `<div class="meta"><span class="amt">${ethers.formatUnits(o.value, shareMeta.decimals)} ${shareMeta.symbol}</span>`
+      + ` to ${esc(o.name)} every ${Number(o.every)}s &middot; `
+      + (due ? "due now" : "next " + new Date(Number(o.nextAt) * 1000).toLocaleString()) + `</div>`
+      + `<div class="row">` + (due ? `<button class="ghost" data-run="${ids[k]}">Run</button>` : "")
+      + (o.from === wallet.address ? `<button class="ghost" data-cancel="${ids[k]}">Cancel</button>` : "") + `</div></div>`;
+  }).join("");
+  $("orders").innerHTML = html || "none yet";
+}
+
+$("orders").onclick = async e => {
+  const { run, cancel } = e.target.dataset;
+  if (run === undefined && cancel === undefined) return;
+  try {
+    say(run !== undefined ? "running order " + run : "cancelling order " + cancel);
+    const r = await (await (run !== undefined ? gram.runOrder(run) : gram.cancelOrder(cancel))).wait();
+    say(`done. ${cfg.explorer}/tx/${r.hash}`);
+    refresh();
+  } catch (e) { say(e.shortMessage || e.message, true); }
+};
 
 async function loadFeed() {
   let logs = [];
@@ -193,9 +243,12 @@ $("claim").onclick = async () => {
 
 $("send").onclick = async () => {
   const to = $("to").value.trim(), memo = $("memo").value, amount = $("amount").value.trim();
+  const every = +$("every").value;
   if (!to || !amount) return say("needs a username and an amount", true);
+  // Nothing can pull the native balance, so a standing order is a token order.
+  if (every && $("asset").value === "native") return say("a standing order needs the share, not " + cfg.symbol, true);
   try {
-    say("sending");
+    say(every ? "writing the order" : "sending");
     let tx;
     if ($("asset").value === "native") {
       tx = await gram.sendNative(to, memo, { value: ethers.parseEther(amount) });
@@ -205,10 +258,12 @@ $("send").onclick = async () => {
         say("approving once");
         await (await share.approve(cfg.gram, MAX)).wait();
       }
-      tx = await gram.sendToken(cfg.share, to, value, memo);
+      // firstAt 0 means due at once: the first payment goes out on the first Run.
+      tx = every ? await gram.createOrder(cfg.share, to, value, 0, every, memo)
+                 : await gram.sendToken(cfg.share, to, value, memo);
     }
     const r = await tx.wait();
-    say(`sent. ${cfg.explorer}/tx/${r.hash}`);
+    say(`${every ? "order written, press Run to pay it" : "sent"}. ${cfg.explorer}/tx/${r.hash}`);
     $("amount").value = ""; $("memo").value = "";
     refresh();
   } catch (e) { say(e.shortMessage || e.message, true); }
