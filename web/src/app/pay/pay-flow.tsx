@@ -22,7 +22,7 @@ import {
   Sheet,
 } from "@/components/ui";
 import { Confetti, SuccessCheck, haptic } from "@/components/feel";
-import { countryName, flagOf } from "@/lib/countries";
+import { countryName } from "@/lib/countries";
 import {
   ASSETS,
   NOTE_SHORTCUTS,
@@ -283,94 +283,47 @@ function PayFlowInner() {
           <span className="w-10" />
         </div>
 
-        <div className="flex flex-1 flex-col items-center px-6 pt-4 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center px-6 pb-10 text-center">
           <span className="relative">
-            <Avatar handle={first.handle} size={80} />
+            <Avatar handle={first.handle} size={88} />
             <span className="pop absolute -bottom-1 -right-2 rounded-full ring-4 ring-white">
-              <AssetDot symbol={chosen} size={34} />
+              <AssetDot symbol={chosen} size={36} />
             </span>
           </span>
-          <p className="mt-3 text-[17px] text-muted">
-            Pay{" "}
-            <span className="font-semibold text-ink">
-              {first.first} {first.last}
-            </span>{" "}
-            <Flag code={first.country} size={16} />
+          <p className="mt-4 flex items-center gap-1.5 text-[19px] font-semibold">
+            {first.first} {first.last} <Flag code={first.country} size={17} />
           </p>
-          <p className="mt-1 text-[56px] font-semibold leading-none tracking-tight">
+          <p className="tabular mt-3 text-[64px] font-semibold leading-none tracking-tight">
             {usd(value)}
           </p>
-          <p className="mt-3 text-[17px] text-muted">with</p>
-          <div className="mt-3 flex items-center gap-3 rounded-full bg-chip py-2 pl-2 pr-5">
-            <AssetDot symbol={chosen} size={44} />
-            <span className="text-left">
-              <span className="block text-[19px] font-semibold leading-tight">
-                {a.name}
-              </span>
-              <span className="block text-[14px] text-muted">
-                {amountLabel(units, chosen)}
-              </span>
-            </span>
-          </div>
-
-          <div className="mt-6 w-full space-y-2.5 rounded-2xl border border-line p-4 text-left text-[15px]">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-muted">For</span>
-              <span className="truncate font-semibold">{note.trim()}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted">{first.first} gets</span>
-              <span className="font-semibold">
-                {amountLabel(units, chosen)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted">Who can see it</span>
-              <AudienceToggle value={audience} onChange={setAudience} />
-            </div>
-            <p className="text-[12px] leading-snug text-muted">
-              {audience === "public"
-                ? "Shows in feeds. The amount stays between you two."
-                : "Only you and " +
-                  first.first +
-                  " see it in the app. The transfer is still on a public blockchain."}
-            </p>
-            <div className="flex items-center justify-between">
-              <span className="text-muted">Arrives</span>
-              <span className="font-semibold">
-                In seconds, in {first.first}&apos;s wallet
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted">Fee</span>
-              <span className="font-semibold">under 1¢ (estimate)</span>
-            </div>
-          </div>
-          <p className="mt-3 text-[13px] text-muted">
-            {first.first} can keep it or sell it for dollars any time.
+          <p className="mt-3 flex items-center gap-2 rounded-full bg-chip py-1.5 pl-1.5 pr-3.5 text-[15px] font-semibold">
+            <AssetDot symbol={chosen} size={26} />
+            {amountLabel(units, chosen)}
           </p>
+          {note.trim() && (
+            <p className="mt-3 max-w-full truncate text-[16px] text-muted">
+              for {note.trim()}
+            </p>
+          )}
+          <div className="mt-7">
+            <AudienceToggle value={audience} onChange={setAudience} />
+          </div>
           {firstTime && (
-            <p className="mt-3 w-full rounded-xl bg-brand-soft px-3 py-2 text-[14px] font-medium text-brand">
-              First time paying @{first.handle}
-              {first.country
-                ? ` in ${countryName(first.country)} ${flagOf(first.country)}`
-                : ""}
-              . Check the name, photo and flag.
+            <p className="mt-6 text-[13px] font-medium text-brand">
+              First payment to this person. Check the photo and flag.
             </p>
           )}
         </div>
 
-        <div className="px-4 pb-[max(env(safe-area-inset-bottom),24px)] pt-4">
-          <PrimaryButton onClick={doPay}>
-            Pay {usd(value)} with {a.name}
-          </PrimaryButton>
+        <div className="px-4 pb-[max(env(safe-area-inset-bottom),24px)] pt-2">
+          <PrimaryButton onClick={doPay}>Pay {usd(value)}</PrimaryButton>
           <button
             type="button"
             onClick={() => {
               setStep("amount");
               setConfirmOpen(true);
             }}
-            className="mt-1 h-12 w-full text-[16px] font-semibold text-brand"
+            className="mt-1 h-12 w-full text-[15px] font-semibold text-muted"
           >
             Pay with something else
           </button>
