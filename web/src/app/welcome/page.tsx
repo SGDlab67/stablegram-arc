@@ -1,77 +1,131 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowRight, Camera, Check, ChevronLeft, ImageIcon, Sparkles, Wallet } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Camera, Check, ChevronLeft, ChevronRight, Globe2, Search, ShieldCheck, Sparkles, Wallet, Zap } from "lucide-react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { Wordmark } from "@/components/shell";
-import { AssetChip, AssetDot, AudienceLabel, PrimaryButton, Sheet } from "@/components/ui";
-import {
-  AVATAR_COLORS,
-  HANDLE_RULE,
-  RESERVED_HANDLES,
-  STARTER_ASSET_USD,
-  STARTER_CHOICES,
-  STARTER_DOLLARS,
-  assetOf,
-  usd,
-  type Audience,
-} from "@/lib/data";
+import { AssetChip, Flag, PrimaryButton, Sheet } from "@/components/ui";
+import { AVATAR_COLORS, HANDLE_RULE, RESERVED_HANDLES, STARTER_ASSET, STARTER_ASSET_USD, STARTER_DOLLARS, assetOf, usd } from "@/lib/data";
+import { COUNTRY_CODES, POPULAR_COUNTRIES, countryName, flagOf, guessCountry } from "@/lib/countries";
+import { WALLET_INFO, connectWallet, shortAddress, type ConnectedWallet, type WalletKind } from "@/lib/wallet";
 import { PhotoPicker } from "@/components/photo-picker";
-import { Confetti } from "@/components/feel";
+import { Confetti, haptic } from "@/components/feel";
 import { useStore } from "@/lib/store";
 
-const STEPS = ["intro", "signin", "name", "username", "photo", "first", "audience", "done"] as const;
+/*
+ * Sign-up in three screens, no ID checks:
+ *   1. intro   – what the app is
+ *   2. wallet  – create one on the spot, or connect Phantom / MetaMask / another wallet
+ *   3. profile – photo, name or nickname, @username, country flag (all on one screen)
+ *   then done.
+ */
+const STEPS = ["intro", "wallet", "profile", "done"] as const;
 type Step = (typeof STEPS)[number];
 
-const WALLETS = ["MetaMask", "Phantom", "Rabby", "Coinbase Wallet"];
-const AUDIENCES: { id: Audience; hint: string }[] = [
-  { id: "public", hint: "Shows in feeds: names and the note. Never the amount." },
-  { id: "private", hint: "Only you and the other person see it in the app." },
-];
+const noSubscribe = () => () => {};
+
+function WalletBadge({ kind, size = 44 }: { kind: WalletKind; size?: number }) {
+  const style = { width: size, height: size };
+  if (kind === "phantom")
+    return (
+      <span className="flex shrink-0 items-center justify-center rounded-2xl bg-[#AB9FF2] text-white" style={style}>
+        <svg viewBox="0 0 24 24" width={size * 0.55} height={size * 0.55} fill="currentColor" aria-hidden>
+          <path d="M12 3C6.9 3 3 7.2 3 12.4V19a2 2 0 0 0 3.4 1.4l1.1-1.1 1.1 1.1a2 2 0 0 0 2.8 0l.6-.6.6.6a2 2 0 0 0 2.8 0l1.1-1.1 1.1 1.1A2 2 0 0 0 21 19v-6.6C21 7.2 17.1 3 12 3Zm-3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm6 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z" />
+        </svg>
+      </span>
+    );
+  if (kind === "metamask")
+    return (
+      <span className="flex shrink-0 items-center justify-center rounded-2xl bg-[#FFF1E6] text-[#F6851B]" style={style}>
+        <svg viewBox="0 0 24 24" width={size * 0.6} height={size * 0.6} fill="currentColor" aria-hidden>
+          <path d="M21 3l-7.3 5.4 1.4-3.2L21 3ZM3 3l7.2 5.5-1.3-3.3L3 3Zm15.4 12.6-1.9 3 4.2 1.2 1.2-4.1-3.5-.1Zm-15.7.1 1.2 4.1 4.1-1.2-1.9-3-3.4.1Zm5.6-5-1.2 1.8 4.1.2-.1-4.5-2.8 2.5Zm7.4 0-2.9-2.6-.1 4.6 4.1-.2-1.1-1.8ZM8.7 18.6l2.5-1.2-2.1-1.7-.4 2.9Zm4.1-1.2 2.5 1.2-.4-2.9-2.1 1.7Z" />
+        </svg>
+      </span>
+    );
+  if (kind === "created")
+    return (
+      <span className="flex shrink-0 items-center justify-center rounded-2xl bg-brand text-white" style={style}>
+        <Sparkles size={size * 0.48} />
+      </span>
+    );
+  return (
+    <span className="flex shrink-0 items-center justify-center rounded-2xl bg-chip text-ink" style={style}>
+      <Wallet size={size * 0.48} />
+    </span>
+  );
+}
 
 export default function Welcome() {
   const router = useRouter();
   const { people, signUp, resetToSample } = useStore();
   const [step, setStep] = useState<Step>("intro");
-  const [walletsOpen, setWalletsOpen] = useState(false);
-  const [wallet, setWallet] = useState<string | null>(null);
-  const [first, setFirst] = useState("");
-  const [last, setLast] = useState("");
+  const [wallet, setWallet] = useState<ConnectedWallet | null>(null);
+  const [connecting, setConnecting] = useState<WalletKind | null>(null);
+  const [walletError, setWalletError] = useState("");
+  const [name, setName] = useState("");
   const [handle, setHandle] = useState("");
-  const [color, setColor] = useState(AVATAR_COLORS[0]);
+  const [handleEdited, setHandleEdited] = useState(false);
   const [photo, setPhoto] = useState<string | undefined>(undefined);
-  const [firstAsset, setFirstAsset] = useState(STARTER_CHOICES[0]);
-  const [audience, setAudience] = useState<Audience>("public");
+  const suggestedCountry = useSyncExternalStore(noSubscribe, guessCountry, () => "");
+  const [pickedCountry, setPickedCountry] = useState<string | null>(null);
+  const country = pickedCountry ?? suggestedCountry;
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [countryQuery, setCountryQuery] = useState("");
 
   const index = STEPS.indexOf(step);
   const go = (to: Step) => setStep(to);
-  const next = () => setStep(STEPS[Math.min(index + 1, STEPS.length - 1)]);
   const back = () => setStep(STEPS[Math.max(index - 1, 0)]);
 
-  // On the "done" step the new account is already in the list, so its own name must not count as taken.
-  const taken = step !== "done" && (people.some((p) => p.handle === handle) || RESERVED_HANDLES.includes(handle));
-  const validHandle = HANDLE_RULE.test(handle);
-  const handleMessage = !handle
+  const clean = (v: string) => v.toLowerCase().replace(/[^a-z0-9_]/g, "");
+  const [first, ...rest] = name.trim().split(/\s+/);
+  const last = rest.join(" ");
+  // Initials colour follows the name, so it stays the same on every screen.
+  const color = AVATAR_COLORS[[...name].reduce((n, ch) => n + ch.charCodeAt(0), 0) % AVATAR_COLORS.length];
+  // Suggest a username from the name until the person types their own.
+  const autoHandle = clean(name.trim().replace(/\s+/g, "_")).slice(0, 20);
+  const shownHandle = handleEdited ? handle : autoHandle;
+
+  const taken = step !== "done" && (people.some((p) => p.handle === shownHandle) || RESERVED_HANDLES.includes(shownHandle));
+  const validHandle = HANDLE_RULE.test(shownHandle);
+  const handleMessage = !shownHandle
     ? "3 to 20 lower-case letters, numbers or underscores."
     : !validHandle
       ? "Use 3 to 20 lower-case letters, numbers or underscores."
       : taken
-        ? `@${handle} is taken.`
-        : `@${handle} is available.`;
-  const clean = (v: string) => v.toLowerCase().replace(/[^a-z0-9_]/g, "");
-  const ideas = [clean(first + last), clean(`${first}_${last}`), clean(first + (last[0] ?? "")), clean(`${first}${last}1`)]
-    .filter((v, i, all) => HANDLE_RULE.test(v) && all.indexOf(v) === i)
-    .filter((v) => !people.some((p) => p.handle === v) && !RESERVED_HANDLES.includes(v) && v !== handle)
-    .slice(0, 3);
+        ? `@${shownHandle} is taken. Try another.`
+        : `@${shownHandle} is yours.`;
+  const ideas = useMemo(
+    () =>
+      [`${autoHandle}1`, `${clean(first ?? "")}${clean(last).slice(0, 1)}`, `${autoHandle}_pay`]
+        .filter((v, i, all) => HANDLE_RULE.test(v) && all.indexOf(v) === i && v !== shownHandle)
+        .filter((v) => !people.some((p) => p.handle === v) && !RESERVED_HANDLES.includes(v))
+        .slice(0, 3),
+    [autoHandle, first, last, shownHandle, people],
+  );
+  const ready = !!first && validHandle && !taken;
 
-  const asset = assetOf(firstAsset);
-  const startsWith =
-    firstAsset === "USDC"
-      ? `${usd(STARTER_DOLLARS + STARTER_ASSET_USD)} in dollars`
-      : `${usd(STARTER_DOLLARS)} in dollars and ${usd(STARTER_ASSET_USD)} of ${asset.name}`;
+  const connect = async (kind: WalletKind) => {
+    haptic();
+    setWalletError("");
+    setConnecting(kind);
+    try {
+      const w = await connectWallet(kind);
+      if (w) {
+        setWallet(w);
+        haptic("success");
+        go("profile");
+      }
+    } catch {
+      setWalletError(`${WALLET_INFO[kind].name} didn't connect. Open it and try again.`);
+    } finally {
+      setConnecting(null);
+    }
+  };
 
   const create = () => {
-    signUp({ handle, first: first.trim(), last: last.trim(), color, photo, firstAsset, audience });
+    if (!wallet || !ready) return;
+    signUp({ handle: shownHandle, first: first ?? "", last, color, photo, country, address: wallet.address });
+    haptic("success");
     go("done");
   };
 
@@ -85,19 +139,24 @@ export default function Welcome() {
         ...(photo ? { backgroundImage: `url(${photo})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: color }),
       }}
     >
-      {photo ? null : `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase()}
+      {photo ? null : `${first?.[0] ?? ""}${last[0] ?? first?.[1] ?? ""}`.toUpperCase() || <Camera size={size * 0.3} />}
     </span>
   );
 
   const title = (text: string, sub?: string) => (
     <>
-      <h1 className="text-[32px] font-semibold leading-[1.08] tracking-tight">{text}</h1>
-      {sub && <p className="mt-3 text-[16px] leading-relaxed text-[#5b544a]">{sub}</p>}
+      <h1 className="text-[30px] font-semibold leading-[1.08] tracking-tight">{text}</h1>
+      {sub && <p className="mt-2.5 text-[16px] leading-relaxed text-[#5b544a]">{sub}</p>}
     </>
   );
 
-  const field = "h-14 w-full rounded-2xl border border-[#ddd5c8] bg-white px-4 text-[18px] outline-none focus:border-brand";
+  const field = "h-14 w-full rounded-2xl border border-[#ddd5c8] bg-white px-4 text-[17px] outline-none focus:border-brand";
   const showHeader = step !== "intro" && step !== "done";
+
+  const q = countryQuery.trim().toLowerCase();
+  const countryList = COUNTRY_CODES.map((c) => ({ c, n: countryName(c) }))
+    .filter((x) => !q || x.n.toLowerCase().includes(q) || x.c.toLowerCase() === q)
+    .sort((a, b) => a.n.localeCompare(b.n));
 
   return (
     <div className="min-h-app flex flex-col bg-page">
@@ -108,9 +167,11 @@ export default function Welcome() {
               <ChevronLeft size={22} />
             </button>
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
-              <div className="h-full rounded-full bg-brand transition-all duration-300 ease-out" style={{ width: `${(index / (STEPS.length - 2)) * 100}%` }} />
+              <div className="h-full rounded-full bg-brand transition-all duration-300 ease-out" style={{ width: `${(index / (STEPS.length - 1)) * 100}%` }} />
             </div>
-            <span className="w-10" />
+            <span className="w-10 text-right text-[13px] font-semibold text-muted">
+              {index}/{STEPS.length - 2}
+            </span>
           </>
         )}
       </div>
@@ -119,9 +180,11 @@ export default function Welcome() {
         {step === "intro" && (
           <>
             <Wordmark className="text-[30px]" mark />
-            <div className="flex flex-1 flex-col justify-center py-6">
+            <div className="flex flex-1 flex-col justify-center py-5">
               <div className="rounded-[28px] bg-white p-5">
-                <p className="text-[15px] font-medium text-muted">You send @wes</p>
+                <p className="flex items-center gap-1.5 text-[15px] font-medium text-muted">
+                  You send @dev <Flag code="IN" size={15} />
+                </p>
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-[30px] font-semibold tracking-tight">$10</span>
                   <AssetChip symbol="NVDA" large />
@@ -131,12 +194,24 @@ export default function Welcome() {
                   <ArrowRight size={18} />
                   <span className="h-px flex-1 bg-line" />
                 </div>
-                <p className="text-[15px] font-medium text-muted">Wes gets $10 of NVIDIA</p>
-                <p className="mt-1 text-[15px] leading-snug text-muted">In his own wallet. He keeps it, or sells it for dollars whenever he wants.</p>
+                <p className="text-[15px] font-medium text-muted">Dev gets $10 of NVIDIA in Mumbai</p>
+                <p className="mt-1 text-[15px] leading-snug text-muted">In seconds, in his own wallet. No bank in between.</p>
               </div>
             </div>
-            {title("Send friends a slice of your portfolio.", "Pay back $10 in NVIDIA or in bitcoin, by username. They get exactly what you sent.")}
-            <PrimaryButton className="mt-7" onClick={next}>
+            {title("Pay anyone, anywhere.", "Send a slice of your portfolio to a friend down the street or across the world. Just a username.")}
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {[
+                { icon: <ShieldCheck size={18} />, text: "No ID checks" },
+                { icon: <Wallet size={18} />, text: "Your own wallet" },
+                { icon: <Zap size={18} />, text: "Settles in seconds" },
+              ].map((x) => (
+                <div key={x.text} className="flex flex-col items-center gap-1 rounded-2xl bg-white px-2 py-3 text-center text-[12px] font-semibold leading-tight">
+                  <span className="text-brand">{x.icon}</span>
+                  {x.text}
+                </div>
+              ))}
+            </div>
+            <PrimaryButton className="mt-5" onClick={() => go("wallet")}>
               Get started
             </PrimaryButton>
             <button
@@ -145,236 +220,201 @@ export default function Welcome() {
                 resetToSample();
                 router.replace("/");
               }}
-              className="mt-2 h-12 text-[16px] font-semibold text-brand"
+              className="mt-1 h-12 text-[16px] font-semibold text-brand"
             >
               I already have an account
             </button>
           </>
         )}
 
-        {step === "signin" && (
+        {step === "wallet" && (
           <>
-            {title("How do you want to sign in?", "Either way, the wallet is yours. We never hold your money.")}
+            {title("Your wallet", "This is where your money lives. Only you control it. No ID, no bank account, no forms.")}
             <div className="mt-6 space-y-3">
               <button
                 type="button"
-                onClick={() => {
-                  setWallet(null);
-                  next();
-                }}
-                className="flex w-full items-center gap-4 rounded-[22px] bg-white p-4 text-left"
+                disabled={!!connecting}
+                onClick={() => connect("created")}
+                className="flex w-full items-center gap-4 rounded-[22px] bg-white p-4 text-left ring-2 ring-brand disabled:opacity-60"
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
-                  <Sparkles size={22} />
+                <WalletBadge kind="created" />
+                <span className="flex-1">
+                  <span className="flex items-center gap-2 text-[17px] font-semibold">
+                    {WALLET_INFO.created.name}
+                    <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-bold uppercase text-brand">Fastest</span>
+                  </span>
+                  <span className="block text-[14px] leading-snug text-muted">{WALLET_INFO.created.hint}</span>
                 </span>
-                <span>
-                  <span className="block text-[17px] font-semibold">Start without a wallet</span>
-                  <span className="block text-[14px] leading-snug text-muted">We make one on this phone. You can back it up later.</span>
-                </span>
+                {connecting === "created" ? <Spinner /> : <ChevronRight size={20} className="text-muted" />}
               </button>
-              <button type="button" onClick={() => setWalletsOpen(true)} className="flex w-full items-center gap-4 rounded-[22px] bg-white p-4 text-left">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-chip">
-                  <Wallet size={22} />
-                </span>
-                <span>
-                  <span className="block text-[17px] font-semibold">Use my wallet</span>
-                  <span className="block text-[14px] leading-snug text-muted">MetaMask, Phantom, Rabby or Coinbase Wallet.</span>
-                </span>
-              </button>
-            </div>
-            <Sheet open={walletsOpen} onClose={() => setWalletsOpen(false)} title="Choose your wallet">
-              <div className="space-y-2">
-                {WALLETS.map((w) => (
-                  <button
-                    key={w}
-                    type="button"
-                    onClick={() => {
-                      setWallet(w);
-                      setWalletsOpen(false);
-                      next();
-                    }}
-                    className="flex h-14 w-full items-center justify-between rounded-2xl bg-chip px-4 text-[17px] font-semibold"
-                  >
-                    {w}
-                    <ArrowRight size={18} className="text-muted" />
+
+              <p className="px-1 pt-2 text-[13px] font-semibold uppercase tracking-wide text-muted">Or connect yours</p>
+              <div className="divide-y divide-line rounded-[22px] bg-white">
+                {(["phantom", "metamask", "other"] as const).map((k) => (
+                  <button key={k} type="button" disabled={!!connecting} onClick={() => connect(k)} className="flex w-full items-center gap-4 p-4 text-left disabled:opacity-60">
+                    <WalletBadge kind={k} size={40} />
+                    <span className="flex-1">
+                      <span className="block text-[16px] font-semibold">{WALLET_INFO[k].name}</span>
+                      <span className="block text-[13px] leading-snug text-muted">{WALLET_INFO[k].hint}</span>
+                    </span>
+                    {connecting === k ? <Spinner /> : <ChevronRight size={20} className="text-muted" />}
                   </button>
                 ))}
               </div>
-              <p className="mt-4 text-[13px] leading-relaxed text-muted">
-                Phantom needs Testnet Mode switched on first. In this preview no wallet is opened; the real build asks you to sign one message.
+              {walletError && <p className="px-1 text-[14px] font-medium text-down">{walletError}</p>}
+              <p className="px-1 text-[13px] leading-relaxed text-muted">
+                No Phantom yet?{" "}
+                <a href={WALLET_INFO.phantom.download} target="_blank" rel="noreferrer" className="font-semibold text-brand">
+                  Get Phantom
+                </a>{" "}
+                or{" "}
+                <a href={WALLET_INFO.metamask.download} target="_blank" rel="noreferrer" className="font-semibold text-brand">
+                  MetaMask
+                </a>
+                , or let us make one for you above. You can move it to another wallet later.
               </p>
-            </Sheet>
-          </>
-        )}
-
-        {step === "name" && (
-          <>
-            {title("What's your name?", "Friends see this next to your payments.")}
-            <div className="mt-6 space-y-3">
-              <input autoFocus value={first} onChange={(e) => setFirst(e.target.value)} placeholder="First name" autoComplete="given-name" maxLength={30} className={field} />
-              <input value={last} onChange={(e) => setLast(e.target.value)} placeholder="Last name" autoComplete="family-name" maxLength={30} className={field} />
             </div>
-            <div className="flex-1" />
-            <PrimaryButton onClick={next} disabled={!first.trim() || !last.trim()}>
-              Continue
-            </PrimaryButton>
           </>
         )}
 
-        {step === "username" && (
+        {step === "profile" && (
           <>
-            {title("Pick a username", "This is how people find and pay you. No wallet address needed.")}
-            <label className={`mt-6 flex items-center gap-1 ${field}`}>
-              <span className="text-muted">@</span>
-              <input
-                autoFocus
-                value={handle}
-                onChange={(e) => setHandle(clean(e.target.value).slice(0, 20))}
-                placeholder="yourname"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                className="w-full bg-transparent outline-none"
-              />
-              {validHandle && !taken && <Check size={20} className="shrink-0 text-money" />}
+            {title("Make it yours", "Friends use these to find you and check it's really you.")}
+            <div className="mt-5 flex items-center gap-4">
+              <PhotoPicker hasPhoto={!!photo} onChange={setPhoto}>
+                {(open) => (
+                  <button type="button" onClick={open} className="relative" aria-label="Add a photo">
+                    {preview(84)}
+                    <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white ring-[3px] ring-page">
+                      <Camera size={15} />
+                    </span>
+                  </button>
+                )}
+              </PhotoPicker>
+              <div className="min-w-0">
+                <p className="flex items-center gap-1.5 truncate text-[19px] font-semibold">
+                  {name.trim() || "Your name"} <Flag code={country} size={18} />
+                </p>
+                <p className="truncate text-[15px] text-muted">@{shownHandle || "username"}</p>
+                {wallet && (
+                  <p className="mt-1 flex items-center gap-1.5 text-[12px] text-muted">
+                    <WalletBadge kind={wallet.kind} size={16} /> {shortAddress(wallet.address)}
+                    {wallet.demo && " (demo)"}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <label className="mt-5 block">
+              <span className="px-1 text-[13px] font-semibold text-muted">Name or nickname</span>
+              <input autoFocus value={name} onChange={(e) => setName(e.target.value.slice(0, 40))} placeholder="e.g. Riley Stone, or just Riley" autoComplete="name" className={`mt-1 ${field}`} />
             </label>
-            <p className={`mt-2 px-1 text-[14px] ${validHandle && !taken ? "text-money" : handle && (taken || !validHandle) ? "text-down" : "text-muted"}`}>{handleMessage}</p>
-            {ideas.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
+
+            <label className="mt-3 block">
+              <span className="px-1 text-[13px] font-semibold text-muted">Username</span>
+              <span className={`mt-1 flex items-center gap-1 ${field}`}>
+                <span className="text-muted">@</span>
+                <input
+                  value={shownHandle}
+                  onChange={(e) => {
+                    setHandleEdited(true);
+                    setHandle(clean(e.target.value).slice(0, 20));
+                  }}
+                  placeholder="yourname"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  className="w-full bg-transparent outline-none"
+                />
+                {validHandle && !taken && <Check size={20} className="shrink-0 text-money" />}
+              </span>
+            </label>
+            <p className={`mt-1.5 px-1 text-[13px] ${validHandle && !taken ? "text-money" : shownHandle && (taken || !validHandle) ? "text-down" : "text-muted"}`}>{handleMessage}</p>
+            {taken && ideas.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
                 {ideas.map((idea) => (
-                  <button key={idea} type="button" onClick={() => setHandle(idea)} className="h-10 rounded-full bg-white px-4 text-[15px] font-semibold">
+                  <button
+                    key={idea}
+                    type="button"
+                    onClick={() => {
+                      setHandleEdited(true);
+                      setHandle(idea);
+                    }}
+                    className="h-9 rounded-full bg-white px-3.5 text-[14px] font-semibold"
+                  >
                     @{idea}
                   </button>
                 ))}
               </div>
             )}
-            {wallet && <p className="mt-4 px-1 text-[13px] text-muted">Payments to this username go to your {wallet} wallet.</p>}
-            <div className="flex-1" />
-            <PrimaryButton onClick={next} disabled={!validHandle || taken}>
-              Continue
-            </PrimaryButton>
-          </>
-        )}
 
-        {step === "photo" && (
-          <>
-            {title("Add a photo", "Pick one from your camera roll or take a selfie. It helps friends know they're paying the right person.")}
-            <div className="mt-8 flex flex-col items-center">
-              <PhotoPicker hasPhoto={!!photo} onChange={setPhoto}>
-                {(open) => (
-                  <button type="button" onClick={open} className="relative" aria-label="Choose a photo">
-                    {preview(132)}
-                    <span className="absolute -bottom-1 -right-1 flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white ring-4 ring-page">
-                      <Camera size={20} />
-                    </span>
-                  </button>
-                )}
-              </PhotoPicker>
-              <p className="mt-4 text-[20px] font-semibold">
-                {first} {last}
-              </p>
-              <p className="text-[15px] text-muted">@{handle}</p>
-              {photo ? (
-                <PhotoPicker hasPhoto onChange={setPhoto}>
-                  {(open) => (
-                    <button type="button" onClick={open} className="mt-5 h-10 rounded-full bg-white px-4 text-[15px] font-semibold">
-                      Change photo
-                    </button>
-                  )}
-                </PhotoPicker>
-              ) : (
-                <>
-                  <PhotoPicker hasPhoto={false} onChange={setPhoto}>
-                    {(open) => (
-                      <button type="button" onClick={open} className="mt-5 flex h-12 items-center gap-2 rounded-full bg-ink px-5 text-[16px] font-semibold text-white">
-                        <ImageIcon size={18} /> Choose from your photos
-                      </button>
-                    )}
-                  </PhotoPicker>
-                <>
-                  <p className="mt-6 text-[13px] font-semibold uppercase tracking-wide text-muted">Or pick a colour</p>
-                  <div className="mt-3 flex flex-wrap justify-center gap-3">
-                    {AVATAR_COLORS.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        aria-label={`Colour ${c}`}
-                        onClick={() => setColor(c)}
-                        className={`h-10 w-10 rounded-full ${color === c ? "ring-2 ring-ink ring-offset-2 ring-offset-page" : ""}`}
-                        style={{ background: c }}
-                      />
-                    ))}
-                  </div>
-                </>
-                </>
-              )}
+            <div className="mt-3">
+              <span className="px-1 text-[13px] font-semibold text-muted">Country</span>
+              <button type="button" onClick={() => setCountryOpen(true)} className={`mt-1 flex items-center gap-3 text-left ${field}`}>
+                {country ? <span className="text-[22px] leading-none">{flagOf(country)}</span> : <Globe2 size={20} className="text-muted" />}
+                <span className={`flex-1 ${country ? "" : "text-muted"}`}>{country ? countryName(country) : "Pick your country"}</span>
+                <ChevronRight size={18} className="text-muted" />
+              </button>
+              <p className="mt-1.5 px-1 text-[13px] leading-snug text-muted">Shows as a flag by your name, so friends can tell you apart from look-alikes. Optional.</p>
             </div>
-            <div className="flex-1" />
-            <PrimaryButton onClick={next}>{photo ? "Continue" : "Continue without a photo"}</PrimaryButton>
-          </>
-        )}
 
-        {step === "first" && (
-          <>
-            {title("Pick your first stock", "Your portfolio is what you pay friends with, so it starts with a little of something.")}
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              {STARTER_CHOICES.map((symbol) => {
-                const a = assetOf(symbol);
-                const on = firstAsset === symbol;
-                return (
-                  <button
-                    key={symbol}
-                    type="button"
-                    onClick={() => setFirstAsset(symbol)}
-                    className={`flex items-center gap-3 rounded-[22px] bg-white p-4 text-left ${symbol === "USDC" ? "col-span-2" : ""} ${on ? "ring-2 ring-brand" : ""}`}
-                  >
-                    <AssetDot symbol={symbol} size={42} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[16px] font-semibold leading-tight">{symbol === "USDC" ? "Just dollars" : a.name}</span>
-                      <span className="block font-mono text-[13px] text-muted">{symbol === "USDC" ? "Pick a stock later" : usd(a.price, { cents: true })}</span>
-                    </span>
-                    {on && symbol === "USDC" && <Check size={20} className="shrink-0 text-brand" />}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-4 px-1 text-[14px] leading-relaxed text-muted">
-              You start with {startsWith}. This is a demo: the stocks are test tokens that follow real prices.
-            </p>
             <div className="flex-1" />
-            <PrimaryButton className="mt-4" onClick={next}>
-              Continue
-            </PrimaryButton>
-          </>
-        )}
-
-        {step === "audience" && (
-          <>
-            {title("Who can see your payments?", "You can change this on any payment. Amounts are never shown to other people.")}
-            <div className="mt-5 space-y-2">
-              {AUDIENCES.map((a) => (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => setAudience(a.id)}
-                  className={`flex w-full items-start gap-3 rounded-[22px] p-4 text-left ${audience === a.id ? "bg-brand-soft ring-2 ring-brand" : "bg-white"}`}
-                >
-                  <span className="flex-1">
-                    <AudienceLabel audience={a.id} className="text-[17px] font-semibold" />
-                    <span className="mt-0.5 block text-[14px] text-muted">{a.hint}</span>
-                  </span>
-                  {audience === a.id && <Check size={20} className="text-brand" />}
-                </button>
-              ))}
-            </div>
-            <p className="mt-4 px-1 text-[13px] leading-relaxed text-muted">
-              Your username is linked to a public wallet. Anyone can see its balances and payments on the blockchain. This setting controls what
-              shows in feeds.
-            </p>
-            <div className="flex-1" />
-            <PrimaryButton className="mt-4" onClick={create}>
+            <PrimaryButton className="mt-5" disabled={!ready} onClick={create}>
               Create my account
             </PrimaryButton>
+
+            <Sheet open={countryOpen} onClose={() => setCountryOpen(false)} title="Where are you based?">
+              <label className="flex h-12 items-center gap-2 rounded-full bg-chip px-4">
+                <Search size={18} className="text-muted" />
+                <input value={countryQuery} onChange={(e) => setCountryQuery(e.target.value)} placeholder="Search countries" className="w-full bg-transparent text-[16px] outline-none placeholder:text-muted" />
+              </label>
+              {!q && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {POPULAR_COUNTRIES.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => {
+                        setPickedCountry(c);
+                        setCountryOpen(false);
+                      }}
+                      className={`flex h-9 items-center gap-1.5 rounded-full px-3 text-[14px] font-semibold ${country === c ? "bg-brand text-white" : "bg-chip"}`}
+                    >
+                      <span className="text-[17px] leading-none">{flagOf(c)}</span> {countryName(c)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="mt-3 divide-y divide-line">
+                {countryList.map(({ c, n }) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      setPickedCountry(c);
+                      setCountryOpen(false);
+                      setCountryQuery("");
+                    }}
+                    className="flex w-full items-center gap-3 py-3 text-left text-[16px]"
+                  >
+                    <span className="text-[22px] leading-none">{flagOf(c)}</span>
+                    <span className="flex-1">{n}</span>
+                    {country === c && <Check size={18} className="text-brand" />}
+                  </button>
+                ))}
+                {countryList.length === 0 && <p className="py-6 text-center text-muted">No country matches “{countryQuery}”.</p>}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPickedCountry("");
+                  setCountryOpen(false);
+                }}
+                className="mt-2 h-12 w-full text-[15px] font-semibold text-muted"
+              >
+                Prefer not to say
+              </button>
+            </Sheet>
           </>
         )}
 
@@ -387,14 +427,23 @@ export default function Welcome() {
                 <Check size={22} strokeWidth={3} />
               </span>
             </span>
-            <h1 className="mt-6 text-[32px] font-semibold leading-[1.08] tracking-tight">You&apos;re in, @{handle}.</h1>
+            <h1 className="mt-6 flex items-center gap-2 text-[30px] font-semibold leading-[1.08] tracking-tight">
+              You&apos;re in, @{shownHandle} <Flag code={country} size={26} />
+            </h1>
             <p className="mt-3 text-[16px] leading-relaxed text-[#5b544a]">
-              We added {startsWith} to get you started (demo). Send any of it to a friend by username.
+              Anyone can now pay you by username, from anywhere. We added {usd(STARTER_DOLLARS)} and {usd(STARTER_ASSET_USD)} of {assetOf(STARTER_ASSET).name} to try it
+              out (demo).
             </p>
+            {wallet && (
+              <p className="mt-3 flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[13px] text-muted">
+                <WalletBadge kind={wallet.kind} size={18} />
+                {wallet.kind === "created" ? "New wallet" : WALLET_INFO[wallet.kind].name} · {shortAddress(wallet.address)}
+              </p>
+            )}
             <PrimaryButton className="mt-8" onClick={() => router.replace("/")}>
               Go to Home
             </PrimaryButton>
-            <button type="button" onClick={() => router.replace("/friends")} className="mt-2 h-12 text-[16px] font-semibold text-brand">
+            <button type="button" onClick={() => router.replace("/friends")} className="mt-1 h-12 text-[16px] font-semibold text-brand">
               Find friends first
             </button>
           </div>
@@ -402,4 +451,8 @@ export default function Welcome() {
       </div>
     </div>
   );
+}
+
+function Spinner() {
+  return <span aria-label="Connecting" className="h-5 w-5 animate-spin rounded-full border-[2.5px] border-brand/25 border-t-brand" />;
 }

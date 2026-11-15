@@ -6,9 +6,10 @@ import { Check, Clock, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { ActivityRow, FeedCard } from "@/components/feed";
 import { BackHeader, Screen } from "@/components/shell";
-import { Avatar, Card, GhostButton, PrimaryButton, SectionTitle, Sheet } from "@/components/ui";
+import { Avatar, Card, Flag, GhostButton, PrimaryButton, SectionTitle, Sheet } from "@/components/ui";
 import { PublicPortfolio } from "@/components/public-portfolio";
 import { useStore } from "@/lib/store";
+import { countryName } from "@/lib/countries";
 
 export function ProfileScreen() {
   const params = useParams<{ handle: string }>();
@@ -36,10 +37,13 @@ export function ProfileScreen() {
       <BackHeader title="" />
       <div className="flex flex-col items-center px-6 pt-1 text-center">
         <Avatar handle={handle} size={104} />
-        <h1 className="mt-4 text-[26px] font-semibold tracking-tight">
-          {person.first} {person.last}
+        <h1 className="mt-4 flex items-center gap-2 text-[26px] font-semibold tracking-tight">
+          {person.first} {person.last} <Flag code={person.country} size={22} />
         </h1>
-        <p className="text-[16px] text-muted">@{person.handle}</p>
+        <p className="text-[16px] text-muted">
+          @{person.handle}
+          {person.country && <span> · {countryName(person.country)}</span>}
+        </p>
         {state !== "self" && mutual > 0 && (
           <p className="mt-2 text-[14px] text-muted">
             {mutual} {mutual === 1 ? "friend" : "friends"} in common

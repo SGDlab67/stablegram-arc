@@ -42,6 +42,10 @@ export interface Person {
   color: string;
   /** A small square image as a data URL. Missing means initials on the colour. */
   photo?: string;
+  /** Self-reported country (ISO code) shown as a flag next to the name. Never verified. */
+  country?: string;
+  /** The wallet payments to this username go to. */
+  address?: string;
 }
 
 export interface Comment {
@@ -112,7 +116,8 @@ export const ASSETS: Asset[] = [
   { symbol: "EURC", name: "Euro", group: "cash", market: "cash", price: 1.1, change24h: -0.28, color: "#1A3E9C", demo: false, logo: "/logos/EURC.png", about: "A digital euro issued by Circle." },
 ];
 
-export const STARTER_CHOICES = ["NVDA", "TSLA", "AAPL", "AMZN", "USDC"];
+/** Every new account starts with a little NVIDIA plus dollars (demo). No question in sign-up for it. */
+export const STARTER_ASSET = "NVDA";
 /** A new account picks its first stock and starts with a little of it plus some dollars. Matches the Arc column of the sign-up grants in spec/SEED-DATA.md. */
 export const STARTER_DOLLARS = 4;
 export const STARTER_ASSET_USD = 3;
@@ -122,16 +127,16 @@ export const RESERVED_HANDLES = ["admin", "support", "help", "stablegram", "pay"
 export const HANDLE_RULE = /^[a-z0-9_]{3,20}$/;
 
 export const PEOPLE: Person[] = [
-  { handle: "charlie", first: "Charlie", last: "Sneed", color: "#1F4F82", photo: "/avatars/charlie.png" },
-  { handle: "taihl", first: "Taihl", last: "Le", color: "#0F9D8A", photo: "/avatars/taihl.png" },
-  { handle: "ana", first: "Ana", last: "Rivera", color: "#E8590C", photo: "/avatars/ana.png" },
-  { handle: "wes", first: "Wes", last: "Kim", color: "#1971C2", photo: "/avatars/wes.png" },
-  { handle: "sabina", first: "Sabina", last: "Okafor", color: "#C2255C", photo: "/avatars/sabina.png" },
-  { handle: "maya", first: "Maya", last: "Tran", color: "#2F9E44", photo: "/avatars/maya.png" },
-  { handle: "jordan", first: "Jordan", last: "Park", color: "#B5651D", photo: "/avatars/jordan.png" },
-  { handle: "dev", first: "Dev", last: "Mehta", color: "#D9480F", photo: "/avatars/dev.png" },
-  { handle: "priya", first: "Priya", last: "Nair", color: "#0B7285", photo: "/avatars/priya.png" },
-  { handle: "zoe", first: "Zoe", last: "Castillo", color: "#A61E4D", photo: "/avatars/zoe.png" },
+  { handle: "charlie", first: "Charlie", last: "Sneed", color: "#1F4F82", photo: "/avatars/charlie.png", country: "US", address: "0x71C4a2E8b5d03F6c91e7B4A0d2c58e3F9A3f" },
+  { handle: "taihl", first: "Taihl", last: "Le", color: "#0F9D8A", photo: "/avatars/taihl.png", country: "US" },
+  { handle: "ana", first: "Ana", last: "Rivera", color: "#E8590C", photo: "/avatars/ana.png", country: "MX" },
+  { handle: "wes", first: "Wes", last: "Kim", color: "#1971C2", photo: "/avatars/wes.png", country: "US" },
+  { handle: "sabina", first: "Sabina", last: "Okafor", color: "#C2255C", photo: "/avatars/sabina.png", country: "NG" },
+  { handle: "maya", first: "Maya", last: "Tran", color: "#2F9E44", photo: "/avatars/maya.png", country: "CA" },
+  { handle: "jordan", first: "Jordan", last: "Park", color: "#B5651D", photo: "/avatars/jordan.png", country: "GB" },
+  { handle: "dev", first: "Dev", last: "Mehta", color: "#D9480F", photo: "/avatars/dev.png", country: "IN" },
+  { handle: "priya", first: "Priya", last: "Nair", color: "#0B7285", photo: "/avatars/priya.png", country: "SG" },
+  { handle: "zoe", first: "Zoe", last: "Castillo", color: "#A61E4D", photo: "/avatars/zoe.png", country: "AR" },
 ];
 
 export const MY_HOLDINGS: Record<string, number> = {
@@ -247,7 +252,7 @@ export function shortName(p: Person): string {
 }
 
 export function initials(p: Person): string {
-  return `${p.first[0] ?? ""}${p.last[0] ?? ""}`.toUpperCase();
+  return `${p.first[0] ?? ""}${p.last[0] ?? p.first[1] ?? ""}`.toUpperCase();
 }
 
 const EMOJI_RE = new RegExp("\\p{Extended_Pictographic}(\\uFE0F)?", "u");

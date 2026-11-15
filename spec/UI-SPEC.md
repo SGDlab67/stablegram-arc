@@ -114,6 +114,13 @@ Likes are open to anyone who can see the card. Comments need you to be a friend 
 
 ## 7. Pay/Request
 
+**Sign-up v2 (Charlie, Nov 14).**
+- **Steps:** intro → wallet → profile → done, with a 1/2 · 2/2 counter. Details in DECISIONS 70.
+- **Wallet tiles:** the "Create a wallet" tile has a navy ring and a Fastest badge. Phantom, MetaMask and Another wallet are rows in one white card with brand-coloured badges.
+- **Profile screen:** a live preview at the top (photo, name and flag, @username, wallet short address), then Name or nickname, Username and Country fields, and "Create my account".
+- **Done screen:** confetti, "You're in, @handle 🇮🇳", and a pill showing the wallet with its address.
+- **`<Flag code>`** in `ui.tsx` renders the emoji flag, with the country name as its accessible label.
+
 **Polish pass (Nov 14).** App feel lives in `web/src/components/feel.tsx`:
 - **Shared pieces:**
   - `haptic()`: vibration on Android, ignored on iPhone.

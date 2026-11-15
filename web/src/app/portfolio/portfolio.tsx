@@ -26,6 +26,7 @@ import {
 } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { useCountUp } from "@/components/feel";
+import { shortAddress } from "@/lib/wallet";
 
 const GROUPS: {
   id: AssetGroup;
@@ -86,7 +87,7 @@ function Row({
 }
 
 export function Portfolio() {
-  const { holdings, totalUsd, hideBalances, toggleHideBalances } = useStore();
+  const { me, holdings, totalUsd, hideBalances, toggleHideBalances } = useStore();
   const [range, setRange] = useState<Range>("1D");
   const [scrub, setScrub] = useState<number | null>(null);
 
@@ -314,7 +315,7 @@ export function Portfolio() {
           href="/me/settings"
           className="mt-4 flex items-center justify-center gap-1 text-[13px] text-muted"
         >
-          Wallet 0x71C4…9A3f (sample) <ChevronRight size={14} />
+          Wallet {me.address ? shortAddress(me.address) : "not connected"} <ChevronRight size={14} />
         </Link>
       </div>
       <PreviewNote />

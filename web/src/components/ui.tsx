@@ -5,6 +5,7 @@ import { Globe, Lock } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { assetOf, initials, personOf, type Audience } from "@/lib/data";
 import { useStore } from "@/lib/store";
+import { countryName, flagOf } from "@/lib/countries";
 
 export function Avatar({ handle, size = 40, ring = false }: { handle: string; size?: number; ring?: boolean }) {
   const { people } = useStore();
@@ -22,6 +23,16 @@ export function Avatar({ handle, size = 40, ring = false }: { handle: string; si
       aria-label={`${p.first} ${p.last}`}
     >
       {p.photo ? null : initials(p)}
+    </span>
+  );
+}
+
+/** The person's self-reported country as a flag, with the country name on hover. */
+export function Flag({ code, size = 16, className = "" }: { code?: string; size?: number; className?: string }) {
+  if (!code) return null;
+  return (
+    <span role="img" aria-label={countryName(code)} title={countryName(code)} className={`inline-block leading-none ${className}`} style={{ fontSize: size }}>
+      {flagOf(code)}
     </span>
   );
 }

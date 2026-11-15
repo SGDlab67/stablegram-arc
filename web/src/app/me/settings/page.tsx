@@ -7,6 +7,7 @@ import { AudienceLabel, Avatar, Card, SectionTitle } from "@/components/ui";
 import { type Audience, type PortfolioPrivacy } from "@/lib/data";
 import { PhotoPicker } from "@/components/photo-picker";
 import { toast } from "@/components/feel";
+import { shortAddress } from "@/lib/wallet";
 import { useStore } from "@/lib/store";
 
 const AUDIENCES: { id: Audience; hint: string }[] = [
@@ -167,7 +168,7 @@ export default function SettingsPage() {
         <Card className="divide-y divide-line py-1">
           <div className="flex items-center justify-between py-3 text-[16px]">
             <span className="font-semibold">Wallet</span>
-            <span className="font-mono text-[14px] text-muted">0x71C4…9A3f (sample)</span>
+            <span className="font-mono text-[14px] text-muted">{me.address ? shortAddress(me.address) : "Not connected"}</span>
           </div>
           <div className="py-3">
             <p className="text-[16px] font-semibold">Your wallet, your money</p>

@@ -297,7 +297,10 @@ export function BuyFlow() {
             </button>
           ))}
         </div>
-        <p className="mt-3 text-center text-[12px] text-muted">Credit cards aren&apos;t offered yet.</p>
+        <p className="mt-3 text-center text-[12px] leading-snug text-muted">
+          Sending and receiving never needs ID. Paying with a card, bank or Venmo goes through a licensed partner, which may ask for ID the first time. Paying from
+          your own wallet doesn&apos;t. Credit cards aren&apos;t offered yet.
+        </p>
       </Sheet>
     </div>
   );

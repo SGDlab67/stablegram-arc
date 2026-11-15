@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Check, Search, X } from "lucide-react";
 import { useState } from "react";
 import { Screen } from "@/components/shell";
-import { Avatar, Card, PreviewNote, SectionTitle } from "@/components/ui";
+import { Avatar, Card, Flag, PreviewNote, SectionTitle } from "@/components/ui";
 import { type Person } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
@@ -14,8 +14,11 @@ function PersonRow({ p, right }: { p: Person; right: React.ReactNode }) {
       <Link href={`/u/${p.handle}`} className="flex min-w-0 flex-1 items-center gap-3">
         <Avatar handle={p.handle} size={48} />
         <span className="min-w-0">
-          <span className="block truncate text-[17px] font-semibold">
-            {p.first} {p.last}
+          <span className="flex items-center gap-1.5 text-[17px] font-semibold">
+            <span className="truncate">
+              {p.first} {p.last}
+            </span>
+            <Flag code={p.country} size={15} />
           </span>
           <span className="block text-[14px] text-muted">@{p.handle}</span>
         </span>

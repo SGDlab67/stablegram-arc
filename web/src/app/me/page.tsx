@@ -5,7 +5,7 @@ import { Bell, QrCode, Settings, Share } from "lucide-react";
 import { ActivityRow } from "@/components/feed";
 import { RequestCards } from "@/components/requests";
 import { Screen } from "@/components/shell";
-import { Avatar, Card, PreviewNote, SectionTitle } from "@/components/ui";
+import { Avatar, Card, Flag, PreviewNote, SectionTitle } from "@/components/ui";
 import { usd } from "@/lib/data";
 import { toast } from "@/components/feel";
 import { useStore } from "@/lib/store";
@@ -45,8 +45,8 @@ export default function Me() {
             <QrCode size={18} />
           </span>
         </Link>
-        <h1 className="mt-4 text-[26px] font-semibold tracking-tight">
-          {me.first} {me.last}
+        <h1 className="mt-4 flex items-center gap-2 text-[26px] font-semibold tracking-tight">
+          {me.first} {me.last} <Flag code={me.country} size={22} />
         </h1>
         <p className="text-[16px] text-muted">@{me.handle}</p>
       </div>

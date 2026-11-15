@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Delete, Plus, QrCode, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Sentence } from "@/components/feed";
-import { AssetDot, AudienceToggle, Avatar, PrimaryButton, Sheet } from "@/components/ui";
+import { AssetDot, AudienceToggle, Avatar, Flag, PrimaryButton, Sheet } from "@/components/ui";
 import { Confetti, SuccessCheck, haptic } from "@/components/feel";
+import { countryName, flagOf } from "@/lib/countries";
 import { ASSETS, NOTE_SHORTCUTS, amountLabel, assetOf, feeLabel, personOf, shortName, usd, type Audience, type Payment } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
@@ -62,6 +63,9 @@ function PayFlowInner() {
     }
     return seen.slice(0, 6);
   }, [payments, me.handle, recipients]);
+  // Two people with the same display name: show the country in words too, so the flag can't be missed.
+  const sameName = (x: { handle: string; first: string; last: string }) =>
+    people.some((o) => o.handle !== x.handle && o.first.toLowerCase() === x.first.toLowerCase() && o.last.toLowerCase() === x.last.toLowerCase());
   const morePeople = people.filter((p) => p.handle !== me.handle && !recipients.includes(p.handle) && !candidates.some((c) => c.handle === p.handle));
 
   const funded = useMemo(
@@ -185,7 +189,7 @@ function PayFlowInner() {
             </span>
           </span>
           <p className="mt-3 text-[17px] text-muted">
-            Pay <span className="font-semibold text-ink">{first.first} {first.last}</span>
+            Pay <span className="font-semibold text-ink">{first.first} {first.last}</span> <Flag code={first.country} size={16} />
           </p>
           <p className="mt-1 text-[56px] font-semibold leading-none tracking-tight">{usd(value)}</p>
           <p className="mt-3 text-[17px] text-muted">with</p>
@@ -223,7 +227,12 @@ function PayFlowInner() {
             </div>
           </div>
           <p className="mt-3 text-[13px] text-muted">{first.first} can keep it or sell it for dollars any time.</p>
-          {firstTime && <p className="mt-3 w-full rounded-xl bg-brand-soft px-3 py-2 text-[14px] font-medium text-brand">First time paying @{first.handle}. Check the name and photo.</p>}
+          {firstTime && (
+            <p className="mt-3 w-full rounded-xl bg-brand-soft px-3 py-2 text-[14px] font-medium text-brand">
+              First time paying @{first.handle}
+              {first.country ? ` in ${countryName(first.country)} ${flagOf(first.country)}` : ""}. Check the name, photo and flag.
+            </p>
+          )}
         </div>
 
         <div className="px-4 pb-[max(env(safe-area-inset-bottom),24px)] pt-4">
@@ -295,10 +304,13 @@ function PayFlowInner() {
               <button type="button" onClick={() => choose(p.handle)} className="flex w-full items-center gap-3 px-5 py-3 text-left active:bg-chip">
                 <Avatar handle={p.handle} size={48} />
                 <span className="flex-1">
-                  <span className="block text-[17px] font-semibold">
-                    {p.first} {p.last}
+                  <span className="flex items-center gap-1.5 text-[17px] font-semibold">
+                    {p.first} {p.last} <Flag code={p.country} size={15} />
                   </span>
-                  <span className="block text-[15px] text-muted">@{p.handle}</span>
+                  <span className="block text-[15px] text-muted">
+                    @{p.handle}
+                    {sameName(p) && p.country && <span className="font-medium text-ink"> · {countryName(p.country)}</span>}
+                  </span>
                 </span>
                 <ChevronRight size={18} className="text-line" />
               </button>
@@ -315,10 +327,13 @@ function PayFlowInner() {
                   <button type="button" onClick={() => choose(p.handle)} className="flex w-full items-center gap-3 px-5 py-3 text-left active:bg-chip">
                     <Avatar handle={p.handle} size={48} />
                     <span className="flex-1">
-                      <span className="block text-[17px] font-semibold">
-                        {p.first} {p.last}
+                      <span className="flex items-center gap-1.5 text-[17px] font-semibold">
+                        {p.first} {p.last} <Flag code={p.country} size={15} />
                       </span>
-                      <span className="block text-[15px] text-muted">@{p.handle}</span>
+                      <span className="block text-[15px] text-muted">
+                        @{p.handle}
+                        {sameName(p) && p.country && <span className="font-medium text-ink"> · {countryName(p.country)}</span>}
+                      </span>
                     </span>
                     <ChevronRight size={18} className="text-line" />
                   </button>
@@ -352,8 +367,8 @@ function PayFlowInner() {
             <Plus size={20} />
           </button>
         </div>
-        <p className="mt-3 text-[20px] font-semibold">
-          {split ? `${recipients.length} people` : first ? `${first.first} ${first.last}` : ""}
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-[20px] font-semibold">
+          {split ? `${recipients.length} people` : first ? `${first.first} ${first.last}` : ""} {!split && first && <Flag code={first.country} size={18} />}
         </p>
         <p className="text-[15px] text-muted">{split ? recipients.map((h) => `@${h}`).join("  ") : first ? `@${first.handle}` : ""}</p>
 

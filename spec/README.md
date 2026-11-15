@@ -38,3 +38,14 @@ Until that is agreed, `SPEC.md` section 5 and Appendix A describe contracts that
 - The README says the hackathon runs Nov 13 to 20. UBC's build window opened Nov 12.
 - The README plans a Monad deploy at the Blitz. Whether code written before Sunday may be used there is still an open question for the organisers.
 - The repo is private. UBC needs it public by submission.
+
+## Wallet sign-in: where to plug in (for Taihl)
+Everything wallet-related in the app goes through `web/src/lib/wallet.ts` → `connectWallet(kind)`, which returns `{ kind, address, demo }`.
+
+| Kind | What it does now | What it should do |
+|---|---|---|
+| `phantom`, `metamask` | Calls `eth_requestAccounts` on the injected wallet. On a phone without one, opens the app's deep link. | Same, then switch to Arc testnet 5042002, sign a Sign-In with Ethereum message, register `username → address`. |
+| `created` | Makes a random demo address. | Embedded wallet (Circle user-controlled wallets, Privy, or a passkey wallet), with backup later. |
+| `other` | Demo address. | WalletConnect / Reown AppKit. |
+
+Sign-up then calls `signUp({ handle, first, last, photo, country, address })` in `web/src/lib/store.tsx`; that is where the registry call goes.

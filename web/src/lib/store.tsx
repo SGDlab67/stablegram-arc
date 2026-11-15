@@ -15,6 +15,7 @@ import {
   PEOPLE_PRIVACY,
   DEFAULT_PRIVACY,
   REQUESTS,
+  STARTER_ASSET,
   STARTER_ASSET_USD,
   STARTER_DOLLARS,
   assetOf,
@@ -40,13 +41,15 @@ interface PayInput {
 
 export interface SignUpInput {
   handle: string;
+  /** Name or nickname, split at the first space. Aliases are fine; nothing is checked. */
   first: string;
   last: string;
   color: string;
   photo?: string;
-  /** The first stock the new person picked. "USDC" means they only want dollars to start. */
-  firstAsset: string;
-  audience: Audience;
+  /** Self-reported country code for the flag. Empty means no flag. */
+  country?: string;
+  /** The wallet that was created or connected. */
+  address: string;
 }
 
 interface Store {
@@ -249,18 +252,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [meHandle]);
 
   const signUp = useCallback((input: SignUpInput) => {
-    const person: Person = { handle: input.handle, first: input.first, last: input.last, color: input.color, photo: input.photo };
+    const person: Person = { handle: input.handle, first: input.first, last: input.last, color: input.color, photo: input.photo, country: input.country || undefined, address: input.address };
     setPeople((list) => [person, ...list.filter((p) => p.handle !== input.handle)]);
     setMeHandle(input.handle);
     setFriends([]);
     setIncoming([]);
     setOutgoing([]);
-    setHoldings(
-      input.firstAsset === "USDC"
-        ? { USDC: STARTER_DOLLARS + STARTER_ASSET_USD }
-        : { USDC: STARTER_DOLLARS, [input.firstAsset]: STARTER_ASSET_USD / assetOf(input.firstAsset).price },
-    );
-    setDefaultAudience(input.audience);
+    // A small demo starter so a new account can try paying straight away. No questions asked for it.
+    setHoldings({ USDC: STARTER_DOLLARS, [STARTER_ASSET]: STARTER_ASSET_USD / assetOf(STARTER_ASSET).price });
+    setDefaultAudience("public");
   }, []);
 
   const resetToSample = useCallback(() => {
