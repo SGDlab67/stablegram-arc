@@ -171,17 +171,24 @@ password and nothing lands in shell history.
 
 ## The phone app
 
-`web/index.html` is the whole client: one file, ethers from a CDN, no build
-step, no framework. Serve it, open it in Safari, then Share and Add to Home
-Screen for a full screen app with no browser chrome.
+There are two clients in this repo.
+
+- `web/` is the app: Next.js, every screen, running on sample data today. It
+  is being wired to the contracts through `deployments/arc-testnet.json`.
+  Run it with `cd web && npm install && npm run dev`.
+- `demo/index.html` is the reference client that talks to the chain now: one
+  file, ethers from a CDN, no build step, no framework.
+
+To run the reference client, serve it, open it in Safari, then Share and Add
+to Home Screen for a full screen app with no browser chrome.
 
 ```bash
-cd web && python3 -m http.server 8000
+cd demo && python3 -m http.server 8000
 ```
 
 It carries two throwaway testnet accounts instead of a wallet connector,
 because mobile wallet deep linking is what breaks live demos. A judge picks
-"as alice" or "as bob" and sends. Those keys live in `web/demo-keys.js`, which
+"as alice" or "as bob" and sends. Those keys live in `demo/demo-keys.js`, which
 is gitignored and holds nothing of value.
 
 Rehearsed end to end on Arc testnet on 2026-11-13: both usernames claimed, a

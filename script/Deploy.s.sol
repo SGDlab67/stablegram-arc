@@ -16,7 +16,7 @@ import {UsernameRegistry} from "../src/UsernameRegistry.sol";
 /// are named outright for that reason.
 contract Deploy is Script {
     /// Throwaway testnet accounts the phone app sends as. Their keys live in
-    /// web/demo-keys.js, which is gitignored.
+    /// demo/demo-keys.js, which is gitignored.
     address constant ALICE = 0x9eD68aFD9aF46Aea351B78D491068Ca23aEe5dB5;
     address constant BOB = 0xa76e8E1193b48e483224eb311ea4Fc14158eDEAF;
 
