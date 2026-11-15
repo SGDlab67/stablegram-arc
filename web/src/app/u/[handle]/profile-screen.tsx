@@ -44,6 +44,7 @@ export function ProfileScreen() {
           @{person.handle}
           {person.country && <span> · {countryName(person.country)}</span>}
         </p>
+        {person.tag && <span className="mt-2 rounded-full bg-brand-soft px-3 py-1 text-[13px] font-semibold text-brand">{person.tag}</span>}
         {state !== "self" && mutual > 0 && (
           <p className="mt-2 text-[14px] text-muted">
             {mutual} {mutual === 1 ? "friend" : "friends"} in common

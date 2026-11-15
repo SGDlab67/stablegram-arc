@@ -14,6 +14,7 @@ import {
   PEOPLE_HOLDINGS,
   PEOPLE_PRIVACY,
   DEFAULT_PRIVACY,
+  PRIVATE_PRIVACY,
   REQUESTS,
   STARTER_ASSET,
   STARTER_ASSET_USD,
@@ -312,7 +313,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const privacyOf = useCallback(
-    (handle: string) => (handle === meHandle ? myPrivacy : (PEOPLE_PRIVACY[handle] ?? DEFAULT_PRIVACY)),
+    (handle: string) => (handle === meHandle ? myPrivacy : (PEOPLE_PRIVACY[handle] ?? PRIVATE_PRIVACY)),
     [meHandle, myPrivacy],
   );
   const holdingsOf = useCallback((handle: string) => (handle === meHandle ? holdings : (others[handle] ?? {})), [meHandle, holdings, others]);

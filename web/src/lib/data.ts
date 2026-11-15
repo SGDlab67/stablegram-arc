@@ -47,6 +47,8 @@ export interface Person {
   country?: string;
   /** The wallet payments to this username go to. */
   address?: string;
+  /** A group label shown on the profile, e.g. the event someone is at. */
+  tag?: string;
 }
 
 export interface Comment {
@@ -130,7 +132,7 @@ export const AVATAR_COLORS = ["#1F4F82", "#0F9D8A", "#E8590C", "#1971C2", "#C225
 export const RESERVED_HANDLES = ["admin", "support", "help", "stablegram", "pay", "request", "requests", "me", "home", "friends", "portfolio", "settings", "everyone", "welcome"];
 export const HANDLE_RULE = /^[a-z0-9_]{3,20}$/;
 
-export const PEOPLE: Person[] = [
+export const PERSONAS: Person[] = [
   { handle: "charlie", first: "Charlie", last: "Sneed", color: "#1F4F82", photo: "/avatars/charlie.png", country: "US", address: "0x71C4a2E8b5d03F6c91e7B4A0d2c58e3F9A3f" },
   { handle: "taihl", first: "Taihl", last: "Le", color: "#0F9D8A", photo: "/avatars/taihl.png", country: "US" },
   { handle: "ana", first: "Ana", last: "Rivera", color: "#E8590C", photo: "/avatars/ana.png", country: "MX" },
@@ -142,6 +144,67 @@ export const PEOPLE: Person[] = [
   { handle: "priya", first: "Priya", last: "Nair", color: "#0B7285", photo: "/avatars/priya.png", country: "SG" },
   { handle: "zoe", first: "Zoe", last: "Castillo", color: "#A61E4D", photo: "/avatars/zoe.png", country: "AR" },
 ];
+
+export const HACKATHON_TAG = "UBC Hackathon 2026";
+
+/**
+ * UBC Hackathon 2026 participants, listed by Charlie with their permission. Real names, so: initials only (no photos),
+ * no made-up payments, and portfolios kept private. They show up in search, on Home and on Friends.
+ */
+export const HACKATHON_PEOPLE: Person[] = [
+  { handle: "bardia_ahmadi", first: "Bardia", last: "Ahmadi Dafchahi", color: "#1F4F82", tag: HACKATHON_TAG },
+  { handle: "salem_alfassam", first: "Salem", last: "Alfassam", color: "#0F9D8A", tag: HACKATHON_TAG },
+  { handle: "armon_behikeesh", first: "Armon", last: "Behikeesh", color: "#E8590C", tag: HACKATHON_TAG },
+  { handle: "jack_bernstein", first: "Jack", last: "Bernstein-Sheehan", color: "#1971C2", tag: HACKATHON_TAG },
+  { handle: "diego_carpenter", first: "Diego", last: "Carpenter", color: "#C2255C", tag: HACKATHON_TAG },
+  { handle: "cameron_coleman", first: "Cameron", last: "Coleman", color: "#2F9E44", tag: HACKATHON_TAG },
+  { handle: "armaan_hajarizadeh", first: "Armaan", last: "Hajarizadeh", color: "#D9480F", tag: HACKATHON_TAG },
+  { handle: "audrey_hudspeth", first: "Audrey", last: "Hudspeth", color: "#364FC7", tag: HACKATHON_TAG },
+  { handle: "banyan_julian", first: "Banyan", last: "Julian", color: "#5C7A99", tag: HACKATHON_TAG },
+  { handle: "finian_kierstead", first: "Finian", last: "Kierstead", color: "#A61E4D", tag: HACKATHON_TAG },
+  { handle: "nikita_klepikov", first: "Nikita", last: "Klepikov", color: "#0B7285", tag: HACKATHON_TAG },
+  { handle: "ruhi_kotwal", first: "Ruhi", last: "Kotwal", color: "#B5651D", tag: HACKATHON_TAG },
+  { handle: "kevin_le", first: "Kevin", last: "Le", color: "#1F4F82", tag: HACKATHON_TAG },
+  { handle: "valentin_levy", first: "Valentin", last: "Levy", color: "#0F9D8A", tag: HACKATHON_TAG },
+  { handle: "carsen_luna", first: "Carsen", last: "Luna", color: "#E8590C", tag: HACKATHON_TAG },
+  { handle: "drew_manley", first: "Drew", last: "Manley", color: "#1971C2", tag: HACKATHON_TAG },
+  { handle: "miles_miller", first: "Miles", last: "Miller", color: "#C2255C", tag: HACKATHON_TAG },
+  { handle: "katrina_nguyen", first: "Katrina", last: "Nguyen", color: "#2F9E44", tag: HACKATHON_TAG },
+  { handle: "mateusz_palusinski", first: "Mateusz", last: "Palusinski", color: "#D9480F", tag: HACKATHON_TAG },
+  { handle: "braydon_perko", first: "Braydon", last: "Perko", color: "#364FC7", tag: HACKATHON_TAG },
+  { handle: "chris_richardson", first: "Christopher", last: "Richardson", color: "#5C7A99", tag: HACKATHON_TAG },
+  { handle: "nick_sakys", first: "Nick", last: "Sakys", color: "#A61E4D", tag: HACKATHON_TAG },
+  { handle: "shaurya_saxena", first: "Shaurya", last: "Saxena", color: "#0B7285", tag: HACKATHON_TAG },
+  { handle: "justin_schroeder", first: "Justin", last: "Schroeder", color: "#B5651D", tag: HACKATHON_TAG },
+  { handle: "kellen_snider", first: "Kellen", last: "Snider", color: "#1F4F82", tag: HACKATHON_TAG },
+  { handle: "blake_staats", first: "Blake", last: "Staats", color: "#0F9D8A", tag: HACKATHON_TAG },
+  { handle: "eleanor_stenberg", first: "Eleanor", last: "Stenberg", color: "#E8590C", tag: HACKATHON_TAG },
+  { handle: "matthew_stone", first: "Matthew", last: "Stone", color: "#1971C2", tag: HACKATHON_TAG },
+  { handle: "fatima_syed", first: "Fatima", last: "Syed", color: "#C2255C", tag: HACKATHON_TAG },
+  { handle: "evan_thompson", first: "Evan", last: "Thompson", color: "#2F9E44", tag: HACKATHON_TAG },
+  { handle: "shantam_tyagi", first: "Shantam", last: "Tyagi", color: "#D9480F", tag: HACKATHON_TAG },
+  { handle: "xavier_vortigern", first: "Xavier", last: "Vortigern", color: "#364FC7", tag: HACKATHON_TAG },
+  { handle: "chris_warner", first: "Chris", last: "Warner", color: "#5C7A99", tag: HACKATHON_TAG },
+  { handle: "archie_webber", first: "Archie", last: "Webber", color: "#A61E4D", tag: HACKATHON_TAG },
+  { handle: "libby_wise", first: "Libby", last: "Wise", color: "#0B7285", tag: HACKATHON_TAG },
+  { handle: "madeleine_ward", first: "Madeleine", last: "Ward", color: "#B5651D", tag: HACKATHON_TAG },
+  { handle: "joseph_harris", first: "Joseph", last: "Harris", color: "#1F4F82", tag: HACKATHON_TAG },
+  { handle: "huy_voqui", first: "Huy", last: "Voqui", color: "#0F9D8A", tag: HACKATHON_TAG },
+  { handle: "liam_nichols", first: "Liam", last: "Nichols", color: "#E8590C", tag: HACKATHON_TAG },
+  { handle: "joshua_mcmullen", first: "Joshua", last: "McMullen", color: "#1971C2", tag: HACKATHON_TAG },
+  { handle: "lin_mills", first: "Lin", last: "Mills", color: "#C2255C", tag: HACKATHON_TAG },
+  { handle: "calvin_peck", first: "Calvin", last: "N Peck Dobson", color: "#2F9E44", tag: HACKATHON_TAG },
+  { handle: "anureet_waraich", first: "Anureet", last: "Waraich", color: "#D9480F", tag: HACKATHON_TAG },
+  { handle: "shishir_thilavalli", first: "Shishir", last: "Thilavalli", color: "#364FC7", tag: HACKATHON_TAG },
+  { handle: "clayton_fawthrop", first: "Clayton", last: "Fawthrop-Male", color: "#5C7A99", tag: HACKATHON_TAG },
+  { handle: "jared_vaughn", first: "Jared", last: "Vaughn", color: "#A61E4D", tag: HACKATHON_TAG },
+  { handle: "jalen_wang", first: "Jalen", last: "Wang", color: "#0B7285", tag: HACKATHON_TAG },
+  { handle: "alana_nguyen", first: "Alana", last: "Nguyen", color: "#B5651D", tag: HACKATHON_TAG },
+  { handle: "ritvik_botla", first: "Ritvik", last: "Botla", color: "#1F4F82", tag: HACKATHON_TAG },
+  { handle: "parker_myers", first: "Parker", last: "Myers", color: "#0F9D8A", tag: HACKATHON_TAG },
+];
+
+export const PEOPLE: Person[] = [...PERSONAS, ...HACKATHON_PEOPLE];
 
 export const MY_HOLDINGS: Record<string, number> = {
   USDC: 42.5,
@@ -172,6 +235,9 @@ export interface PortfolioPrivacy {
   activity: boolean;
 }
 
+/** Portfolio hidden. Used for real people (hackathon participants) so no made-up holdings are shown under their names. */
+export const PRIVATE_PRIVACY: PortfolioPrivacy = { show: false, who: "everyone", total: false, holdings: false, amounts: "hidden", performance: false, activity: false };
+
 export const DEFAULT_PRIVACY: PortfolioPrivacy = { show: true, who: "everyone", total: false, holdings: true, amounts: "percent", performance: true, activity: true };
 
 /** Sample portfolios for the other nine demo people, in token units. */
@@ -201,7 +267,7 @@ export const PEOPLE_PRIVACY: Record<string, PortfolioPrivacy> = {
 };
 
 export const FRIENDS: string[] = ["taihl", "ana", "wes", "sabina", "maya"];
-export const INCOMING_FRIEND_REQUESTS: string[] = ["jordan"];
+export const INCOMING_FRIEND_REQUESTS: string[] = ["evan_thompson", "salem_alfassam", "cameron_coleman", "jordan"];
 
 /** Who the other sample people are friends with, for the Friends feed and friends in common. */
 export const OTHER_FRIENDSHIPS: [string, string][] = [

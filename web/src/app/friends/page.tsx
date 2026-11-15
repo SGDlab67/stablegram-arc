@@ -7,6 +7,7 @@ import { Screen } from "@/components/shell";
 import { Avatar, Card, Flag, PreviewNote, SectionTitle } from "@/components/ui";
 import { type Person } from "@/lib/data";
 import { useStore } from "@/lib/store";
+import { HACKATHON_TAG } from "@/lib/data";
 
 function PersonRow({ p, right }: { p: Person; right: React.ReactNode }) {
   return (
@@ -36,8 +37,9 @@ export default function Friends() {
   const others = people.filter((p) => p.handle !== me.handle);
   const byHandle = (h: string) => others.find((p) => p.handle === h);
   const paidWith = new Set(payments.filter((p) => p.from === me.handle || p.to === me.handle).flatMap((p) => [p.from, p.to]));
+  const hackathon = others.filter((p) => p.tag === HACKATHON_TAG && !incoming.includes(p.handle)).sort((a, b) => a.first.localeCompare(b.first));
   const suggested = others
-    .filter((p) => !friends.includes(p.handle) && !incoming.includes(p.handle))
+    .filter((p) => !p.tag && !friends.includes(p.handle) && !incoming.includes(p.handle))
     .sort((a, b) => Number(paidWith.has(b.handle)) - Number(paidWith.has(a.handle)));
   const results = q ? others.filter((p) => p.handle.includes(q) || `${p.first} ${p.last}`.toLowerCase().includes(q)) : [];
 
@@ -91,8 +93,8 @@ export default function Friends() {
                         p={p}
                         right={
                           <span className="flex shrink-0 gap-2">
-                            <button type="button" onClick={() => acceptFriend(h)} className="flex h-10 items-center gap-1.5 rounded-full bg-brand px-4 text-[15px] font-semibold text-white">
-                              <Check size={17} strokeWidth={2.6} /> Accept
+                            <button type="button" aria-label={`Accept ${p.first}`} onClick={() => acceptFriend(h)} className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white">
+                              <Check size={19} strokeWidth={2.6} />
                             </button>
                             <button type="button" aria-label={`Ignore ${p.first}`} onClick={() => ignoreFriend(h)} className="flex h-10 w-10 items-center justify-center rounded-full bg-chip">
                               <X size={18} />
@@ -131,6 +133,14 @@ export default function Friends() {
                   />
                 ))}
               {friends.length === 0 && <p className="py-4 text-muted">No friends yet. Add a few above.</p>}
+            </Card>
+
+            <div id="ubc" className="scroll-mt-4" />
+            <SectionTitle right={<span className="text-[13px] font-semibold text-muted">{hackathon.length}</span>}>{HACKATHON_TAG}</SectionTitle>
+            <Card className="divide-y divide-line py-1">
+              {hackathon.map((p) => (
+                <PersonRow key={p.handle} p={p} right={addButton(p.handle)} />
+              ))}
             </Card>
           </>
         )}

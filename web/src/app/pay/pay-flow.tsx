@@ -23,6 +23,7 @@ import {
 } from "@/components/ui";
 import { Confetti, SuccessCheck, haptic } from "@/components/feel";
 import { countryName } from "@/lib/countries";
+import { HACKATHON_TAG } from "@/lib/data";
 import {
   ASSETS,
   NOTE_SHORTCUTS,
@@ -125,12 +126,16 @@ function PayFlowInner() {
         o.first.toLowerCase() === x.first.toLowerCase() &&
         o.last.toLowerCase() === x.last.toLowerCase(),
     );
-  const morePeople = people.filter(
+  const notListed = people.filter(
     (p) =>
       p.handle !== me.handle &&
       !recipients.includes(p.handle) &&
       !candidates.some((c) => c.handle === p.handle),
   );
+  const morePeople = notListed.filter((p) => !p.tag);
+  const hackathonPeople = notListed
+    .filter((p) => p.tag)
+    .sort((a, b) => a.first.localeCompare(b.first));
 
   const funded = useMemo(
     () =>
@@ -431,6 +436,41 @@ function PayFlowInner() {
             </p>
             <ul>
               {morePeople.map((p) => (
+                <li key={p.handle}>
+                  <button
+                    type="button"
+                    onClick={() => choose(p.handle)}
+                    className="flex w-full items-center gap-3 px-5 py-3 text-left active:bg-chip"
+                  >
+                    <Avatar handle={p.handle} size={48} />
+                    <span className="flex-1">
+                      <span className="flex items-center gap-1.5 text-[17px] font-semibold">
+                        {p.first} {p.last} <Flag code={p.country} size={15} />
+                      </span>
+                      <span className="block text-[15px] text-muted">
+                        @{p.handle}
+                        {sameName(p) && p.country && (
+                          <span className="font-medium text-ink">
+                            {" "}
+                            · {countryName(p.country)}
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                    <ChevronRight size={18} className="text-line" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {!query && hackathonPeople.length > 0 && (
+          <>
+            <p className="px-5 pb-1 pt-5 text-[13px] font-semibold uppercase tracking-wide text-muted">
+              {HACKATHON_TAG}
+            </p>
+            <ul>
+              {hackathonPeople.map((p) => (
                 <li key={p.handle}>
                   <button
                     type="button"
