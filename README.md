@@ -4,8 +4,7 @@
 it was for. Or just text your agent and let it do it.**
 
 Built for the University Blockchain Conference Hackathon 2026 (Nov 13 to
-20) and Monad Blitz Oregon. Contracts are chain neutral and run on Arc
-testnet first, where gas is USDC.
+20). Live on Arc testnet, where gas is USDC.
 
 ## Why
 
@@ -172,8 +171,6 @@ still holds the two rehearsal sends from 2026-11-13 listed below.
 | `UsernameRegistry` | `0x9100A33057302d106850D42Eb09f2896480ea3Ee` |
 | `MockShare` | `0x7cb45eB5C729061295f84C69e0eb3961f28a9f64` |
 
-Monad testnet, chain ID 10143: to be deployed at Monad Blitz on 2026-11-15.
-
 ## Run it
 
 ```bash
@@ -263,7 +260,6 @@ one.
 - **USDC on Arc has two faces.** The native balance uses 18 decimals and the
   ERC-20 interface uses 6, over one balance. An agent sends through the
   ERC-20 interface, because native value cannot be pulled from a user.
-- **Monad**: mainnet chain ID 143, testnet 10143.
 - No hardcoded addresses anywhere. Porting between chains is a redeploy.
 
 ## Licence

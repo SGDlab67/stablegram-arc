@@ -7,8 +7,7 @@ import {MockShare} from "../src/MockShare.sol";
 import {Stablegram} from "../src/Stablegram.sol";
 import {UsernameRegistry} from "../src/UsernameRegistry.sol";
 
-/// Deploys the whole set. Nothing here is chain specific, so the same
-/// script runs on Arc testnet and on Monad with only --rpc-url changed.
+/// Deploys the whole set to whichever chain --rpc-url names.
 ///
 /// Do not use `msg.sender` here. In a forge script it is the simulation
 /// sender, not the wallet that signs the broadcast, so anything minted to

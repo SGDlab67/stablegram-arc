@@ -63,3 +63,6 @@ Corrections to the notes above, which were written before the current contracts 
 - **Not built:** `DemoVenue`, `claimFor`, the `Onboarder` and relayer, and the off-chain note with a `ref`. The note is always on-chain in the `Sent` event today.
 - **CI is green**, and it now lints and builds `web/` as well as running the Foundry checks.
 - **A working reference client is in `demo/index.html`:** one file, no build, real sends on Arc testnet. Copy the calls from there when wiring `connectWallet()` and `signUp()`.
+
+## Update, 2026-11-15, later (Taihl)
+- This repo is Arc only. The Monad deploy planned above, and milestone M7 in `SPEC.md`, are out of scope here.

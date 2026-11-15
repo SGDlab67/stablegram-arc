@@ -13,5 +13,3 @@ remappings = [
 [rpc_endpoints]
 arc_testnet = "https://rpc.testnet.arc.io"
 arc = "https://rpc.arc.io"
-monad_testnet = "https://testnet-rpc.monad.xyz"
-monad = "https://rpc.monad.xyz"
