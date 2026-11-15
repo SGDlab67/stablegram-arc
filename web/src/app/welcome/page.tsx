@@ -13,6 +13,7 @@ import { Confetti, FaceScan, haptic, toast } from "@/components/feel";
 import { createPasskey, signInWithPasskey } from "@/lib/passkey";
 import { looksLikePhrase, toWords } from "@/lib/recovery";
 import { useStore } from "@/lib/store";
+import { TERMS_VERSION } from "@/lib/legal";
 
 /*
  * Sign-up, no ID checks and no password:
@@ -76,6 +77,7 @@ export default function Welcome() {
   const [countryOpen, setCountryOpen] = useState(false);
   const [countryQuery, setCountryQuery] = useState("");
   const [connectOpen, setConnectOpen] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
 
   // Match the phone's status bar to the navy splash, then back to beige.
@@ -152,7 +154,7 @@ export default function Welcome() {
 
   const finish = () => {
     if (!wallet) return;
-    signUp({ handle: shownHandle, first: first ?? "", last, color, photo, country, address: wallet.address });
+    signUp({ handle: shownHandle, first: first ?? "", last, color, photo, country, address: wallet.address, termsVersion: TERMS_VERSION });
     haptic("success");
     go("done");
   };
@@ -253,7 +255,12 @@ export default function Welcome() {
           >
             I already have an account
           </button>
-          <p className="mt-1 text-center text-[12px] text-[#F3EEE5]/45">No ID needed. Your money stays in your own wallet.</p>
+          <p className="mt-1 text-center text-[12px] text-[#F3EEE5]/45">
+            No ID needed. Your money stays in your own wallet.{" "}
+            <a href="/legal/terms" className="underline underline-offset-2">
+              Terms
+            </a>
+          </p>
           {walletError && <p className="mt-2 text-center text-[13px] font-medium text-[#FFB4AE]">{walletError}</p>}
         </div>
 
@@ -386,7 +393,21 @@ export default function Welcome() {
             </div>
 
             <div className="flex-1" />
-            <PrimaryButton className="mt-5" disabled={!ready} onClick={create}>
+            <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl bg-white p-3.5">
+              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[#1F4F82]" />
+              <span className="text-[14px] leading-snug text-muted">
+                I agree to the{" "}
+                <a href="/legal/terms" target="_blank" className="font-semibold text-brand">
+                  Terms
+                </a>{" "}
+                and{" "}
+                <a href="/legal/privacy" target="_blank" className="font-semibold text-brand">
+                  Privacy Policy
+                </a>
+                . I understand payments are final, my wallet is mine to protect, and prices can go down.
+              </span>
+            </label>
+            <PrimaryButton className="mt-3" disabled={!ready || !agreed} onClick={create}>
               Create my account
             </PrimaryButton>
 

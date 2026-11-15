@@ -62,7 +62,7 @@ const AMOUNT_OPTIONS: { id: PortfolioPrivacy["amounts"]; label: string }[] = [
 ];
 
 export default function SettingsPage() {
-  const { me, updateMe, defaultAudience, setDefaultAudience, myPrivacy, setMyPrivacy, backedUp } = useStore();
+  const { me, updateMe, defaultAudience, setDefaultAudience, myPrivacy, setMyPrivacy, backedUp, termsAgreed } = useStore();
   const pv = myPrivacy;
   return (
     <Screen tabs={false}>
@@ -186,6 +186,22 @@ export default function SettingsPage() {
             <span className="text-[14px] text-muted">Face ID</span>
           </div>
         </Card>
+
+        <SectionTitle>About</SectionTitle>
+        <Card className="divide-y divide-line py-1">
+          {[
+            ["/help", "Help & FAQ"],
+            ["/help", "Fees"],
+            ["/legal/terms", "Terms of Service"],
+            ["/legal/privacy", "Privacy Policy"],
+          ].map(([href, label]) => (
+            <Link key={label} href={href} className="flex items-center justify-between py-3 text-[16px] font-semibold">
+              {label}
+              <ChevronRight size={18} className="text-muted" />
+            </Link>
+          ))}
+        </Card>
+        <p className="px-3 pt-2 text-[12px] text-muted">You agreed to Terms version {termsAgreed}.</p>
 
         <Link href="/welcome" className="mt-6 flex h-12 items-center justify-center rounded-full bg-white text-[16px] font-semibold text-down">
           Sign out

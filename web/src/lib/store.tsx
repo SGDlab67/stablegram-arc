@@ -27,6 +27,7 @@ import {
   type PortfolioPrivacy,
 } from "./data";
 import { haptic, toast } from "@/components/feel";
+import { TERMS_VERSION } from "./legal";
 
 export type FriendState = "none" | "requested" | "incoming" | "friends" | "self";
 
@@ -50,6 +51,8 @@ export interface SignUpInput {
   country?: string;
   /** The wallet that was created or connected. */
   address: string;
+  /** Version of the Terms the person agreed to at sign-up. */
+  termsVersion: string;
 }
 
 interface Store {
@@ -73,6 +76,8 @@ interface Store {
   /** Has this wallet's recovery phrase been written down? Drives the backup nudge. */
   backedUp: boolean;
   markBackedUp: () => void;
+  /** Terms version this account agreed to (the sample account is treated as agreed). */
+  termsAgreed: string;
   myPrivacy: PortfolioPrivacy;
   setMyPrivacy: (patch: Partial<PortfolioPrivacy>) => void;
   privacyOf: (handle: string) => PortfolioPrivacy;
@@ -121,6 +126,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [hideBalances, setHideBalances] = useState(false);
   const toggleHideBalances = useCallback(() => setHideBalances((v) => !v), []);
   const [backedUp, setBackedUp] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(TERMS_VERSION);
   const markBackedUp = useCallback(() => setBackedUp(true), []);
   const [myPrivacy, setMyPrivacyState] = useState<PortfolioPrivacy>(DEFAULT_PRIVACY);
   const setMyPrivacy = useCallback((patch: Partial<PortfolioPrivacy>) => setMyPrivacyState((p) => ({ ...p, ...patch })), []);
@@ -269,6 +275,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setHoldings({ USDC: STARTER_DOLLARS, [STARTER_ASSET]: STARTER_ASSET_USD / assetOf(STARTER_ASSET).price });
     setDefaultAudience("public");
     setBackedUp(false);
+    setTermsAgreed(input.termsVersion);
   }, []);
 
   const resetToSample = useCallback(() => {
@@ -332,6 +339,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toggleHideBalances,
     backedUp,
     markBackedUp,
+    termsAgreed,
     myPrivacy,
     setMyPrivacy,
     privacyOf,
