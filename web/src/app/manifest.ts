@@ -22,6 +22,7 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: "Pay or request", short_name: "Pay", url: "/pay", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Add money", short_name: "Add money", url: "/deposit", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "Buy stocks or crypto", short_name: "Buy", url: "/buy", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "Markets", url: "/markets", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "My code", url: "/me/code", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },

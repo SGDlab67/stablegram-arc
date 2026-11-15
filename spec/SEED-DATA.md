@@ -22,6 +22,8 @@ Checked Fri Nov 13 2026 unless a row says otherwise. **[check]** means not confi
 | dSOL | Solana (demo) | `solana` | crypto |  |
 | dMON | Monad (demo) | `monad` | crypto |  |
 
+**Stablecoins (added Nov 14):** USDC and EURC (Circle, both live on Arc testnet), plus demo tokens dUSDT (Tether), dPYUSD (PayPal USD, issued by Paxos) and dDAI (Sky). Blockworks asset IDs: USDT `51f8ea5e-f426-4f40-939a-db7e05495374`, PYUSD `169274ab-dfbf-45da-9d9a-b3c4b3be8f71`, DAI `a3b64831-4288-48bd-a3e7-eb4f77f6f740`. Logos come from CoinGecko large images (`tether`, `paypal-usd`, `dai`, `usd-coin`, `euro-coin`).
+
 **Real-world assets (added Nov 14):**
 
 | Symbol | Name shown | Source token | Market |

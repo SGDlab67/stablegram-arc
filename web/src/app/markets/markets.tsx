@@ -24,9 +24,10 @@ function priceLabel(a: Asset) {
 /** A tiny line for the row, from the same sample path the asset page draws. */
 function MiniLine({ symbol, up }: { symbol: string; up: boolean }) {
   const s = sampleSeries(symbol, 24, "1D");
-  const min = Math.min(...s);
-  const max = Math.max(...s);
-  const span = max - min || 1;
+  const mid = (Math.min(...s) + Math.max(...s)) / 2;
+  // Never stretch less than a 3% band, so a coin pinned at $1 draws flat instead of a jagged line.
+  const span = Math.max(Math.max(...s) - Math.min(...s), mid * 0.03) || 1;
+  const min = mid - span / 2;
   const d = s.map((v, i) => `${i === 0 ? "M" : "L"}${((i / (s.length - 1)) * 56).toFixed(1)},${(20 - ((v - min) / span) * 18 - 1).toFixed(1)}`).join(" ");
   return (
     <svg width="56" height="20" viewBox="0 0 56 20" aria-hidden className="shrink-0">
@@ -35,7 +36,13 @@ function MiniLine({ symbol, up }: { symbol: string; up: boolean }) {
   );
 }
 
+/** Remount on every new link (e.g. /markets?m=cash then /markets) so the filter matches the link. */
 export function Markets() {
+  const params = useSearchParams();
+  return <MarketsInner key={params.toString()} />;
+}
+
+function MarketsInner() {
   const params = useSearchParams();
   const start = params.get("m");
   const [filter, setFilter] = useState<Filter>(MARKETS.some((m) => m.id === start) ? (start as Market) : "all");

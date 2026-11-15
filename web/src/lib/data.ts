@@ -3,6 +3,7 @@
 // Stock prices: CoinGecko xStocks tokens (Blockworks does not carry them), pulled 2026-11-14T22:56Z. Logos: Blockworks for crypto
 // (CoinGecko where its image was too small), xStocks token images for stocks.
 // Gold, Tether Gold, US Treasuries (USDY) and BlackRock (BUIDL): Blockworks asset-price, daily close 2026-11-13 UTC.
+// Dollar stablecoins are shown at their $1 peg (Blockworks closes were 0.9993-0.9997). EURC: Blockworks asset-price, daily close 2026-11-14. Logos: CoinGecko large images, 256 px.
 // Silver (KAG): CoinGecko (not on Blockworks). All pulled 2026-11-14T23:32Z.
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "stablegram";
@@ -18,7 +19,7 @@ export const MARKETS: { id: Market; label: string }[] = [
   { id: "crypto", label: "Crypto" },
   { id: "metals", label: "Gold & silver" },
   { id: "treasuries", label: "Treasuries" },
-  { id: "cash", label: "Dollars & euros" },
+  { id: "cash", label: "Stablecoins" },
 ];
 
 export interface Asset {
@@ -93,7 +94,7 @@ export interface Notice {
 export const ME = "charlie";
 
 export const ASSETS: Asset[] = [
-  { symbol: "NVDA", name: "NVIDIA", group: "stocks", market: "stocks", price: 159.22, change24h: -1.41, color: "#76B900", demo: true, logo: "/logos/NVDA.png", about: "Designs the chips behind most AI training and gaming graphics." },
+  { symbol: "NVDA", name: "NVIDIA", group: "stocks", market: "stocks", price: 159.22, change24h: -1.41, color: "#76B900", demo: true, logo: "/logos/NVDA.svg", about: "Designs the chips behind most AI training and gaming graphics." },
   { symbol: "TSLA", name: "Tesla", group: "stocks", market: "stocks", price: 382.72, change24h: -1.33, color: "#E31937", demo: true, logo: "/logos/TSLA.png", about: "Electric vehicles, batteries and energy storage." },
   { symbol: "AAPL", name: "Apple", group: "stocks", market: "stocks", price: 356.45, change24h: -0.07, color: "#555555", demo: true, logo: "/logos/AAPL.png", about: "iPhone, Mac and services." },
   { symbol: "GOOGL", name: "Google", group: "stocks", market: "stocks", price: 291.05, change24h: -1.22, color: "#4285F4", demo: true, logo: "/logos/GOOGL.png", about: "Alphabet: Google search, YouTube, Android and Google Cloud." },
@@ -112,8 +113,11 @@ export const ASSETS: Asset[] = [
   { symbol: "ETH", name: "Ethereum", group: "crypto", market: "crypto", price: 1927.77, change24h: -4.42, color: "#627EEA", demo: true, logo: "/logos/ETH.png", about: "The network most on-chain apps are built on." },
   { symbol: "SOL", name: "Solana", group: "crypto", market: "crypto", price: 78.14, change24h: -4.28, color: "#9945FF", demo: true, logo: "/logos/SOL.png", about: "A fast, low-fee network." },
   { symbol: "MON", name: "Monad", group: "crypto", market: "crypto", price: 0.01674, change24h: -3.29, color: "#836EF9", demo: true, logo: "/logos/MON.png", about: "A high-throughput EVM network." },
-  { symbol: "USDC", name: "US Dollar", group: "cash", market: "cash", price: 1, change24h: 0, color: "#2775CA", demo: false, logo: "/logos/USDC.png", about: "A digital dollar issued by Circle. On Arc it also pays the network fee." },
-  { symbol: "EURC", name: "Euro", group: "cash", market: "cash", price: 1.1, change24h: -0.28, color: "#1A3E9C", demo: false, logo: "/logos/EURC.png", about: "A digital euro issued by Circle." },
+  { symbol: "USDC", name: "USD Coin", group: "cash", market: "cash", price: 1, change24h: 0, color: "#2775CA", demo: false, logo: "/logos/USDC.png", about: "USDC, the digital dollar issued by Circle. Always worth $1, redeemable 1:1. On Arc it also pays the network fee." },
+  { symbol: "USDT", name: "Tether USD", group: "cash", market: "cash", price: 1, change24h: 0, color: "#26A17B", demo: true, logo: "/logos/USDT.png", about: "USDT, the most used dollar stablecoin, issued by Tether. Tracks $1." },
+  { symbol: "PYUSD", name: "PayPal USD", group: "cash", market: "cash", price: 1, change24h: 0, color: "#0070E0", demo: true, logo: "/logos/PYUSD.png", about: "PYUSD, PayPal's dollar stablecoin, issued by Paxos. Tracks $1, and also lives in PayPal and Venmo." },
+  { symbol: "DAI", name: "Dai", group: "cash", market: "cash", price: 1, change24h: 0, color: "#F5AC37", demo: true, logo: "/logos/DAI.png", about: "DAI, a dollar stablecoin run on-chain by the Sky (formerly Maker) protocol. Tracks $1." },
+  { symbol: "EURC", name: "Euro Coin", group: "cash", market: "cash", price: 1.1002, change24h: -0.13, color: "#1A3E9C", demo: false, logo: "/logos/EURC.png", about: "EURC, the digital euro issued by Circle. Always worth €1." },
 ];
 
 /** Every new account starts with a little NVIDIA plus dollars (demo). No question in sign-up for it. */
@@ -141,6 +145,7 @@ export const PEOPLE: Person[] = [
 
 export const MY_HOLDINGS: Record<string, number> = {
   USDC: 42.5,
+  USDT: 20,
   NVDA: 0.31,
   SOL: 1.85,
   TSLA: 0.05,
@@ -172,14 +177,14 @@ export const DEFAULT_PRIVACY: PortfolioPrivacy = { show: true, who: "everyone", 
 /** Sample portfolios for the other nine demo people, in token units. */
 export const PEOPLE_HOLDINGS: Record<string, Record<string, number>> = {
   taihl: { ETH: 0.42, MON: 900, NVDA: 0.6, COIN: 0.25, USDC: 120 },
-  ana: { AAPL: 0.4, NFLX: 0.08, PAXG: 0.012, USDC: 35 },
+  ana: { AAPL: 0.4, NFLX: 0.08, PAXG: 0.012, PYUSD: 35 },
   wes: { TSLA: 0.35, BTC: 0.004, SOL: 3.2, USDC: 18 },
   sabina: { MSFT: 0.2, USDY: 150, EURC: 40 },
   maya: { META: 0.15, AMZN: 0.3, KAG: 1.5, USDC: 60 },
-  jordan: { BTC: 0.01, ETH: 0.2, SOL: 6, USDC: 25 },
+  jordan: { BTC: 0.01, ETH: 0.2, SOL: 6, USDT: 25 },
   dev: { NVDA: 1.1, GOOGL: 0.5, CRCL: 0.4, XAUT: 0.02, USDC: 75 },
   priya: { AAPL: 0.25, PAXG: 0.03, BUIDL: 200, USDC: 50 },
-  zoe: { TSLA: 0.1, SOL: 1.2, MON: 400, USDC: 12 },
+  zoe: { TSLA: 0.1, SOL: 1.2, MON: 400, DAI: 12 },
 };
 
 /** Each demo person's choices, picked so the demo shows every combination. */

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Eye, EyeOff, Plus } from "lucide-react";
+import { ArrowDownToLine, ChevronRight, Eye, EyeOff, Plus, Send } from "lucide-react";
 import { useMemo, useState } from "react";
 import { RangeTabs, Sparkline } from "@/components/chart";
 import { Screen } from "@/components/shell";
@@ -41,7 +41,7 @@ const GROUPS: {
     color: "#1F4F82",
   },
   { id: "crypto", title: "Crypto", short: "Crypto", color: "#C9A46A" },
-  { id: "cash", title: "Cash", short: "Cash", color: "#8DB3DA" },
+  { id: "cash", title: "Stablecoins", short: "Stablecoins", color: "#8DB3DA" },
 ];
 const PORTFOLIO_RANGES: Range[] = ["1D", "1W", "1M"];
 const MASK = "$•••••";
@@ -196,6 +196,19 @@ export function Portfolio() {
         </p>
       </div>
 
+      <div className="grid grid-cols-3 gap-2 px-4 pt-4">
+        {[
+          { href: "/deposit", label: "Add money", icon: <ArrowDownToLine size={20} /> },
+          { href: "/buy", label: "Buy", icon: <Plus size={20} /> },
+          { href: "/pay", label: "Send", icon: <Send size={19} /> },
+        ].map((x) => (
+          <Link key={x.label} href={x.href} className="flex flex-col items-center gap-1.5 rounded-[20px] bg-white py-3 text-[13px] font-semibold">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white">{x.icon}</span>
+            {x.label}
+          </Link>
+        ))}
+      </div>
+
       {mix.length > 0 && (
         <div className="px-4 pt-5">
           <Card>
@@ -255,8 +268,15 @@ export function Portfolio() {
             <div key={g.id}>
               <SectionTitle
                 right={
-                  <span className="font-mono text-[13px] font-semibold text-muted">
-                    {hideBalances ? MASK : usd(subtotal, { cents: true })}
+                  <span className="flex items-center gap-3">
+                    {g.id === "cash" && (
+                      <Link href="/deposit" className="text-[13px] font-semibold text-brand">
+                        + Add
+                      </Link>
+                    )}
+                    <span className="tabular text-[13px] font-semibold text-muted">
+                      {hideBalances ? MASK : usd(subtotal, { cents: true })}
+                    </span>
                   </span>
                 }
               >

@@ -8,7 +8,7 @@ import { AssetDot, Card, Change } from "./ui";
 const GROUP_COLORS: Record<string, { label: string; color: string }> = {
   stocks: { label: "Stocks & RWAs", color: "#1F4F82" },
   crypto: { label: "Crypto", color: "#C9A46A" },
-  cash: { label: "Cash", color: "#8DB3DA" },
+  cash: { label: "Stablecoins", color: "#8DB3DA" },
 };
 
 /**

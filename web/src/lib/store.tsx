@@ -97,6 +97,8 @@ interface Store {
   buy: (symbol: string, dollars: number) => void;
   /** Buy with outside money (Apple Pay, card, Venmo…): adds the asset without touching the dollar balance. */
   buyWithOutside: (symbol: string, dollars: number) => void;
+  /** Stablecoins arriving from outside (another wallet or an exchange). */
+  deposit: (symbol: string, units: number) => void;
   sell: (symbol: string, dollars: number) => void;
 }
 
@@ -291,6 +293,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setHoldings((h) => ({ ...h, [symbol]: (h[symbol] ?? 0) + dollars / price }));
   }, []);
 
+  const deposit = useCallback((symbol: string, units: number) => {
+    setHoldings((h) => ({ ...h, [symbol]: (h[symbol] ?? 0) + units }));
+  }, []);
+
   const sell = useCallback((symbol: string, dollars: number) => {
     const price = assetOf(symbol).price;
     setHoldings((h) => ({ ...h, USDC: (h.USDC ?? 0) + dollars, [symbol]: Math.max(0, (h[symbol] ?? 0) - dollars / price) }));
@@ -349,6 +355,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateMe,
     buy,
     buyWithOutside,
+    deposit,
     sell,
   };
 
