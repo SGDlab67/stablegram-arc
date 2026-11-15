@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Camera, Check, KeyRound, ShieldAlert, UserRound, ChevronLeft, ChevronRight, Globe2, Search, Sparkles, Wallet } from "lucide-react";
+import { Camera, Check, KeyRound, ShieldAlert, ChevronLeft, ChevronRight, Globe2, Search, Sparkles, Wallet } from "lucide-react";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Mark } from "@/components/shell";
 import { Flag, PrimaryButton, Sheet } from "@/components/ui";
-import { APP_NAME, AVATAR_COLORS, HANDLE_RULE, RESERVED_HANDLES, STARTER_ASSET, STARTER_ASSET_USD, STARTER_DOLLARS, assetOf, usd } from "@/lib/data";
+import { APP_NAME, AVATAR_COLORS, HANDLE_RULE, defaultAvatar, RESERVED_HANDLES, STARTER_ASSET, STARTER_ASSET_USD, STARTER_DOLLARS, assetOf, usd } from "@/lib/data";
 import { COUNTRY_CODES, POPULAR_COUNTRIES, countryName, flagOf, guessCountry } from "@/lib/countries";
 import { WALLET_INFO, connectWallet, shortAddress, type ConnectedWallet, type WalletKind } from "@/lib/wallet";
 import { PhotoPicker } from "@/components/photo-picker";
@@ -189,6 +189,8 @@ export default function Welcome() {
     }
   };
 
+  // No photo picked yet: show the character they'll get, so nobody ends up without a picture.
+  const shownPhoto = photo ?? defaultAvatar(shownHandle || "new");
   const preview = (size: number) => (
     <span
       className="inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white"
@@ -196,10 +198,12 @@ export default function Welcome() {
         width: size,
         height: size,
         fontSize: size * 0.38,
-        ...(photo ? { backgroundImage: `url(${photo})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: color }),
+        backgroundColor: color,
+        backgroundImage: `url(${shownPhoto})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
-      {photo ? null : `${first?.[0] ?? ""}${last[0] ?? first?.[1] ?? ""}`.toUpperCase() || <UserRound size={size * 0.42} />}
     </span>
   );
 
@@ -315,9 +319,9 @@ export default function Welcome() {
           <>
             {title("Make it yours", "Friends use these to find you and check it's really you.")}
             <div className="mt-5 flex items-center gap-4">
-              <PhotoPicker hasPhoto={!!photo} onChange={setPhoto}>
+              <PhotoPicker hasPhoto={!!photo} onChange={setPhoto} current={photo}>
                 {(open) => (
-                  <button type="button" onClick={open} className="relative" aria-label="Add a photo">
+                  <button type="button" onClick={open} className="relative" aria-label="Change picture">
                     {preview(84)}
                     <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white ring-[3px] ring-page">
                       <Camera size={15} />

@@ -3,6 +3,8 @@
 import { Camera, ImageIcon, Trash2 } from "lucide-react";
 import { useRef, useState, type ReactNode } from "react";
 import { PrimaryButton, Sheet } from "./ui";
+import { haptic } from "./feel";
+import { AVATAR_PRESETS, presetUrl } from "@/lib/data";
 
 const VIEW = 280; // crop circle size on screen, in px
 const OUT = 320; // saved picture size, in px
@@ -119,10 +121,13 @@ function CropEditor({ src, onDone, onCancel }: { src: string; onDone: (dataUrl: 
 export function PhotoPicker({
   hasPhoto,
   onChange,
+  current,
   children,
 }: {
   hasPhoto: boolean;
   onChange: (photo: string | undefined) => void;
+  /** The picture in use now, so the chosen character can be ticked. */
+  current?: string;
   /** Renders the trigger; call `open()` to show the choices. */
   children: (open: () => void) => ReactNode;
 }) {
@@ -144,7 +149,30 @@ export function PhotoPicker({
       <input ref={library} type="file" accept="image/*" className="hidden" onChange={picked} />
       <input ref={camera} type="file" accept="image/*" capture="user" className="hidden" onChange={picked} />
 
-      <Sheet open={menu} onClose={() => setMenu(false)} title="Profile photo">
+      <Sheet open={menu} onClose={() => setMenu(false)} title="Profile picture">
+        <p className="mb-2 text-[14px] font-semibold text-muted">Pick a character</p>
+        <div className="mb-5 grid grid-cols-4 gap-3">
+          {AVATAR_PRESETS.map((a) => {
+            const url = presetUrl(a.id);
+            const on = current === url;
+            return (
+              <button
+                key={a.id}
+                type="button"
+                aria-label={a.label}
+                aria-pressed={on}
+                onClick={() => {
+                  haptic();
+                  onChange(url);
+                  setMenu(false);
+                }}
+                className={`aspect-square rounded-full bg-chip bg-cover bg-center transition-transform active:scale-90 ${on ? "ring-[3px] ring-brand ring-offset-2" : ""}`}
+                style={{ backgroundImage: `url(${url})` }}
+              />
+            );
+          })}
+        </div>
+        <p className="mb-2 text-[14px] font-semibold text-muted">Or use a photo</p>
         <div className="space-y-2">
           <button type="button" onClick={() => library.current?.click()} className="flex h-14 w-full items-center gap-3 rounded-2xl bg-chip px-4 text-[17px] font-semibold">
             <ImageIcon size={20} /> Choose from your photos

@@ -145,13 +145,47 @@ export const PERSONAS: Person[] = [
   { handle: "zoe", first: "Zoe", last: "Castillo", color: "#A61E4D", photo: "/avatars/zoe.png", country: "AR" },
 ];
 
+/**
+ * Character pictures anyone can pick instead of a photo: Noto emoji (Google, Apache 2.0 / OFL) on colourful
+ * gradients, in /public/avatars/presets. Anyone without a photo gets one automatically, so every account has a picture.
+ */
+export const AVATAR_PRESETS: { id: string; label: string }[] = [
+  { id: "fox", label: "Fox" },
+  { id: "panda", label: "Panda" },
+  { id: "frog", label: "Frog" },
+  { id: "tiger", label: "Tiger" },
+  { id: "unicorn", label: "Unicorn" },
+  { id: "koala", label: "Koala" },
+  { id: "monkey", label: "Monkey" },
+  { id: "penguin", label: "Penguin" },
+  { id: "octopus", label: "Octopus" },
+  { id: "lion", label: "Lion" },
+  { id: "alien", label: "Alien" },
+  { id: "robot", label: "Robot" },
+  { id: "ghost", label: "Ghost" },
+  { id: "cool", label: "Cool" },
+  { id: "rocket", label: "Rocket" },
+  { id: "starstruck", label: "Star-struck" },
+];
+
+export function presetUrl(id: string): string {
+  return `/avatars/presets/${id}.svg`;
+}
+
+/** The picture someone gets until they choose one: a character picked from their username, so it never changes. */
+export function defaultAvatar(handle: string): string {
+  let n = 0;
+  for (const ch of handle) n = (n * 31 + ch.charCodeAt(0)) >>> 0;
+  return presetUrl(AVATAR_PRESETS[n % AVATAR_PRESETS.length].id);
+}
+
 export const HACKATHON_TAG = "UBC Hackathon 2026";
 
 /**
- * UBC Hackathon 2026 participants, listed by Charlie with their permission. Real names, so: initials only (no photos),
+ * UBC Hackathon 2026 participants, listed by Charlie with their permission. Real names, so: a character picture (no photos),
  * no made-up payments, and portfolios kept private. They show up in search, on Home and on Friends.
  */
-export const HACKATHON_PEOPLE: Person[] = [
+export const HACKATHON_PEOPLE: Person[] = ([
   { handle: "bardia_ahmadi", first: "Bardia", last: "Ahmadi Dafchahi", color: "#1F4F82", tag: HACKATHON_TAG },
   { handle: "salem_alfassam", first: "Salem", last: "Alfassam", color: "#0F9D8A", tag: HACKATHON_TAG },
   { handle: "armon_behikeesh", first: "Armon", last: "Behikeesh", color: "#E8590C", tag: HACKATHON_TAG },
@@ -202,7 +236,7 @@ export const HACKATHON_PEOPLE: Person[] = [
   { handle: "alana_nguyen", first: "Alana", last: "Nguyen", color: "#B5651D", tag: HACKATHON_TAG },
   { handle: "ritvik_botla", first: "Ritvik", last: "Botla", color: "#1F4F82", tag: HACKATHON_TAG },
   { handle: "parker_myers", first: "Parker", last: "Myers", color: "#0F9D8A", tag: HACKATHON_TAG },
-];
+] as Person[]).map((p) => ({ ...p, photo: defaultAvatar(p.handle) }));
 
 export const PEOPLE: Person[] = [...PERSONAS, ...HACKATHON_PEOPLE];
 

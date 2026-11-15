@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { Globe, Lock } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { assetOf, initials, personOf, type Audience } from "@/lib/data";
+import { assetOf, defaultAvatar, initials, personOf, type Audience } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { countryName, flagOf } from "@/lib/countries";
 
 export function Avatar({ handle, size = 40, ring = false }: { handle: string; size?: number; ring?: boolean }) {
   const { people } = useStore();
-  const p = personOf(handle, people);
+  const found = personOf(handle, people);
+  // Everyone has a picture: a photo, or their character.
+  const p = { ...found, photo: found.photo ?? defaultAvatar(found.handle) };
   return (
     <span
       className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white ${ring ? "ring-2 ring-white" : ""}`}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Camera, Check, ChevronRight } from "lucide-react";
 import { BackHeader, Screen } from "@/components/shell";
 import { AudienceLabel, Avatar, Card, SectionTitle } from "@/components/ui";
-import { type Audience, type PortfolioPrivacy } from "@/lib/data";
+import { defaultAvatar, type Audience, type PortfolioPrivacy } from "@/lib/data";
 import { PhotoPicker } from "@/components/photo-picker";
 import { toast } from "@/components/feel";
 import { shortAddress } from "@/lib/wallet";
@@ -71,9 +71,9 @@ export default function SettingsPage() {
         <SectionTitle>Profile</SectionTitle>
         <Card>
           <div className="flex items-center gap-4">
-            <PhotoPicker hasPhoto={!!me.photo} onChange={(photo) => {
+            <PhotoPicker hasPhoto={!!me.photo} current={me.photo ?? defaultAvatar(me.handle)} onChange={(photo) => {
                 updateMe({ photo });
-                toast(photo ? "Photo updated" : "Photo removed");
+                toast(photo ? "Picture updated" : "Back to your character");
               }}>
               {(open) => (
                 <>
@@ -84,7 +84,7 @@ export default function SettingsPage() {
                     </span>
                   </button>
                   <button type="button" onClick={open} className="rounded-full bg-chip px-4 py-2 text-[15px] font-semibold">
-                    {me.photo ? "Change photo" : "Add a photo"}
+                    Change picture
                   </button>
                 </>
               )}
