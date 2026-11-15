@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EligibilityRegistry} from "../src/EligibilityRegistry.sol";
 import {GatedShare} from "../src/GatedShare.sol";
 import {MockShare} from "../src/MockShare.sol";
-import {Stablegram} from "../src/Stablegram.sol";
+import {Osmo} from "../src/Osmo.sol";
 import {UsernameRegistry} from "../src/UsernameRegistry.sol";
 
 contract FlowTest is Test {
@@ -15,7 +15,7 @@ contract FlowTest is Test {
     EligibilityRegistry registry;
     UsernameRegistry usernames;
     GatedShare gated;
-    Stablegram gram;
+    Osmo gram;
 
     address compliance = makeAddr("compliance");
     address alice = makeAddr("alice");
@@ -30,7 +30,7 @@ contract FlowTest is Test {
         registry = new EligibilityRegistry(compliance);
         usernames = new UsernameRegistry();
         gated = new GatedShare(share, "Sendable Circle Share", "sCRCL", registry, usernames);
-        gram = new Stablegram(usernames);
+        gram = new Osmo(usernames);
 
         vm.startPrank(compliance);
         registry.set(alice, true);
@@ -188,7 +188,7 @@ contract FlowTest is Test {
         gated.sendToUsername("bob", 1e18, tooLong);
     }
 
-    // --- stablegram: crypto, and anything else ---
+    // --- Osmo: crypto, and anything else ---
 
     function test_sendsAnyToken() public {
         vm.startPrank(alice);
@@ -201,8 +201,8 @@ contract FlowTest is Test {
         assertEq(share.balanceOf(alice), 70e18);
     }
 
-    /// Stablegram has no gate of its own, so the share's gate must still bite.
-    function test_cannotBypassTheGateThroughStablegram() public {
+    /// Osmo has no gate of its own, so the share's gate must still bite.
+    function test_cannotBypassTheGateThroughOsmo() public {
         _wrap(alice, 10e18);
         vm.startPrank(alice);
         gated.approve(address(gram), 10e18);
@@ -225,9 +225,9 @@ contract FlowTest is Test {
 
     function test_rejectsEmptySends() public {
         vm.startPrank(alice);
-        vm.expectRevert(Stablegram.NothingToSend.selector);
+        vm.expectRevert(Osmo.NothingToSend.selector);
         gram.sendToken(IERC20(address(share)), "bob", 0, MEMO);
-        vm.expectRevert(Stablegram.NothingToSend.selector);
+        vm.expectRevert(Osmo.NothingToSend.selector);
         gram.sendNative("bob", MEMO);
         vm.stopPrank();
     }
@@ -240,8 +240,8 @@ contract FlowTest is Test {
         vm.stopPrank();
     }
 
-    /// Stablegram must never be able to hold anything.
-    function testFuzz_stablegramKeepsNoBalance(uint96 tokenAmount, uint96 nativeAmount) public {
+    /// Osmo must never be able to hold anything.
+    function testFuzz_osmoKeepsNoBalance(uint96 tokenAmount, uint96 nativeAmount) public {
         tokenAmount = uint96(bound(tokenAmount, 1, 100e18));
         nativeAmount = uint96(bound(nativeAmount, 1, 100 ether));
         vm.deal(alice, nativeAmount);
@@ -281,7 +281,7 @@ contract FlowTest is Test {
         _authorizeAgent(10e18, 100e18);
 
         vm.prank(agent);
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.OverPerSendLimit.selector, 11e18, 10e18));
+        vm.expectRevert(abi.encodeWithSelector(Osmo.OverPerSendLimit.selector, 11e18, 10e18));
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 11e18, MEMO);
     }
 
@@ -291,7 +291,7 @@ contract FlowTest is Test {
         vm.startPrank(agent);
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 10e18, MEMO);
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 10e18, MEMO);
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.OverDailyLimit.selector, 30e18, 25e18));
+        vm.expectRevert(abi.encodeWithSelector(Osmo.OverDailyLimit.selector, 30e18, 25e18));
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 10e18, MEMO);
         vm.stopPrank();
 
@@ -320,7 +320,7 @@ contract FlowTest is Test {
         vm.stopPrank();
 
         vm.prank(agent);
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.OverPerSendLimit.selector, 1, 0));
+        vm.expectRevert(abi.encodeWithSelector(Osmo.OverPerSendLimit.selector, 1, 0));
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 1, MEMO);
     }
 
@@ -331,7 +331,7 @@ contract FlowTest is Test {
         gram.authorizeAgent(address(0));
 
         vm.prank(agent);
-        vm.expectRevert(Stablegram.NotAgent.selector);
+        vm.expectRevert(Osmo.NotAgent.selector);
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 1e18, MEMO);
     }
 
@@ -339,14 +339,14 @@ contract FlowTest is Test {
         _authorizeAgent(10e18, 100e18);
 
         vm.prank(mallory);
-        vm.expectRevert(Stablegram.NotAgent.selector);
+        vm.expectRevert(Osmo.NotAgent.selector);
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 1e18, MEMO);
     }
 
     /// Nobody has authorized an agent, so address(0) must not be one either.
     function test_unsetAgentIsNotAnAgent() public {
         vm.prank(address(0));
-        vm.expectRevert(Stablegram.NotAgent.selector);
+        vm.expectRevert(Osmo.NotAgent.selector);
         gram.sendAsAgent(bob, IERC20(address(share)), "alice", 1e18, MEMO);
     }
 
@@ -358,7 +358,7 @@ contract FlowTest is Test {
         gated.approve(address(gram), 20e18);
 
         vm.prank(agent);
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.OverPerSendLimit.selector, 1e18, 0));
+        vm.expectRevert(abi.encodeWithSelector(Osmo.OverPerSendLimit.selector, 1e18, 0));
         gram.sendAsAgent(alice, IERC20(address(gated)), "bob", 1e18, MEMO);
     }
 

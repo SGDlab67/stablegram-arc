@@ -1,10 +1,10 @@
-# stablegram — what the app looks like and what it does
+# Osmo — what the app looks like and what it does
 
 **It is a phone app, not a website.** Added to the Home Screen it opens from its own icon, full screen, with no browser bar. On a computer it shows inside a phone-sized frame, next to a code that sends you to your phone. It installs from a link or QR code, not from the App Store.
 
 The app is in `../web/`. Run it with `cd web && npm install && npm run dev`. Every screen works on made-up people and payments; nothing talks to a wallet or a chain yet, and reloading returns to the sample account.
 
-`stablegram-prototype.html` in this folder was a first single-file mock. `web/` has replaced it.
+`osmo-prototype.html` in this folder was a first single-file mock. `web/` has replaced it.
 
 The layout and flows follow Venmo's current app (its May 2026 redesign). The name, colours, logo and artwork are ours. The full screen-by-screen description is in `../spec/UI-SPEC.md`.
 
@@ -59,7 +59,7 @@ The layout and flows follow Venmo's current app (its May 2026 redesign). The nam
 
 ## What we took from Venmo and what we changed
 
-| Venmo | stablegram |
+| Venmo | Osmo |
 |---|---|
 | Home · Cards · Pay/Request · Crypto · Me | Home · Friends · Pay/Request · Portfolio · Me |
 | Cards tab | Left out for now |

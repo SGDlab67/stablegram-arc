@@ -6,7 +6,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {EligibilityRegistry} from "../src/EligibilityRegistry.sol";
 import {GatedShare} from "../src/GatedShare.sol";
 import {MockShare} from "../src/MockShare.sol";
-import {Stablegram} from "../src/Stablegram.sol";
+import {Osmo} from "../src/Osmo.sol";
 import {UsernameRegistry} from "../src/UsernameRegistry.sol";
 
 /// Deploys the whole set. Nothing here is chain specific, so the same
@@ -20,7 +20,7 @@ contract Deploy is Script {
         EligibilityRegistry registry = new EligibilityRegistry(deployer);
         UsernameRegistry usernames = new UsernameRegistry();
         GatedShare gated = new GatedShare(share, "Sendable Circle Share", "sCRCL", registry, usernames);
-        Stablegram gram = new Stablegram(usernames);
+        Osmo gram = new Osmo(usernames);
 
         // The deployer is the compliance role for the demo. Clear it so it
         // can hold shares straight away.
@@ -35,6 +35,6 @@ contract Deploy is Script {
         console.log("EligibilityRegistry", address(registry));
         console.log("UsernameRegistry   ", address(usernames));
         console.log("GatedShare         ", address(gated));
-        console.log("Stablegram         ", address(gram));
+        console.log("Osmo         ", address(gram));
     }
 }

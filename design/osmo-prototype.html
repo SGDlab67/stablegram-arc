@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>stablegram — app prototype</title>
+<title>Osmo — app prototype</title>
 <style>
 :root{
   --page:#F3F3F3; --card:#fff; --ink:#111; --mute:#8A8A8A; --line:#E7E7E7; --chip:#F0F0F0;
@@ -163,7 +163,7 @@ svg.spark{width:100%;height:84px;display:block;margin:4px 0 0}
 <div class="stage">
   <div class="phone" id="phone"></div>
   <aside class="side">
-    <h1>stablegram</h1>
+    <h1>Osmo</h1>
     <p>Clickable layout for the app. Sample people and payments; prices are real as of Nov 13 2026. Nothing here touches a chain.</p>
     <h2>Jump to</h2>
     <div class="jump">
@@ -388,7 +388,7 @@ function sheetCode(){let cells='';let seed=7;const rnd=()=>(seed=(seed*110351524
 /* ---------- sign-up ---------- */
 function sheetOnb(){const o=S.onb;const next=(label,dis)=>`<button class="cta" ${dis?'disabled id="onbNext"':'id="onbNext"'} onclick="S.onb.step++;render()">${label}</button>`;
   const steps=[
-  ()=>`<div class="word">stablegram</div><div class="sp"></div><h2>Pay friends in what you hold.</h2><p>Send ten bucks in Solana. They get it in Nvidia. It lands in their own wallet.</p>${next('Get started')}<button class="link" onclick="closeSheet()">I already have an account</button>`,
+  ()=>`<div class="word">Osmo</div><div class="sp"></div><h2>Pay friends in what you hold.</h2><p>Send ten bucks in Solana. They get it in Nvidia. It lands in their own wallet.</p>${next('Get started')}<button class="link" onclick="closeSheet()">I already have an account</button>`,
   ()=>`<h2>How do you want to sign in?</h2><p>Either way, the wallet is yours.</p><div class="list"><button class="row" onclick="S.onb.step++;render()"><span style="font-size:26px">✨</span><div class="g"><b>Start without a wallet</b><small>We'll make one on this device. Back it up later.</small></div></button><button class="row" onclick="S.onb.step++;render()"><span style="font-size:26px">👛</span><div class="g"><b>Use my wallet</b><small>MetaMask, Phantom, Rabby, Coinbase Wallet</small></div></button></div><div class="sp"></div>`,
   ()=>`<h2>Pick a username</h2><p>This is how friends find and pay you.</p><div class="field"><span style="color:var(--mute)">@</span><input id="un" value="${o.name}" placeholder="yourname" autocapitalize="off" oninput="checkUn(this)"></div><div class="hint" id="unh">3 to 20 letters, numbers or underscores.</div><div class="sp"></div>${next('Continue',!/^[a-z0-9_]{3,20}$/.test(o.name))}`,
   ()=>`<h2>What do you want to get paid in?</h2><p>We'll start you with a little of it (demo). Change this any time.</p><div class="grid2">${['NVDA','TSLA','SPY','SOL','USDC'].map(k=>`<button class="pick ${o.recv===k?'on':''}" onclick="S.onb.recv='${k}';render()">${logo(k,40)}<b>${A[k].name}</b><small>${k==='USDC'?'Stays in dollars':usd2(A[k].price)}</small></button>`).join('')}</div><div class="sp"></div>${next('Continue')}`,

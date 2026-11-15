@@ -22,7 +22,7 @@ contract GatedShare is ERC20, ERC20Wrapper {
 
     uint256 public constant MAX_MEMO_BYTES = 140;
 
-    /// Same shape as Stablegram.Sent, deliberately, so one indexer builds
+    /// Same shape as Osmo.Sent, deliberately, so one indexer builds
     /// the whole feed from both contracts.
     event Sent(
         address indexed token,

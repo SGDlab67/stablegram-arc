@@ -26,7 +26,7 @@ import {UsernameRegistry} from "./UsernameRegistry.sol";
 /// dollars. An agent cannot send the native balance, because nothing can
 /// pull it from a user's account; on Arc an agent sends USDC through its
 /// ERC-20 interface instead.
-contract Stablegram {
+contract Osmo {
     using SafeERC20 for IERC20;
 
     uint256 public constant MAX_MEMO_BYTES = 140;

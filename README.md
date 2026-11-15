@@ -1,4 +1,4 @@
-# stablegram
+# Osmo
 
 **Send someone a fraction of a share, or a few dollars, by name. Say what
 it was for. Or just text your agent and let it do it.**
@@ -22,7 +22,7 @@ experience. Measured on 2026-11-13, three xStocks on Solana (NVDAx, SPYx,
 TSLAx) were held across 360,694 accounts holding $228.7M. You still cannot
 send any of it to a person by name, with a note, from your phone.
 
-stablegram is the missing half: a share that knows who is allowed to hold
+Osmo is the missing half: a share that knows who is allowed to hold
 it, a name instead of an address, a note instead of a bare transfer, and an
 agent that can do it for you inside limits you set.
 
@@ -52,7 +52,7 @@ log is the feed.
 | `EligibilityRegistry` | Who may hold the share. The rule is set by a compliance role, not hardcoded |
 | `UsernameRegistry` | One name per address, case-insensitive, reverts on an unclaimed name |
 | `GatedShare` | `ERC20Wrapper` with an eligibility gate on every transfer, plus send-by-name with a note |
-| `Stablegram` | Send any token or the native currency by name, with a note, as yourself or as someone's agent |
+| `Osmo` | Send any token or the native currency by name, with a note, as yourself or as someone's agent |
 
 Three decisions worth knowing:
 
@@ -63,7 +63,7 @@ Three decisions worth knowing:
   looks like one.
 - **Unwrapping is always allowed.** The gate blocks receiving, never
   burning, so it can never trap somebody's shares. There is a test for it.
-- **`Stablegram` holds nothing and has no owner.** It moves value in the
+- **`Osmo` holds nothing and has no owner.** It moves value in the
   same transaction it receives the instruction. There is a fuzz test
   asserting its balance is always zero.
 
@@ -106,7 +106,7 @@ The agent can be wrong at steps 1 to 4 and still cannot exceed what the
 user allowed, because step 5 is enforced by code the agent does not
 control.
 
-## How stablegram uses Arc
+## How Osmo uses Arc
 
 - **Gas is USDC**, so a recipient who has never touched crypto needs no gas
   token to receive or to send onward. Fees are quoted in dollars.
@@ -124,7 +124,7 @@ control.
 ## QuickNode Streams
 
 Not configured yet. The design: one Stream on Arc testnet filtered to the
-`Sent` event from `GatedShare` and `Stablegram`, delivered to a webhook
+`Sent` event from `GatedShare` and `Osmo`, delivered to a webhook
 that writes the feed and pushes a notification to the recipient.
 
 Both contracts emit an identical `Sent` signature on purpose, so a single

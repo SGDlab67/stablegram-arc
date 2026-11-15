@@ -1,4 +1,4 @@
-# stablegram — Build Spec v3.2 (send friends a slice of your portfolio)
+# Osmo — Build Spec v3.2 (send friends a slice of your portfolio)
 UBC 2026 Hackathon on Arc (build now, submit Fri Nov 20, 10:00 AM PT) and Monad Blitz Oregon (Sun Nov 15).
 Authors: Charlie Sneed, Huu Tai Le (Taihl). v3.1 written Fri Nov 13 2026 after an implementer review and a judge red-team (both in `reviews/`). **v3.2, Sat Nov 14: no conversion.** The receiver gets exactly the asset the sender sent and can sell it for dollars any time; "Get paid in" is gone. v3.1 is in `reviews/v3.1/`.
 
@@ -150,7 +150,7 @@ Every path emits `Paid`, with `from`, `to` and `ref` indexed. The router never h
 
 **Cases the tests cover:** dollar; demo asset; a priced-only real token (EURC); stale price reverts `pay` but not `send`; `maxAmount`.
 
-**Note on the repo.** Taihl's `Stablegram.sendToken` already sends an exact amount to a username with a note. `pay` is the same move, typed in dollars. Merge the two rather than keeping both.
+**Note on the repo.** Taihl's `Osmo.sendToken` already sends an exact amount to a username with a note. `pay` is the same move, typed in dollars. Merge the two rather than keeping both.
 
 Requests are not on-chain. A request lives in the database, and paying it is an ordinary `pay` whose `ref` the server links to the request. The payer chooses which asset to pay a request in.
 

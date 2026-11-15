@@ -6,7 +6,7 @@
 // Dollar stablecoins are shown at their $1 peg (Blockworks closes were 0.9993-0.9997). EURC: Blockworks asset-price, daily close 2026-11-14. Logos: CoinGecko large images, 256 px.
 // Silver (KAG): CoinGecko (not on Blockworks). All pulled 2026-11-14T23:32Z.
 
-export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "stablegram";
+export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "Osmo";
 
 /** Who can see a payment in feeds. Two choices only: everyone, or just the two people. */
 export type Audience = "public" | "private";
@@ -129,7 +129,7 @@ export const STARTER_DOLLARS = 4;
 export const STARTER_ASSET_USD = 3;
 
 export const AVATAR_COLORS = ["#1F4F82", "#0F9D8A", "#E8590C", "#1971C2", "#C2255C", "#2F9E44", "#D9480F", "#364FC7"];
-export const RESERVED_HANDLES = ["admin", "support", "help", "stablegram", "pay", "request", "requests", "me", "home", "friends", "portfolio", "settings", "everyone", "welcome"];
+export const RESERVED_HANDLES = ["admin", "support", "help", "osmo", "pay", "request", "requests", "me", "home", "friends", "portfolio", "settings", "everyone", "welcome"];
 export const HANDLE_RULE = /^[a-z0-9_]{3,20}$/;
 
 export const PERSONAS: Person[] = [
