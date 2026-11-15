@@ -53,3 +53,13 @@ Sign-up then calls `signUp({ handle, first, last, photo, country, address })` in
 ## Face ID sign-in and recovery phrase (for Taihl)
 - `web/src/lib/passkey.ts`: `createPasskey(username)` and `signInWithPasskey()` already call WebAuthn on https/localhost (real Face ID / Touch ID prompt) and fall back to an animation. Next: make the passkey the wallet's signer (Circle Modular Wallets, passkey-owned smart accounts; check Arc testnet support) and map credential id → account.
 - `web/src/lib/recovery.ts`: demo words only. Swap in viem `generateMnemonic(english)`, `mnemonicToAccount`, `validateMnemonic`. The phrase never leaves the phone.
+
+## Update, 2026-11-15 (Taihl)
+Corrections to the notes above, which were written before the current contracts were visible on this branch.
+
+- **The gate and the wrapper are gone.** `GatedShare` and `EligibilityRegistry` were dropped on purpose: anyone can hold the share in this concept, and stablegram sends the token you already hold. Ignore the "Keep them" row in the table.
+- **Three contracts exist:** `MockShare`, `UsernameRegistry`, `Stablegram`. They are live on Arc testnet (chain 5042002).
+- **Build the app against `deployments/arc-testnet.json`.** It holds the addresses and the ABIs. Nothing else in the repo is needed to call the contracts.
+- **Not built:** `DemoVenue`, `claimFor`, the `Onboarder` and relayer, and the off-chain note with a `ref`. The note is always on-chain in the `Sent` event today.
+- **CI is green**, and it now lints and builds `web/` as well as running the Foundry checks.
+- **A working reference client is in `demo/index.html`:** one file, no build, real sends on Arc testnet. Copy the calls from there when wiring `connectWallet()` and `signUp()`.
