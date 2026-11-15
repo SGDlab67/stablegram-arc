@@ -1,0 +1,31 @@
+import type { MetadataRoute } from "next";
+import { APP_NAME } from "@/lib/data";
+
+// Lets a phone install this as an app: its own icon, full screen, no browser bar.
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: APP_NAME,
+    short_name: APP_NAME,
+    description: "Pay friends in what you hold.",
+    id: "/",
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    orientation: "portrait",
+    background_color: "#f3eee5",
+    theme_color: "#f3eee5",
+    categories: ["finance", "social"],
+    icons: [
+      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+    shortcuts: [
+      { name: "Pay or request", short_name: "Pay", url: "/pay", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Add money", short_name: "Add money", url: "/deposit", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Buy stocks or crypto", short_name: "Buy", url: "/buy", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Markets", url: "/markets", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "My code", url: "/me/code", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+    ],
+  };
+}
