@@ -176,10 +176,10 @@ export default function Welcome() {
       <div className="relative flex min-h-app flex-col overflow-hidden bg-[#0F2C4D] text-[#F3EEE5]">
         <div aria-hidden className="pointer-events-none absolute left-1/2 top-[34%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(91,140,201,0.35)_0%,rgba(15,44,77,0)_65%)]" />
         <div className="relative flex flex-1 flex-col items-center justify-center px-8 text-center">
-          <span className="pop flex h-28 w-28 items-center justify-center rounded-[34px] bg-[#F3EEE5]/10 ring-1 ring-[#F3EEE5]/15">
-            <Mark size={68} className="text-[#F3EEE5]" />
+          <span className="pop drop-shadow-[0_12px_30px_rgba(0,0,0,0.25)]">
+            <Mark size={168} className="text-[#F3EEE5]" />
           </span>
-          <p className="screen-in mt-6 text-[40px] font-bold tracking-tight">{APP_NAME}</p>
+          <p className="screen-in mt-7 text-[42px] font-bold tracking-tight">{APP_NAME}</p>
           <p className="screen-in mt-2 text-[17px] text-[#F3EEE5]/70">Pay friends in stocks and crypto.</p>
         </div>
 
