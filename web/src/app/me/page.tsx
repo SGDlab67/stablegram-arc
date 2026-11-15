@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, ChevronRight, QrCode, Settings, Share, ShieldCheck } from "lucide-react";
+import { Bell, ChevronRight, QrCode, Send, Settings, Share, ShieldCheck } from "lucide-react";
 import { ActivityRow } from "@/components/feed";
 import { RequestCards } from "@/components/requests";
 import { Screen } from "@/components/shell";
-import { Avatar, Card, Flag, PreviewNote, SectionTitle } from "@/components/ui";
+import { Avatar, Card, EmptyState, Flag, PreviewNote, SectionTitle } from "@/components/ui";
 import { usd } from "@/lib/data";
 import { toast } from "@/components/feel";
 import { useStore } from "@/lib/store";
@@ -39,7 +39,7 @@ export default function Me() {
       </div>
 
       <div className="flex flex-col items-center px-6 pt-2">
-        <Link href="/me/code" className="relative">
+        <Link href="/me/code" className="relative" aria-label="Your code and profile picture">
           <Avatar handle={me.handle} size={104} />
           <span className="absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white ring-4 ring-page">
             <QrCode size={18} />
@@ -107,13 +107,7 @@ export default function Me() {
             <ActivityRow key={p.ref} p={p} />
           ))}
           {mine.length === 0 && (
-            <div className="py-6 text-center">
-              <p className="text-[16px] font-semibold">No payments yet</p>
-              <p className="mt-1 text-[14px] text-muted">Pay a friend a slice of your portfolio and it shows up here.</p>
-              <Link href="/pay" className="mt-3 inline-flex h-10 items-center rounded-full bg-brand px-4 text-[15px] font-semibold text-white">
-                Make your first payment
-              </Link>
-            </div>
+            <EmptyState icon={Send} title="No payments yet" text="Pay a friend a slice of your portfolio and it shows up here." action={{ label: "Make your first payment", href: "/pay" }} />
           )}
         </Card>
       </div>

@@ -124,7 +124,7 @@ export function AssetScreen() {
             <div className="mt-3 flex items-center gap-3">
               <div className="flex -space-x-2.5">
                 {holders.slice(0, 5).map((p) => (
-                  <Link key={p.handle} href={`/u/${p.handle}`} className="rounded-full ring-[3px] ring-white">
+                  <Link key={p.handle} href={`/u/${p.handle}`} aria-label={`${p.first} ${p.last}`} className="rounded-full ring-[3px] ring-white">
                     <Avatar handle={p.handle} size={38} />
                   </Link>
                 ))}

@@ -629,6 +629,7 @@ function PayFlowInner() {
               key={k}
               type="button"
               onClick={() => press(k)}
+              aria-label={k === "del" ? "Delete" : undefined}
               className="flex h-14 items-center justify-center text-[26px] font-medium active:bg-chip"
             >
               {k === "del" ? <Delete size={26} /> : k}

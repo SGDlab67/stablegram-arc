@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChartLine, ChevronLeft, House, QrCode, Search, Users } from "lucide-react";
 import type { ReactNode } from "react";
-import { APP_NAME } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { Avatar } from "./ui";
 import { haptic } from "./feel";
@@ -19,15 +18,6 @@ export function Mark({ size = 28, className = "" }: { size?: number; className?:
       <path d="M30 34 L30 14 A20 20 0 1 0 47.3 44 Z" fill="currentColor" />
       <path d="M35 30 L35 10 A20 20 0 0 1 52.3 40 Z" fill="currentColor" opacity={0.55} />
     </svg>
-  );
-}
-
-export function Wordmark({ className = "", mark = false }: { className?: string; mark?: boolean }) {
-  return (
-    <span className={`inline-flex items-center gap-2 font-bold tracking-tight text-brand ${className}`}>
-      {mark && <Mark size={30} />}
-      {APP_NAME}
-    </span>
   );
 }
 

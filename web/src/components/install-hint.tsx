@@ -62,7 +62,7 @@ export function InstallHint() {
   };
 
   return (
-    <div className="mx-4 mt-4 flex items-start gap-3 rounded-[22px] bg-brand p-4 text-white">
+    <div className="mx-4 mb-4 mt-1 flex items-start gap-3 rounded-[22px] bg-brand p-4 text-white">
       <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15">
         <SquarePlus size={20} />
       </span>

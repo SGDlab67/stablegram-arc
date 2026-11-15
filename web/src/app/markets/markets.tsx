@@ -116,7 +116,7 @@ function MarketsInner() {
           </p>
           <div className="flex gap-1">
             {SORTS.map((s) => (
-              <button key={s.id} type="button" onClick={() => setSort(s.id)} className={`rounded-full px-2.5 py-1 text-[12px] font-semibold ${sort === s.id ? "bg-chip text-ink" : "text-muted"}`}>
+              <button key={s.id} type="button" onClick={() => setSort(s.id)} className={`h-8 rounded-full px-3 text-[13px] font-semibold ${sort === s.id ? "bg-chip text-ink" : "text-muted"}`}>
                 {s.label}
               </button>
             ))}

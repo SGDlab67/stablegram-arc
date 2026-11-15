@@ -3,14 +3,19 @@
 import Link from "next/link";
 import { agoLabel, personOf, shortName, textOf, usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
-import { Avatar, Card, GhostButton } from "./ui";
+import { Avatar, Card, EmptyState, GhostButton } from "./ui";
+import { Inbox } from "lucide-react";
 
 export function RequestCards({ empty = false }: { empty?: boolean }) {
   const { requests, me, people, declineRequest, cancelRequest } = useStore();
   const incoming = requests.filter((r) => r.payer === me.handle && r.status === "open");
   const outgoing = requests.filter((r) => r.requester === me.handle && r.status === "open");
   if (incoming.length + outgoing.length === 0) {
-    return empty ? <p className="px-2 py-8 text-center text-muted">No requests waiting.</p> : null;
+    return empty ? (
+      <Card className="!p-0">
+        <EmptyState icon={Inbox} title="No requests waiting" text="When someone asks you for money, it shows up here." />
+      </Card>
+    ) : null;
   }
   return (
     <div className="space-y-3">

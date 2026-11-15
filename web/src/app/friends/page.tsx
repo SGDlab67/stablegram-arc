@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Search, X } from "lucide-react";
+import { Check, Search, UserPlus, X } from "lucide-react";
 import { useState } from "react";
 import { Screen } from "@/components/shell";
-import { Avatar, Card, Flag, PreviewNote, SectionTitle } from "@/components/ui";
+import { Avatar, Card, EmptyState, Flag, PreviewNote, SectionTitle } from "@/components/ui";
 import { type Person } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { HACKATHON_TAG } from "@/lib/data";
@@ -132,7 +132,7 @@ export default function Friends() {
                     }
                   />
                 ))}
-              {friends.length === 0 && <p className="py-4 text-muted">No friends yet. Add a few above.</p>}
+              {friends.length === 0 && <EmptyState icon={UserPlus} title="No friends yet" text="Add people from the list below, or search by name." />}
             </Card>
 
             <div id="ubc" className="scroll-mt-4" />

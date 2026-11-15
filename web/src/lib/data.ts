@@ -342,8 +342,6 @@ export const NOTICES: Notice[] = [
 export const REACTION_CHOICES = ["❤️", "😂", "🔥", "🙏", "💸", "✨"];
 export const NOTE_SHORTCUTS = ["🍕", "🍔", "🌮", "☕", "🍻", "🏠", "🚗", "⛽", "🎟️", "🎉", "🛒", "✈️", "💸", "🎂", "🏀"];
 
-const TILE_COLORS = ["#FF8A1F", "#FFD43B", "#63E6BE", "#74C0FC", "#B197FC", "#FF8787", "#A9E34B", "#F783AC"];
-
 export function assetOf(symbol: string): Asset {
   return ASSETS.find((a) => a.symbol === symbol) ?? ASSETS[ASSETS.length - 2];
 }
@@ -371,11 +369,6 @@ export function textOf(note: string): string {
   const e = emojiOf(note);
   const t = e ? note.replace(e, "").trim() : note.trim();
   return t || note.trim();
-}
-
-export function tileColor(emoji: string): string {
-  const code = emoji.codePointAt(0) ?? 0;
-  return TILE_COLORS[code % TILE_COLORS.length];
 }
 
 export function agoLabel(minutes: number): string {

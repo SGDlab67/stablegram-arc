@@ -270,7 +270,7 @@ export function Portfolio() {
                 right={
                   <span className="flex items-center gap-3">
                     {g.id === "cash" && (
-                      <Link href="/deposit" className="text-[13px] font-semibold text-brand">
+                      <Link href="/deposit" className="hit text-[13px] font-semibold text-brand">
                         + Add
                       </Link>
                     )}
@@ -300,7 +300,7 @@ export function Portfolio() {
           right={
             <Link
               href="/markets"
-              className="text-[14px] font-semibold text-brand"
+              className="hit text-[14px] font-semibold text-brand"
             >
               See all
             </Link>
@@ -333,7 +333,7 @@ export function Portfolio() {
 
         <Link
           href="/me/settings"
-          className="mt-4 flex items-center justify-center gap-1 text-[13px] text-muted"
+          className="mt-2 flex h-11 items-center justify-center gap-1 text-[13px] text-muted"
         >
           Wallet {me.address ? shortAddress(me.address) : "not connected"} <ChevronRight size={14} />
         </Link>

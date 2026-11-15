@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { BackHeader, Screen } from "@/components/shell";
-import { Avatar, Card, SectionTitle } from "@/components/ui";
+import { Avatar, Card, EmptyState, SectionTitle } from "@/components/ui";
+import { Bell } from "lucide-react";
 import { agoLabel, personOf, shortName } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
@@ -13,7 +14,9 @@ export default function NotificationsPage() {
       <BackHeader title="Notifications" fallback="/me" />
       <div className="px-4 pb-8">
         {notices.length === 0 ? (
-          <p className="px-2 py-16 text-center text-muted">Nothing yet. Payments, requests and reactions show up here.</p>
+          <div className="pt-10">
+            <EmptyState icon={Bell} title="No notifications yet" text="Payments, requests and reactions show up here." />
+          </div>
         ) : (
           [
             { title: "New", items: notices.filter((x) => x.ago < 60 * 3) },

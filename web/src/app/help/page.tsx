@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChevronDown, FileText, Lock, Mail, Search } from "lucide-react";
 import { useState } from "react";
 import { BackHeader, Screen } from "@/components/shell";
-import { Card, SectionTitle } from "@/components/ui";
+import { Card, EmptyState, SectionTitle } from "@/components/ui";
 import { APP_NAME } from "@/lib/data";
 import { FAQ, TERMS_VERSION } from "@/lib/legal";
 
@@ -60,7 +60,7 @@ export default function HelpPage() {
             </Card>
           </div>
         ))}
-        {groups.length === 0 && <p className="py-10 text-center text-muted">No answers match “{query}”.</p>}
+        {groups.length === 0 && <EmptyState icon={Search} title={`No answers for “${query}”`} text="Try another word, or contact us below." />}
 
         <SectionTitle>More</SectionTitle>
         <Card className="divide-y divide-line !py-1">

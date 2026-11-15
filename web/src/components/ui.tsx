@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Globe, Lock } from "lucide-react";
+import { Globe, Lock, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { assetOf, defaultAvatar, initials, personOf, type Audience } from "@/lib/data";
 import { useStore } from "@/lib/store";
@@ -113,10 +113,6 @@ export function AudienceToggle({ value, onChange }: { value: Audience; onChange:
   );
 }
 
-export function audienceIcon(a: Audience) {
-  return AUDIENCE[a].Icon;
-}
-
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={`rounded-[28px] bg-white p-5 ${className}`}>{children}</div>;
 }
@@ -144,22 +140,6 @@ export function PrimaryButton({
   }
   return (
     <button type="button" onClick={onClick} disabled={disabled} className={cls}>
-      {children}
-    </button>
-  );
-}
-
-export function BlackPill({ children, onClick, href }: { children: ReactNode; onClick?: () => void; href?: string }) {
-  const cls = "inline-flex h-12 items-center rounded-full bg-ink px-6 text-[17px] font-semibold text-white active:scale-[0.97]";
-  if (href) {
-    return (
-      <Link href={href} className={cls}>
-        {children}
-      </Link>
-    );
-  }
-  return (
-    <button type="button" onClick={onClick} className={cls}>
       {children}
     </button>
   );
@@ -254,5 +234,23 @@ export function Change({ pct, className = "" }: { pct: number; className?: strin
     <span className={`${up ? "text-money" : "text-down"} ${className}`}>
       {up ? "▲" : "▼"} {Math.abs(pct).toFixed(2)}%
     </span>
+  );
+}
+
+/** One look for every empty list: an icon in a soft circle, a short title, one line of help, and an optional button. */
+export function EmptyState({ icon: Icon, title, text, action }: { icon: LucideIcon; title: string; text?: string; action?: { label: string; href: string } }) {
+  return (
+    <div className="flex flex-col items-center px-6 py-8 text-center">
+      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand">
+        <Icon size={24} />
+      </span>
+      <p className="mt-3 text-[16px] font-semibold">{title}</p>
+      {text && <p className="mt-1 max-w-[280px] text-[14px] leading-snug text-muted">{text}</p>}
+      {action && (
+        <Link href={action.href} className="mt-4 inline-flex h-11 items-center rounded-full bg-brand px-5 text-[15px] font-semibold text-white">
+          {action.label}
+        </Link>
+      )}
+    </div>
   );
 }

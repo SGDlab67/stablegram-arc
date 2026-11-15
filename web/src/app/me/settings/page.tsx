@@ -106,7 +106,7 @@ export default function SettingsPage() {
         <div id="portfolio" className="scroll-mt-16" />
         <SectionTitle
           right={
-            <Link href={`/u/${me.handle}`} className="text-[14px] font-semibold text-brand">
+            <Link href={`/u/${me.handle}`} className="hit text-[14px] font-semibold text-brand">
               Preview
             </Link>
           }

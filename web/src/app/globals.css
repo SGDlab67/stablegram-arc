@@ -315,6 +315,25 @@ button:active:not(:disabled):not(.no-press) {
   border-radius: 12px;
 }
 
+/* Text fields: no square outline on the bare input; the rounded field around it shows focus instead. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+label:is(.rounded-full, .rounded-2xl):has(input:focus) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 30%, transparent);
+}
+
+/* Small text links ("See all", "Edit") get a finger-sized tap area without changing the layout. */
+.hit {
+  position: relative;
+}
+.hit::after {
+  content: "";
+  position: absolute;
+  inset: -12px -10px;
+}
+
 .tabular {
   font-variant-numeric: tabular-nums;
 }

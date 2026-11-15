@@ -5,7 +5,8 @@ import { useState, useSyncExternalStore } from "react";
 import { FeedCard } from "@/components/feed";
 import { InstallHint } from "@/components/install-hint";
 import { Mark, Screen, SearchBar } from "@/components/shell";
-import { AssetDot, Avatar, PreviewNote } from "@/components/ui";
+import { AssetDot, Avatar, EmptyState, PreviewNote } from "@/components/ui";
+import { UsersRound } from "lucide-react";
 import { ChevronRight, Plus } from "lucide-react";
 import { ASSETS, HACKATHON_TAG, personOf, usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
@@ -103,7 +104,7 @@ export default function Home() {
       <div className="pt-5">
         <div className="flex items-center justify-between px-5 pb-2">
           <p className="text-[15px] font-semibold">At {HACKATHON_TAG}</p>
-          <Link href="/friends#ubc" className="text-[14px] font-semibold text-brand">
+          <Link href="/friends#ubc" className="hit text-[14px] font-semibold text-brand">
             See all {hackers.length}
           </Link>
         </div>
@@ -111,7 +112,7 @@ export default function Home() {
           {hackers.slice(0, 14).map((p) => {
             const state = friendState(p.handle);
             return (
-              <div key={p.handle} className="flex w-[104px] shrink-0 flex-col items-center rounded-[20px] bg-white px-2 pb-2.5 pt-3">
+              <div key={p.handle} className="flex w-[112px] shrink-0 flex-col items-center rounded-[20px] bg-white px-2 pb-2.5 pt-3">
                 <Link href={`/u/${p.handle}`} className="flex flex-col items-center">
                   <Avatar handle={p.handle} size={52} />
                   <span className="mt-1.5 w-full truncate text-center text-[14px] font-semibold">{p.first}</span>
@@ -156,12 +157,8 @@ export default function Home() {
           </div>
         ))}
         {feed.length === 0 && (
-          <div className="rounded-[28px] bg-white p-8 text-center">
-            <p className="text-lg font-semibold">Nothing here yet</p>
-            <p className="mt-1 text-muted">Add a few friends to see what they are paying for.</p>
-            <Link href="/friends" className="mt-4 inline-flex h-11 items-center rounded-full bg-brand px-5 font-semibold text-white">
-              Find friends
-            </Link>
+          <div className="rounded-[28px] bg-white">
+            <EmptyState icon={UsersRound} title="Nothing here yet" text="Add a few friends to see what they are paying for." action={{ label: "Find friends", href: "/friends" }} />
           </div>
         )}
       </div>

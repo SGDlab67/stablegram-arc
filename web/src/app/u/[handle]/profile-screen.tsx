@@ -86,7 +86,7 @@ export function ProfileScreen() {
         <SectionTitle
           right={
             state === "self" ? (
-              <Link href="/me/settings#portfolio" className="text-[14px] font-semibold text-brand">
+              <Link href="/me/settings#portfolio" className="hit text-[14px] font-semibold text-brand">
                 Edit
               </Link>
             ) : undefined
