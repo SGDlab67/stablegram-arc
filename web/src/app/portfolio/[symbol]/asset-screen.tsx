@@ -6,7 +6,7 @@ import { useState } from "react";
 import { RangeTabs, Sparkline } from "@/components/chart";
 import { ActivityRow } from "@/components/feed";
 import { BackHeader, Screen } from "@/components/shell";
-import { AssetDot, Card, Change, GhostButton, PrimaryButton, SectionTitle, Sheet } from "@/components/ui";
+import { AssetDot, Avatar, Card, Change, GhostButton, PrimaryButton, SectionTitle, Sheet } from "@/components/ui";
 import { ASSETS, RANGES, agoLabel, amountLabel, sampleSeries, usd, type Range } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
@@ -15,7 +15,7 @@ const ASSET_RANGES: Range[] = ["1D", "1W", "1M", "6M", "1Y", "All"];
 
 export function AssetScreen() {
   const { symbol } = useParams<{ symbol: string }>();
-  const { holdings, payments, me, buy, sell } = useStore();
+  const { holdings, payments, me, buy, sell, people, friends, privacyOf, holdingsOf } = useStore();
   const [trade, setTrade] = useState<"buy" | "sell" | null>(null);
   const [range, setRange] = useState<Range>("1D");
   const [scrub, setScrub] = useState<number | null>(null);
@@ -37,6 +37,14 @@ export function AssetScreen() {
   const fromFriends = mine.filter((p) => p.to === me.handle);
   const fromFriendsUsd = fromFriends.reduce((sum, p) => sum + p.usd, 0);
   const isDollar = asset.symbol === "USDC";
+  // People who hold this and let others see what they hold. Friends first.
+  const holders = people
+    .filter((p) => p.handle !== me.handle)
+    .filter((p) => {
+      const pv = privacyOf(p.handle);
+      return pv.show && pv.holdings && (pv.who === "everyone" || friends.includes(p.handle)) && (holdingsOf(p.handle)[asset.symbol] ?? 0) > 0;
+    })
+    .sort((x, y) => Number(friends.includes(y.handle)) - Number(friends.includes(x.handle)));
 
   const series = sampleSeries(asset.symbol, 48, range);
   const point = scrub !== null && scrub < series.length ? scrub : null;
@@ -109,6 +117,28 @@ export function AssetScreen() {
             </p>
           )}
         </Card>
+
+        {holders.length > 0 && (
+          <Card>
+            <p className="text-[14px] font-medium text-muted">People who hold {asset.name}</p>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="flex -space-x-2.5">
+                {holders.slice(0, 5).map((p) => (
+                  <Link key={p.handle} href={`/u/${p.handle}`} className="rounded-full ring-[3px] ring-white">
+                    <Avatar handle={p.handle} size={38} />
+                  </Link>
+                ))}
+              </div>
+              <p className="min-w-0 flex-1 text-[14px] leading-snug">
+                <span className="font-semibold">{holders.slice(0, 2).map((p) => p.first).join(" and ")}</span>
+                {holders.length > 2 && <span className="text-muted"> and {holders.length - 2} more</span>}
+              </p>
+            </div>
+            {holders.length > 0 && units > 0 && (
+              <p className="mt-3 text-[13px] text-muted">Send some to {holders[0].first}? They can keep it or sell it any time.</p>
+            )}
+          </Card>
+        )}
 
         <Card>
           <p className="text-[14px] font-medium text-muted">About</p>

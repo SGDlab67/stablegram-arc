@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Globe, Lock } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { assetOf, initials, personOf, type Audience } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
@@ -16,7 +16,7 @@ export function Avatar({ handle, size = 40, ring = false }: { handle: string; si
         width: size,
         height: size,
         fontSize: Math.max(10, size * 0.38),
-        ...(p.photo ? { backgroundImage: `url(${p.photo})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: p.color }),
+        ...(p.photo ? { backgroundColor: p.color, backgroundImage: `url(${p.photo})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: p.color }),
       }}
       role="img"
       aria-label={`${p.first} ${p.last}`}
@@ -161,13 +161,55 @@ export function GhostButton({ children, onClick, className = "" }: { children: R
 }
 
 export function Sheet({ open, onClose, children, title }: { open: boolean; onClose: () => void; children: ReactNode; title?: string }) {
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const start = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
+  // Drag the handle (or the title) down to dismiss, like an iPhone sheet.
+  const grab = {
+    onPointerDown: (e: React.PointerEvent) => {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      start.current = e.clientY;
+      setDragging(true);
+    },
+    onPointerMove: (e: React.PointerEvent) => {
+      if (start.current !== null) setDragY(Math.max(0, e.clientY - start.current));
+    },
+    onPointerUp: () => {
+      if (dragY > 90) onClose();
+      start.current = null;
+      setDragging(false);
+      setDragY(0);
+    },
+    onPointerCancel: () => {
+      start.current = null;
+      setDragging(false);
+      setDragY(0);
+    },
+  };
   return (
-    <div className="fixed inset-0 z-50 mx-auto flex max-w-[430px] items-end">
-      <button type="button" aria-label="Close" className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="slide-up relative max-h-sheet w-full overflow-y-auto rounded-t-[28px] bg-white p-5 pb-8">
-        <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-line" />
-        {title && <h2 className="mb-4 text-xl font-semibold">{title}</h2>}
+    <div className="fixed inset-0 z-50 mx-auto flex max-w-[430px] items-end" role="dialog" aria-modal="true" aria-label={title}>
+      <button type="button" aria-label="Close" className="no-press fade-in absolute inset-0 bg-black/40" style={{ opacity: 1 - Math.min(dragY / 400, 0.6) }} onClick={onClose} />
+      <div
+        className="slide-up relative max-h-sheet w-full overflow-y-auto rounded-t-[28px] bg-white p-5 pb-[max(env(safe-area-inset-bottom),32px)]"
+        style={{ transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}
+      >
+        <div {...grab} className="-mx-5 -mt-5 mb-1 flex cursor-grab touch-none justify-center pb-3 pt-3">
+          <div className="h-1.5 w-10 rounded-full bg-line" />
+        </div>
+        {title && (
+          <h2 {...grab} className="mb-4 touch-none text-xl font-semibold">
+            {title}
+          </h2>
+        )}
         {children}
       </div>
     </div>

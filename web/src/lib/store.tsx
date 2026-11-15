@@ -25,6 +25,7 @@ import {
   type Person,
   type PortfolioPrivacy,
 } from "./data";
+import { haptic, toast } from "@/components/feel";
 
 export type FriendState = "none" | "requested" | "incoming" | "friends" | "self";
 
@@ -216,13 +217,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     );
   }, [meHandle]);
 
-  const addFriend = useCallback((handle: string) => setOutgoing((o) => (o.includes(handle) ? o : [...o, handle])), []);
-  const acceptFriend = useCallback((handle: string) => {
-    setIncoming((i) => i.filter((h) => h !== handle));
-    setFriends((f) => (f.includes(handle) ? f : [...f, handle]));
-  }, []);
+  const firstOf = useCallback((handle: string) => people.find((p) => p.handle === handle)?.first ?? `@${handle}`, [people]);
+  const addFriend = useCallback(
+    (handle: string) => {
+      setOutgoing((o) => (o.includes(handle) ? o : [...o, handle]));
+      haptic();
+      toast(`Friend request sent to ${firstOf(handle)}`);
+    },
+    [firstOf],
+  );
+  const acceptFriend = useCallback(
+    (handle: string) => {
+      setIncoming((i) => i.filter((h) => h !== handle));
+      setFriends((f) => (f.includes(handle) ? f : [...f, handle]));
+      haptic("success");
+      toast(`You and ${firstOf(handle)} are friends`);
+    },
+    [firstOf],
+  );
   const ignoreFriend = useCallback((handle: string) => setIncoming((i) => i.filter((h) => h !== handle)), []);
-  const unfriend = useCallback((handle: string) => setFriends((f) => f.filter((h) => h !== handle)), []);
+  const unfriend = useCallback(
+    (handle: string) => {
+      setFriends((f) => f.filter((h) => h !== handle));
+      toast(`Removed ${firstOf(handle)} from friends`);
+    },
+    [firstOf],
+  );
 
   const updateMe = useCallback((patch: Partial<Person>) => {
     setPeople((list) => list.map((p) => (p.handle === meHandle ? { ...p, ...patch, handle: meHandle } : p)));
@@ -268,6 +288,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const sell = useCallback((symbol: string, dollars: number) => {
     const price = assetOf(symbol).price;
     setHoldings((h) => ({ ...h, USDC: (h.USDC ?? 0) + dollars, [symbol]: Math.max(0, (h[symbol] ?? 0) - dollars / price) }));
+    haptic("success");
+    toast(`Sold ${dollars.toLocaleString("en-US", { style: "currency", currency: "USD" })} of ${symbol}. Settled in seconds.`);
   }, []);
 
   const privacyOf = useCallback(

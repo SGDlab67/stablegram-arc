@@ -8,6 +8,7 @@ import { BackHeader, Screen } from "@/components/shell";
 import { AudienceLabel, Avatar, Card, PrimaryButton, SectionTitle, Sheet } from "@/components/ui";
 import { agoLabel, amountLabel, assetOf, feeLabel, personOf, shortName, usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
+import { toast } from "@/components/feel";
 
 const THANKS = ["Thanks! 🙏", "You're the best", "Got it 👍"];
 
@@ -62,6 +63,27 @@ export function PaymentScreen() {
               {row(p.from === me.handle ? "You sent" : `${personOf(p.from, people).first} sent`, amountLabel(units, p.asset))}
               {row("Fee", feeLabel(p.feeUsd))}
               {row("Who can see", <AudienceLabel audience={p.audience} />)}
+              {row(
+                "Status",
+                <span className="inline-flex items-center gap-1.5 text-money">
+                  <span className="h-2 w-2 rounded-full bg-money" />
+                  Settled in seconds
+                </span>,
+              )}
+              {row("Network", "Arc (sample)")}
+              {row(
+                "Receipt",
+                <button
+                  type="button"
+                  onClick={() => {
+                    void navigator.clipboard?.writeText(`${window.location.origin}/p/${p.ref}`);
+                    toast("Receipt link copied");
+                  }}
+                  className="font-mono text-[14px] text-brand"
+                >
+                  #{p.ref.toUpperCase()} · Copy
+                </button>,
+              )}
             </Card>
             {(canSell || sold) && (
               <PrimaryButton className="mt-3" disabled={sold} onClick={() => setSelling(true)}>
@@ -80,7 +102,7 @@ export function PaymentScreen() {
         ) : (
           <Card className="space-y-4">
             {p.comments.map((c) => (
-              <div key={c.id} className="flex items-start gap-3">
+              <div key={c.id} className={`flex items-start gap-3 ${c.ago === 0 ? "slide-up" : ""}`}>
                 <Avatar handle={c.by} size={36} />
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px] text-muted">

@@ -1,13 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { FeedCard } from "@/components/feed";
 import { InstallHint } from "@/components/install-hint";
 import { Mark, Screen, SearchBar } from "@/components/shell";
 import { Avatar, PreviewNote } from "@/components/ui";
 import { personOf, usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
+import { useCountUp } from "@/components/feel";
+
+const noSubscribe = () => () => {};
+function greetingNow() {
+  const h = new Date().getHours();
+  return h < 5 ? "Up late" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+}
+/** Time-of-day greeting. Read on the phone only; the prepared page says "Hi". */
+function useGreeting() {
+  return useSyncExternalStore(noSubscribe, greetingNow, () => "Hi");
+}
 
 export default function Home() {
   const { payments, canSee, friends, me, people, requests, incoming, totalUsd, hideBalances } = useStore();
@@ -21,11 +32,16 @@ export default function Home() {
       : visible.filter((p) => [p.from, p.to].some((h) => h === me.handle || friends.includes(h)));
 
   const top = friends.slice(0, 6);
+  const counted = useCountUp(totalUsd);
+  const greet = useGreeting();
 
   return (
     <Screen>
       <SearchBar />
       <InstallHint />
+      <p className="px-5 pb-2 text-[22px] font-semibold tracking-tight">
+        {greet}, {me.first}
+      </p>
 
       <div className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-1 pt-1">
         {top.map((h) => (
@@ -48,7 +64,7 @@ export default function Home() {
           <span className="text-[15px] font-semibold leading-tight">
             Portfolio
             <br />
-            <span className="text-brand">{hideBalances ? "$•••••" : usd(totalUsd)}</span>
+            <span className="text-brand">{hideBalances ? "$•••••" : usd(counted)}</span>
           </span>
         </Link>
         {openRequests > 0 ? (

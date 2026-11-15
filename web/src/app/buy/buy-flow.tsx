@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Building2, Check, ChevronDown, ChevronLeft, CreditCard, Delete, Wallet, X } from "lucide-react";
 import { AssetDot, PrimaryButton, Sheet } from "@/components/ui";
+import { Confetti, SuccessCheck, haptic } from "@/components/feel";
 import { ASSETS, MARKETS, amountLabel, assetOf, personOf, usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
@@ -44,6 +45,10 @@ function MethodBadge({ m, size = 40 }: { m: Method; size?: number }) {
   );
 }
 
+function Spinner() {
+  return <span aria-label="Working" className="h-6 w-6 animate-spin rounded-full border-[3px] border-white/30 border-t-white" />;
+}
+
 export function BuyFlow() {
   const params = useSearchParams();
   const router = useRouter();
@@ -69,6 +74,7 @@ export function BuyFlow() {
   const ready = symbol !== null && value >= 1 && !overBalance;
 
   const press = (k: string) => {
+    haptic();
     if (k === "del") return setAmount((a) => a.slice(0, -1));
     setAmount((a) => {
       if (k === "." && a.includes(".")) return a;
@@ -89,6 +95,7 @@ export function BuyFlow() {
     window.setTimeout(() => {
       if (methodId === "balance") buy(symbol, value);
       else buyWithOutside(symbol, value);
+      haptic("success");
       setStep("done");
     }, 1100);
   };
@@ -136,9 +143,8 @@ export function BuyFlow() {
   if (step === "done") {
     return (
       <div className="flex min-h-app flex-col items-center bg-white px-6 pt-24 text-center">
-        <span className="flex h-24 w-24 items-center justify-center rounded-full bg-money text-white">
-          <Check size={48} strokeWidth={3} />
-        </span>
+        <Confetti pieces={50} />
+        <SuccessCheck />
         <p className="mt-6 text-[28px] font-semibold leading-tight tracking-tight">You bought {usd(value, { cents: value % 1 !== 0 })} of {asset.name}</p>
         <p className="mt-2 text-[16px] text-muted">{amountLabel(units, symbol)} is in your wallet.</p>
         <p className="mt-6 rounded-xl bg-chip px-3 py-2 text-[13px] text-muted">Demo: no money moved. In the real app the payment partner charges your {method.name}.</p>
@@ -203,11 +209,11 @@ export function BuyFlow() {
         <div className="px-4 pb-[max(env(safe-area-inset-bottom),24px)] pt-4">
           {methodId === "applepay" ? (
             <button type="button" disabled={working} onClick={complete} className="flex h-14 w-full items-center justify-center rounded-full bg-black text-[18px] font-semibold text-white disabled:opacity-60">
-              {working ? "Paying…" : "Buy with Apple Pay"}
+              {working ? <Spinner /> : "Buy with Apple Pay"}
             </button>
           ) : (
             <PrimaryButton disabled={working} onClick={complete}>
-              {working ? "Buying…" : `Buy ${usd(value, { cents: value % 1 !== 0 })} of ${asset.name}`}
+              {working ? <Spinner /> : `Buy ${usd(value, { cents: value % 1 !== 0 })} of ${asset.name}`}
             </PrimaryButton>
           )}
           <p className="mt-3 text-center text-[12px] text-muted">Demo: no real money moves.</p>
@@ -236,7 +242,7 @@ export function BuyFlow() {
       </div>
 
       <div className="flex flex-col items-center px-6 pt-6">
-        <p className={`text-[64px] font-semibold leading-none tracking-tight ${value ? "" : "text-muted"}`}>${amount || "0"}</p>
+        <p className={`tabular text-[64px] font-semibold leading-none tracking-tight ${value ? "" : "text-muted"}`}>${amount || "0"}</p>
         <p className="mt-2 h-5 text-[15px] text-muted">{value > 0 ? `about ${amountLabel(units, symbol)}` : `${usd(asset.price, { cents: true })} per ${symbol}`}</p>
         {payee && <p className="mt-2 rounded-full bg-brand-soft px-3 py-1 text-[13px] font-semibold text-brand">Then send it to {payee.first}</p>}
         <div className="mt-5 flex gap-2">

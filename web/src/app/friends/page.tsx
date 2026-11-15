@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Check, Search, X } from "lucide-react";
 import { useState } from "react";
 import { Screen } from "@/components/shell";
-import { Avatar, Card, GhostButton, PreviewNote, SectionTitle } from "@/components/ui";
+import { Avatar, Card, PreviewNote, SectionTitle } from "@/components/ui";
 import { type Person } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
@@ -87,11 +87,13 @@ export default function Friends() {
                         key={h}
                         p={p}
                         right={
-                          <span className="flex gap-2">
-                            <button type="button" onClick={() => acceptFriend(h)} className="rounded-full bg-brand px-4 py-2 text-[15px] font-semibold text-white">
-                              Accept
+                          <span className="flex shrink-0 gap-2">
+                            <button type="button" onClick={() => acceptFriend(h)} className="flex h-10 items-center gap-1.5 rounded-full bg-brand px-4 text-[15px] font-semibold text-white">
+                              <Check size={17} strokeWidth={2.6} /> Accept
                             </button>
-                            <GhostButton onClick={() => ignoreFriend(h)}>Ignore</GhostButton>
+                            <button type="button" aria-label={`Ignore ${p.first}`} onClick={() => ignoreFriend(h)} className="flex h-10 w-10 items-center justify-center rounded-full bg-chip">
+                              <X size={18} />
+                            </button>
                           </span>
                         }
                       />

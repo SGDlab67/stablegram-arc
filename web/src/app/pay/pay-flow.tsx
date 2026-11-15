@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, ChevronLeft, Delete, Plus, QrCode, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Delete, Plus, QrCode, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Sentence } from "@/components/feed";
 import { AssetDot, AudienceToggle, Avatar, PrimaryButton, Sheet } from "@/components/ui";
+import { Confetti, SuccessCheck, haptic } from "@/components/feel";
 import { ASSETS, NOTE_SHORTCUTS, amountLabel, assetOf, feeLabel, personOf, shortName, usd, type Audience, type Payment } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
@@ -52,6 +53,16 @@ function PayFlowInner() {
     }
     return others.filter((p) => p.handle.includes(q) || `${p.first} ${p.last}`.toLowerCase().includes(q));
   }, [query, people, me.handle, friends, recipients]);
+  // People you paid or were paid by most recently, for one-tap repeat payments.
+  const recent = useMemo(() => {
+    const seen: string[] = [];
+    for (const pay of payments) {
+      const other = pay.from === me.handle ? pay.to : pay.to === me.handle ? pay.from : null;
+      if (other && !seen.includes(other) && !recipients.includes(other)) seen.push(other);
+    }
+    return seen.slice(0, 6);
+  }, [payments, me.handle, recipients]);
+  const morePeople = people.filter((p) => p.handle !== me.handle && !recipients.includes(p.handle) && !candidates.some((c) => c.handle === p.handle));
 
   const funded = useMemo(
     () =>
@@ -76,17 +87,19 @@ function PayFlowInner() {
   };
   const firstTime = first ? !payments.some((p) => p.from === me.handle && p.to === first.handle) : false;
 
+  const [shakeKey, setShakeKey] = useState(0);
   const press = (k: string) => {
+    haptic();
     if (k === "del") return setAmount((a) => a.slice(0, -1));
-    setAmount((a) => {
-      if (k === "." && a.includes(".")) return a;
-      const [, dec] = a.split(".");
-      if (dec !== undefined && dec.length >= 2) return a;
-      if (a.replace(".", "").length >= 6) return a;
-      if (a === "" && k === ".") return "0.";
-      if (a === "0" && k !== ".") return k;
-      return a + k;
-    });
+    const a = amount;
+    const [, dec] = a.split(".");
+    const blocked = (k === "." && a.includes(".")) || (dec !== undefined && dec.length >= 2) || a.replace(".", "").length >= 6;
+    if (blocked) {
+      haptic("warn");
+      setShakeKey((n) => n + 1);
+      return;
+    }
+    setAmount(a === "" && k === "." ? "0." : a === "0" && k !== "." ? k : a + k);
   };
 
   const choose = (handle: string) => {
@@ -98,6 +111,7 @@ function PayFlowInner() {
 
   const doRequest = () => {
     store.request(recipients, each, note.trim());
+    haptic("success");
     setDone({ kind: "requested", each });
     setStep("done");
   };
@@ -106,6 +120,7 @@ function PayFlowInner() {
     if (!chosen || !first) return;
     const payment = store.pay({ to: first.handle, usd: value, note: note.trim(), audience, asset: chosen, requestId });
     setConfirmOpen(false);
+    haptic("success");
     setDone({ kind: "paid", payment });
     setStep("done");
   };
@@ -113,9 +128,8 @@ function PayFlowInner() {
   if (step === "done" && done) {
     return (
       <div className="flex min-h-app flex-col items-center justify-center bg-white px-8 text-center">
-        <span className="pop flex h-24 w-24 items-center justify-center rounded-full bg-money text-white">
-          <Check size={48} strokeWidth={3} />
-        </span>
+        {done.kind === "paid" && <Confetti />}
+        <SuccessCheck color={done.kind === "paid" ? "var(--money)" : "var(--brand)"} />
         {done.kind === "paid" ? (
           <div className="mt-8">
             <Sentence p={done.payment} />
@@ -133,6 +147,11 @@ function PayFlowInner() {
         <PrimaryButton className="mt-10" onClick={() => router.push("/")}>
           Done
         </PrimaryButton>
+        {done.kind === "paid" && (
+          <Link href={`/p/${done.payment.ref}`} className="mt-2 flex h-12 w-full items-center justify-center text-[16px] font-semibold text-brand">
+            See the payment
+          </Link>
+        )}
       </div>
     );
   }
@@ -159,7 +178,12 @@ function PayFlowInner() {
         </div>
 
         <div className="flex flex-1 flex-col items-center px-6 pt-4 text-center">
-          <Avatar handle={first.handle} size={72} />
+          <span className="relative">
+            <Avatar handle={first.handle} size={80} />
+            <span className="pop absolute -bottom-1 -right-2 rounded-full ring-4 ring-white">
+              <AssetDot symbol={chosen} size={34} />
+            </span>
+          </span>
           <p className="mt-3 text-[17px] text-muted">
             Pay <span className="font-semibold text-ink">{first.first} {first.last}</span>
           </p>
@@ -251,6 +275,19 @@ function PayFlowInner() {
             <QrCode size={22} />
           </Link>
         </div>
+        {!query && recent.length > 0 && (
+          <>
+            <p className="px-5 pb-2 pt-6 text-[13px] font-semibold uppercase tracking-wide text-muted">Recent</p>
+            <div className="no-scrollbar flex gap-4 overflow-x-auto px-5">
+              {recent.map((h) => (
+                <button key={h} type="button" onClick={() => choose(h)} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
+                  <Avatar handle={h} size={58} />
+                  <span className="w-full truncate text-center text-[13px] font-medium">{personOf(h, people).first}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <p className="px-5 pb-1 pt-6 text-[13px] font-semibold uppercase tracking-wide text-muted">{query || friends.length === 0 ? "People" : "Friends"}</p>
         <ul>
           {candidates.map((p) => (
@@ -263,11 +300,34 @@ function PayFlowInner() {
                   </span>
                   <span className="block text-[15px] text-muted">@{p.handle}</span>
                 </span>
+                <ChevronRight size={18} className="text-line" />
               </button>
             </li>
           ))}
           {candidates.length === 0 && <li className="px-5 py-6 text-muted">Nobody by that name yet.</li>}
         </ul>
+        {!query && morePeople.length > 0 && (
+          <>
+            <p className="px-5 pb-1 pt-5 text-[13px] font-semibold uppercase tracking-wide text-muted">More people</p>
+            <ul>
+              {morePeople.map((p) => (
+                <li key={p.handle}>
+                  <button type="button" onClick={() => choose(p.handle)} className="flex w-full items-center gap-3 px-5 py-3 text-left active:bg-chip">
+                    <Avatar handle={p.handle} size={48} />
+                    <span className="flex-1">
+                      <span className="block text-[17px] font-semibold">
+                        {p.first} {p.last}
+                      </span>
+                      <span className="block text-[15px] text-muted">@{p.handle}</span>
+                    </span>
+                    <ChevronRight size={18} className="text-line" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <div className="h-8" />
       </div>
     );
   }
@@ -297,9 +357,14 @@ function PayFlowInner() {
         </p>
         <p className="text-[15px] text-muted">{split ? recipients.map((h) => `@${h}`).join("  ") : first ? `@${first.handle}` : ""}</p>
 
-        <div className="mt-5 flex items-start justify-center font-semibold tracking-tight">
+        <div key={shakeKey} className={`mt-5 flex items-start justify-center font-semibold tracking-tight tabular ${shakeKey ? "shake" : ""}`}>
           <span className="mt-2 text-[28px]">$</span>
-          <span className={`text-[76px] leading-none ${amount ? "text-ink" : "text-line"}`}>{amount || "0"}</span>
+          <span
+            className={`leading-none transition-[font-size] duration-150 ${amount ? "text-ink" : "text-line"}`}
+            style={{ fontSize: (amount || "0").length > 6 ? 58 : (amount || "0").length > 4 ? 66 : 76 }}
+          >
+            {amount || "0"}
+          </span>
         </div>
         {split && value > 0 && <p className="mt-1 text-[15px] text-muted">{usd(each, { cents: true })} each, split with you</p>}
 

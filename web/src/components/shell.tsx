@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { APP_NAME } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { Avatar } from "./ui";
+import { haptic } from "./feel";
 
 /**
  * The app's mark, "The Slice": a portfolio with one slice pulled out, for paying a friend a slice of what you hold.
@@ -34,22 +35,40 @@ export function TabBar() {
   const pathname = usePathname();
   const { incoming, requests, me } = useStore();
   const openRequests = requests.filter((r) => r.payer === me.handle && r.status === "open").length;
+  // Tapping the tab you're already on scrolls back to the top, like iOS.
+  const toTop = () => {
+    const box = document.querySelector(".device-scroll");
+    if (box && box.scrollHeight > box.clientHeight) box.scrollTo({ top: 0, behavior: "smooth" });
+    else window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   const tab = (href: string, label: string, icon: ReactNode, active: boolean, dot = false) => (
-    <Link href={href} className={`relative flex w-16 flex-col items-center gap-1 pt-2 text-[11px] font-medium ${active ? "text-ink" : "text-brand"}`}>
+    <Link
+      href={href}
+      onClick={(e) => {
+        haptic();
+        if (active && pathname === href) {
+          e.preventDefault();
+          toTop();
+        }
+      }}
+      aria-current={active ? "page" : undefined}
+      className={`relative flex w-16 flex-col items-center gap-1 pt-2 text-[11px] font-medium ${active ? "text-ink" : "text-brand/70"}`}
+    >
+      <span className={`absolute top-0 h-[3px] rounded-full bg-ink transition-all duration-200 ${active ? "w-6 opacity-100" : "w-0 opacity-0"}`} />
       <span className="relative">
         {icon}
         {dot && <span className="absolute -right-1 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E5484D] ring-2 ring-white" />}
       </span>
-      {label}
+      <span className={active ? "font-semibold" : ""}>{label}</span>
     </Link>
   );
   return (
-    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 border-t border-line bg-white pb-[max(env(safe-area-inset-bottom),10px)]">
+    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 border-t border-line bg-white/90 pb-[max(env(safe-area-inset-bottom),10px)] backdrop-blur-xl">
       <div className="flex items-end justify-between px-3">
         {tab("/", "Home", <House size={24} />, pathname === "/")}
         {tab("/friends", "Friends", <Users size={24} />, pathname.startsWith("/friends"), incoming.length > 0)}
-        <Link href="/pay" className="-mt-7 flex w-20 flex-col items-center gap-1 text-[11px] font-medium text-brand">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-brand shadow-lg shadow-brand/30 ring-4 ring-white">
+        <Link href="/pay" onClick={() => haptic()} className="-mt-7 flex w-20 flex-col items-center gap-1 text-[11px] font-medium text-brand">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-b from-[#2A62A0] to-brand shadow-lg shadow-brand/30 ring-4 ring-white transition-transform active:scale-90">
             <Mark size={30} className="text-white" />
           </span>
           Pay/Request

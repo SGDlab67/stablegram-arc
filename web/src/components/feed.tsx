@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageCircle, SmilePlus } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { REACTION_CHOICES, agoLabel, personOf, shortName, textOf, usd, type Payment } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { AssetChip, AudienceLabel, Avatar, Card } from "./ui";
+import { haptic } from "./feel";
 
 export function Sentence({ p, size = "lg" }: { p: Payment; size?: "lg" | "md" | "sm" }) {
   const { me, people } = useStore();
@@ -46,7 +47,11 @@ export function ReactionRow({ p }: { p: Payment }) {
           <button
             key={emoji}
             type="button"
-            onClick={() => react(p.ref, emoji)}
+            onClick={() => {
+            haptic();
+            haptic();
+            react(p.ref, emoji);
+          }}
             className={`pop inline-flex h-9 items-center gap-1 rounded-full px-3 text-[14px] font-semibold ${mine ? "bg-brand-soft text-brand ring-1 ring-brand/40" : "bg-chip text-ink"}`}
           >
             <span>{emoji}</span>
@@ -69,6 +74,7 @@ export function ReactionRow({ p }: { p: Payment }) {
               key={emoji}
               type="button"
               onClick={() => {
+                haptic();
                 react(p.ref, emoji);
                 setPicking(false);
               }}
@@ -91,6 +97,24 @@ export function FeedCard({ p, linked = true }: { p: Payment; linked?: boolean })
   // Which asset was sent shows to the two people, and to others only if both share their activity.
   const showAsset = sent || received || (privacyOf(p.from).activity && privacyOf(p.to).activity);
   const other = sent ? p.to : p.from;
+  const [burst, setBurst] = useState(0);
+  const tapTimer = useRef<number | null>(null);
+  // One tap opens the payment; a quick second tap likes it instead, like a photo app.
+  const onTap = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (tapTimer.current !== null) {
+      window.clearTimeout(tapTimer.current);
+      tapTimer.current = null;
+      if (!p.reactions["❤️"]?.includes(me.handle)) react(p.ref, "❤️");
+      haptic("success");
+      setBurst((n) => n + 1);
+      return;
+    }
+    tapTimer.current = window.setTimeout(() => {
+      tapTimer.current = null;
+      router.push(`/p/${p.ref}`);
+    }, 240);
+  };
   const body = (
     <>
       <div className="mb-1.5 flex items-center gap-1.5 text-[12px] text-muted">
@@ -106,9 +130,14 @@ export function FeedCard({ p, linked = true }: { p: Payment; linked?: boolean })
     </>
   );
   return (
-    <Card className="!p-4">
+    <Card className="relative !p-4">
+      {burst > 0 && (
+        <span key={burst} aria-hidden className="heart-burst pointer-events-none absolute left-1/2 top-1/2 z-10 text-[72px] drop-shadow-lg">
+          ❤️
+        </span>
+      )}
       {linked ? (
-        <Link href={`/p/${p.ref}`} className="block">
+        <Link href={`/p/${p.ref}`} onClick={onTap} className="no-press block">
           {body}
         </Link>
       ) : (

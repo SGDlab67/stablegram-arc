@@ -6,6 +6,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Suspense, useEffect, useRef, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import { APP_NAME } from "@/lib/data";
 import { Mark } from "./shell";
+import { Toaster } from "./feel";
 
 const noSubscribe = () => () => {};
 
@@ -61,26 +62,34 @@ function PhonePanel() {
 }
 
 /** Inside the frame the app scrolls in its own box, so a new screen has to be sent to the top by hand. */
-function ScrollReset({ target }: { target: RefObject<HTMLDivElement | null> }) {
+function ScrollReset({ target, screen }: { target: RefObject<HTMLDivElement | null>; screen: RefObject<HTMLDivElement | null> }) {
   const pathname = usePathname();
   useEffect(() => {
     target.current?.scrollTo(0, 0);
-  }, [pathname, target]);
+    // Fade the new screen in, like a native app. Done on the element so the page itself doesn't remount.
+    const el = screen.current;
+    if (!el) return;
+    el.classList.remove("screen-in");
+    void el.offsetWidth;
+    el.classList.add("screen-in");
+  }, [pathname, target, screen]);
   return null;
 }
 
 export function AppFrame({ children }: { children: ReactNode }) {
   const scroller = useRef<HTMLDivElement>(null);
+  const screen = useRef<HTMLDivElement>(null);
   return (
     <div className="stage">
       {/* Reading the address has to sit under Suspense so pages can still be prepared ahead of time. */}
       <Suspense fallback={null}>
-        <ScrollReset target={scroller} />
+        <ScrollReset target={scroller} screen={screen} />
       </Suspense>
       <div className="device">
         <div ref={scroller} className="device-scroll">
-          {children}
+          <div ref={screen}>{children}</div>
         </div>
+        <Toaster />
       </div>
       <PhonePanel />
     </div>

@@ -17,6 +17,7 @@ import {
   type Audience,
 } from "@/lib/data";
 import { PhotoPicker } from "@/components/photo-picker";
+import { Confetti } from "@/components/feel";
 import { useStore } from "@/lib/store";
 
 const STEPS = ["intro", "signin", "name", "username", "photo", "first", "audience", "done"] as const;
@@ -107,14 +108,14 @@ export default function Welcome() {
               <ChevronLeft size={22} />
             </button>
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
-              <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${(index / (STEPS.length - 2)) * 100}%` }} />
+              <div className="h-full rounded-full bg-brand transition-all duration-300 ease-out" style={{ width: `${(index / (STEPS.length - 2)) * 100}%` }} />
             </div>
             <span className="w-10" />
           </>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)] pt-2">
+      <div key={step} className="screen-in flex flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)] pt-2">
         {step === "intro" && (
           <>
             <Wordmark className="text-[30px]" mark />
@@ -379,6 +380,7 @@ export default function Welcome() {
 
         {step === "done" && (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <Confetti />
             <span className="pop relative">
               {preview(112)}
               <span className="absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full bg-money text-white ring-4 ring-page">

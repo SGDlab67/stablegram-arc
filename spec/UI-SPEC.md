@@ -114,6 +114,39 @@ Likes are open to anyone who can see the card. Comments need you to be a friend 
 
 ## 7. Pay/Request
 
+**Polish pass (Nov 14).** App feel lives in `web/src/components/feel.tsx`:
+- **Shared pieces:**
+  - `haptic()`: vibration on Android, ignored on iPhone.
+  - `toast()` / `<Toaster>`: a dark pill at the top, about 2.2 s.
+  - `<Confetti>`, `<SuccessCheck>` (a check that draws itself), and `useCountUp`.
+- **Motion and pressing:**
+  - Screens fade in on route change (opacity only, so the fixed tab bar is never trapped).
+  - Everything pressable scales to 0.97.
+  - Reduced-motion is respected, and there is a keyboard focus ring.
+- **Sheets:** drag the handle or title down to close, Escape closes, the backdrop fades, and there is safe-area padding.
+- **Tab bar:** frosted glass, a sliding active bar, a bold active label, a gradient Pay button, and tapping the current tab scrolls to the top.
+- **Pay:**
+  - Recent people row, then Friends, then More people, so you can pay anyone.
+  - The keypad gives haptics, shakes on input it can't take, and shrinks long amounts.
+  - The confirm screen shows the asset logo as a badge on the person's photo.
+  - Success has confetti, the check and "See the payment".
+- **Buy:** spinner while paying, confetti on done.
+- **Feed:**
+  - Double-tap a card to heart it, with a big heart burst; a single tap still opens it, about 0.24 s later.
+  - Reactions give a haptic.
+- **Home:** time-of-day greeting ("Good evening, Charlie"); the portfolio number counts up, as on Portfolio.
+- **Payment page:** Status "Settled in seconds", Network, and a receipt ID that copies the link. New comments slide in.
+- **Asset page:** "People who hold NVIDIA", an avatar stack of people whose privacy allows it, friends first.
+- **Notifications:** grouped into New / Today / Earlier, with unread dots on New.
+- **Toasts** for: friend request sent, friends accepted, removed, sold, photo updated, link copied.
+- **Smaller fixes:**
+  - Friend request rows: Accept plus a round X, so names no longer get cut off.
+  - Demo badges removed from portfolio rows.
+  - Me's portfolio number uses the same font as everywhere else.
+  - Empty state for "Your activity".
+- **Sign-up:** steps fade between each other, and there is confetti on "You're in".
+- **Installed app:** long-press the icon for Pay, Buy, Markets and My code shortcuts.
+
 **Profile portfolio + privacy (Charlie, Nov 14).**
 - **Profile card.** `/u/[handle]` shows "{Name}'s portfolio" under the Pay and Friends buttons. It holds:
   - the Total (or "Hidden" with an eye-off icon) and today's change;

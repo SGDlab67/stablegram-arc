@@ -25,6 +25,7 @@ import {
   type Range,
 } from "@/lib/data";
 import { useStore } from "@/lib/store";
+import { useCountUp } from "@/components/feel";
 
 const GROUPS: {
   id: AssetGroup;
@@ -63,11 +64,6 @@ function Row({
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2 text-[17px] font-semibold">
           {asset.name}
-          {asset.demo && (
-            <span className="rounded-full bg-chip px-2 py-0.5 text-[11px] font-semibold uppercase text-muted">
-              demo
-            </span>
-          )}
         </span>
         <span className="block text-[14px] text-muted">
           {units === undefined
@@ -117,7 +113,8 @@ export function Portfolio() {
   }, [holdings, range]);
 
   const point = scrub !== null && scrub < series.length ? scrub : null;
-  const shown = point !== null ? series[point] : totalUsd;
+  const counted = useCountUp(totalUsd);
+  const shown = point !== null ? series[point] : counted;
   const first = series[0] ?? totalUsd;
   const changeUsd = shown - first;
   const changePct = first ? (changeUsd / first) * 100 : 0;

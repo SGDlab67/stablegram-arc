@@ -163,3 +163,168 @@ button {
 .pop {
   animation: pop 0.35s ease-out;
 }
+
+/* ---------- Polish: motion and feel ---------- */
+
+/* Opacity only: a transform here would trap the fixed tab bar and sheets inside the moving screen. */
+@keyframes screen-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.screen-in {
+  animation: screen-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.toast-in {
+  animation: toast-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@keyframes confetti {
+  0% {
+    transform: translate(-50%, -50%) rotate(0);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y) + 260px)) rotate(var(--r));
+    opacity: 0;
+  }
+}
+.confetti-bit {
+  animation: confetti 1.5s cubic-bezier(0.15, 0.7, 0.4, 1) forwards;
+}
+
+@keyframes draw-check {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw-check {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: draw-check 0.35s 0.18s ease-out forwards;
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  80% {
+    transform: translateX(4px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-6px);
+  }
+  40%,
+  60% {
+    transform: translateX(6px);
+  }
+}
+.shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes heart-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -70%) scale(0.9);
+    opacity: 0;
+  }
+}
+.heart-burst {
+  animation: heart-burst 0.8s ease-out forwards;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200px 0;
+  }
+  to {
+    background-position: 200px 0;
+  }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--chip) 0px, #f7f3ec 80px, var(--chip) 160px);
+  background-size: 400px 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+/* Everything you can press gives a little under your finger. */
+a,
+button {
+  transition:
+    transform 0.12s ease,
+    background-color 0.15s ease,
+    opacity 0.15s ease;
+}
+a:active:not(.no-press),
+button:active:not(:disabled):not(.no-press) {
+  transform: scale(0.97);
+}
+
+/* Visible focus for keyboards, none for fingers. */
+:focus-visible {
+  outline: 2.5px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

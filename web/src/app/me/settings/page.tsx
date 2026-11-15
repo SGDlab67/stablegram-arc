@@ -6,6 +6,7 @@ import { BackHeader, Screen } from "@/components/shell";
 import { AudienceLabel, Avatar, Card, SectionTitle } from "@/components/ui";
 import { type Audience, type PortfolioPrivacy } from "@/lib/data";
 import { PhotoPicker } from "@/components/photo-picker";
+import { toast } from "@/components/feel";
 import { useStore } from "@/lib/store";
 
 const AUDIENCES: { id: Audience; hint: string }[] = [
@@ -69,7 +70,10 @@ export default function SettingsPage() {
         <SectionTitle>Profile</SectionTitle>
         <Card>
           <div className="flex items-center gap-4">
-            <PhotoPicker hasPhoto={!!me.photo} onChange={(photo) => updateMe({ photo })}>
+            <PhotoPicker hasPhoto={!!me.photo} onChange={(photo) => {
+                updateMe({ photo });
+                toast(photo ? "Photo updated" : "Photo removed");
+              }}>
               {(open) => (
                 <>
                   <button type="button" onClick={open} aria-label="Change photo" className="relative">

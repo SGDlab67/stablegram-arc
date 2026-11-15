@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { Bell, QrCode, Settings, Share } from "lucide-react";
-import { useState } from "react";
 import { ActivityRow } from "@/components/feed";
 import { RequestCards } from "@/components/requests";
 import { Screen } from "@/components/shell";
 import { Avatar, Card, PreviewNote, SectionTitle } from "@/components/ui";
 import { usd } from "@/lib/data";
+import { toast } from "@/components/feel";
 import { useStore } from "@/lib/store";
 
 export default function Me() {
   const { me, friends, totalUsd, payments, notices, hideBalances, myPrivacy } = useStore();
-  const [copied, setCopied] = useState(false);
   const share = async () => {
     const url = `${window.location.origin}/u/${me.handle}`;
     if (navigator.share) {
@@ -24,8 +23,7 @@ export default function Me() {
       }
     }
     await navigator.clipboard?.writeText(url);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
+    toast("Profile link copied");
   };
   const mine = payments.filter((p) => p.from === me.handle || p.to === me.handle);
   return (
@@ -60,7 +58,7 @@ export default function Me() {
         </Link>
         <Link href="/portfolio" className="rounded-[22px] bg-white p-4">
           <p className="text-[14px] font-medium text-muted">Portfolio</p>
-          <p className="mt-1 font-mono text-[24px] font-semibold">{hideBalances ? "$•••••" : usd(totalUsd, { cents: true })}</p>
+          <p className="tabular mt-1 text-[24px] font-semibold tracking-tight">{hideBalances ? "$•••••" : usd(totalUsd, { cents: true })}</p>
         </Link>
       </div>
 
@@ -80,7 +78,7 @@ export default function Me() {
             View
           </Link>
           <button type="button" onClick={share} className="flex items-center gap-1.5 rounded-full bg-brand px-3.5 py-2 text-[14px] font-semibold text-white">
-            <Share size={15} /> {copied ? "Copied" : "Share"}
+            <Share size={15} /> Share
           </button>
         </div>
       </div>
@@ -94,6 +92,15 @@ export default function Me() {
           {mine.map((p) => (
             <ActivityRow key={p.ref} p={p} />
           ))}
+          {mine.length === 0 && (
+            <div className="py-6 text-center">
+              <p className="text-[16px] font-semibold">No payments yet</p>
+              <p className="mt-1 text-[14px] text-muted">Pay a friend a slice of your portfolio and it shows up here.</p>
+              <Link href="/pay" className="mt-3 inline-flex h-10 items-center rounded-full bg-brand px-4 text-[15px] font-semibold text-white">
+                Make your first payment
+              </Link>
+            </div>
+          )}
         </Card>
       </div>
       <PreviewNote />
