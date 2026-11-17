@@ -22,7 +22,7 @@ export interface PasskeyResult {
   real: boolean;
 }
 
-const RP_NAME = "stablegram";
+const RP_NAME = "Stableplan";
 
 function randomBytes(n: number): Uint8Array<ArrayBuffer> {
   const b = new Uint8Array(new ArrayBuffer(n));

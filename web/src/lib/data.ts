@@ -6,7 +6,7 @@
 // Dollar stablecoins are shown at their $1 peg (Blockworks closes were 0.9993-0.9997). EURC: Blockworks asset-price, daily close 2026-11-14. Logos: CoinGecko large images, 256 px.
 // Silver (KAG): CoinGecko (not on Blockworks). All pulled 2026-11-14T23:32Z.
 
-export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "stablegram";
+export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "Stableplan";
 
 /** Who can see a payment in feeds. Two choices only: everyone, or just the two people. */
 export type Audience = "public" | "private";

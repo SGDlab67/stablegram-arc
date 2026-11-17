@@ -1,4 +1,4 @@
-# stablegram for venues: build spec (option B)
+# Stableplan: build spec (option B)
 
 UBC 2026 hackathon. Submit by Fri 2026-11-20 12:00 PM CST. Pitch in Austin on Sat 2026-11-21.
 Main track: Agentic Payments and AI. Chain award: Best use of Arc. Bounties: Gemini Prediction Markets, QuickNode Streams. Grok Bot only if we confirm it can call our API.
