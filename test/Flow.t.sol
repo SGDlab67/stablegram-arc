@@ -143,15 +143,21 @@ contract FlowTest is Test {
 
     /// Stablegram must never be able to hold anything.
     function testFuzz_stablegramKeepsNoBalance(uint96 tokenAmount, uint96 nativeAmount) public {
-        tokenAmount = uint96(bound(tokenAmount, 1, 100e18));
+        tokenAmount = uint96(bound(tokenAmount, 1, 50e18));
         nativeAmount = uint96(bound(nativeAmount, 1, 100 ether));
         vm.deal(alice, nativeAmount);
 
         vm.startPrank(alice);
-        share.approve(address(gram), tokenAmount);
+        share.approve(address(gram), uint256(tokenAmount) * 2); // once for sendToken, once for approve
         gram.sendToken(IERC20(address(share)), "bob", tokenAmount, MEMO);
         gram.sendNative{value: nativeAmount}("bob", MEMO);
+        gram.authorizeAgent(agent);
         vm.stopPrank();
+
+        vm.prank(agent);
+        uint256 id = gram.propose(alice, IERC20(address(share)), "bob", tokenAmount, MEMO);
+        vm.prank(alice);
+        gram.approve(id);
 
         assertEq(share.balanceOf(address(gram)), 0);
         assertEq(address(gram).balance, 0);
@@ -350,5 +356,148 @@ contract FlowTest is Test {
         vm.expectRevert();
         gram.runOrder(id);
         assertEq(share.balanceOf(bob), 0);
+    }
+
+    // --- proposals ---
+
+    function _propose(uint256 value) private returns (uint256 id) {
+        vm.startPrank(alice);
+        share.approve(address(gram), type(uint256).max);
+        gram.authorizeAgent(agent);
+        vm.stopPrank();
+
+        vm.prank(agent);
+        id = gram.propose(alice, IERC20(address(share)), "bob", value, MEMO);
+    }
+
+    function test_userApprovesAnAgentProposal() public {
+        vm.startPrank(alice);
+        share.approve(address(gram), type(uint256).max);
+        gram.authorizeAgent(agent);
+        vm.stopPrank();
+
+        vm.expectEmit(true, true, true, true, address(gram));
+        emit Stablegram.Proposed(0, alice, bob, address(share), 5e18, MEMO);
+        vm.prank(agent);
+        uint256 id = gram.propose(alice, IERC20(address(share)), "bob", 5e18, MEMO);
+        assertEq(id, 0);
+        assertEq(gram.proposalCount(), 1);
+        assertEq(share.balanceOf(bob), 0); // nothing moves until approval
+
+        vm.expectEmit(true, true, true, true, address(gram));
+        emit Stablegram.Approved(0);
+        vm.expectEmit(true, true, true, true, address(gram));
+        emit Stablegram.Sent(address(share), alice, bob, "bob", 5e18, MEMO, true);
+        vm.prank(alice);
+        gram.approve(id);
+
+        assertEq(share.balanceOf(bob), 5e18);
+        assertEq(share.balanceOf(alice), 95e18);
+        assertEq(share.balanceOf(address(gram)), 0);
+    }
+
+    function test_userRejectsAProposal() public {
+        uint256 id = _propose(5e18);
+
+        vm.expectEmit(true, true, true, true, address(gram));
+        emit Stablegram.Rejected(id);
+        vm.prank(alice);
+        gram.reject(id);
+
+        assertEq(share.balanceOf(bob), 0);
+    }
+
+    function test_onlyTheAgentCanPropose() public {
+        _propose(1e18);
+
+        vm.prank(mallory);
+        vm.expectRevert(Stablegram.NotAgent.selector);
+        gram.propose(alice, IERC20(address(share)), "bob", 1e18, MEMO);
+
+        vm.prank(address(0));
+        vm.expectRevert(Stablegram.NotAgent.selector);
+        gram.propose(bob, IERC20(address(share)), "alice", 1e18, MEMO);
+    }
+
+    function test_strangerCannotApproveOrRejectAProposal() public {
+        uint256 id = _propose(1e18);
+
+        vm.startPrank(mallory);
+        vm.expectRevert(Stablegram.NotYourProposal.selector);
+        gram.approve(id);
+        vm.expectRevert(Stablegram.NotYourProposal.selector);
+        gram.reject(id);
+        vm.stopPrank();
+
+        // the agent proposes, it does not decide
+        vm.startPrank(agent);
+        vm.expectRevert(Stablegram.NotYourProposal.selector);
+        gram.approve(id);
+        vm.stopPrank();
+    }
+
+    function test_aProposalIsDecidedOnce() public {
+        uint256 first = _propose(1e18);
+        vm.prank(agent);
+        uint256 second = gram.propose(alice, IERC20(address(share)), "bob", 1e18, MEMO);
+
+        vm.startPrank(alice);
+        gram.approve(first);
+        vm.expectRevert(Stablegram.NoSuchProposal.selector);
+        gram.approve(first);
+        vm.expectRevert(Stablegram.NoSuchProposal.selector);
+        gram.reject(first);
+
+        gram.reject(second);
+        vm.expectRevert(Stablegram.NoSuchProposal.selector);
+        gram.approve(second);
+        vm.expectRevert(Stablegram.NoSuchProposal.selector);
+        gram.approve(99); // never existed
+        vm.stopPrank();
+
+        assertEq(share.balanceOf(bob), 1e18);
+    }
+
+    function test_proposalChecksNameValueAndMemo() public {
+        _propose(1e18);
+        vm.startPrank(agent);
+        vm.expectRevert(UsernameRegistry.NoSuchName.selector);
+        gram.propose(alice, IERC20(address(share)), "nobody", 1e18, MEMO);
+        vm.expectRevert(Stablegram.NothingToSend.selector);
+        gram.propose(alice, IERC20(address(share)), "bob", 0, MEMO);
+        vm.expectRevert(Stablegram.MemoTooLong.selector);
+        gram.propose(alice, IERC20(address(share)), "bob", 1e18, new string(141));
+        vm.stopPrank();
+    }
+
+    function test_proposalIgnoresTheAgentLimits() public {
+        _authorizeAgent(1e18, 1e18);
+
+        // over the per-send cap, which sendAsAgent would refuse
+        vm.prank(agent);
+        uint256 id = gram.propose(alice, IERC20(address(share)), "bob", 50e18, MEMO);
+        vm.prank(alice);
+        gram.approve(id);
+
+        assertEq(share.balanceOf(bob), 50e18);
+        assertEq(gram.remainingToday(alice, address(share)), 1e18); // cap untouched
+    }
+
+    /// Deliberate: revoking the agent does not cancel its proposals. The
+    /// owner still has to approve each one, so a stale proposal moves nothing
+    /// on its own.
+    function test_revokingTheAgentKeepsExistingProposals() public {
+        uint256 id = _propose(2e18);
+
+        vm.startPrank(alice);
+        gram.authorizeAgent(address(0));
+        gram.approve(id);
+        vm.stopPrank();
+
+        assertEq(share.balanceOf(bob), 2e18);
+
+        vm.prank(agent);
+        vm.expectRevert(Stablegram.NotAgent.selector);
+        gram.propose(alice, IERC20(address(share)), "bob", 1e18, MEMO);
     }
 }
