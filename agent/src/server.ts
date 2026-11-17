@@ -21,7 +21,7 @@ if (!streamToken) console.warn("Keychain item quicknode-stream-token is missing:
 console.log(values.live ? "LIVE: POST /run sends transactions" : "dry run: POST /run sends nothing (start with --live to send)");
 
 type FeedItem = { event: string; args: Record<string, string>; block: string; tx: string; logIndex: number };
-const feed: FeedItem[] = []; // ponytail: in memory, lost on restart; the Stream can backfill
+export const feed: FeedItem[] = []; // ponytail: in memory, lost on restart; the Stream can backfill
 
 const json = (res: ServerResponse, code: number, body: unknown) => {
   res.writeHead(code, { "content-type": "application/json" });
@@ -53,7 +53,7 @@ async function build(q: URLSearchParams) {
 }
 
 // Logs may arrive as an array, {data: [...]} or nested per block; decode what is ours and skip the rest.
-function ingest(body: unknown) {
+export function ingest(body: unknown) {
   const raw = (body as { data?: unknown })?.data ?? body;
   let added = 0;
   for (const log of [raw].flat(Infinity) as { address?: string; topics?: Hex[]; data?: Hex; blockNumber?: string; transactionHash?: string; logIndex?: string | number }[]) {
@@ -77,7 +77,7 @@ function ingest(body: unknown) {
   return added;
 }
 
-createServer(async (req, res) => {
+export const handler = async (req: IncomingMessage, res: ServerResponse) => {
   const url = new URL(req.url ?? "/", "http://x");
   const origin = req.headers.origin;
   if (origin === values.origin) res.setHeader("access-control-allow-origin", origin);
@@ -107,4 +107,7 @@ createServer(async (req, res) => {
     console.error(err);
     json(res, 500, { error: (err as Error).message });
   }
-}).listen(Number(values.port), "127.0.0.1", () => console.log(`agent on http://127.0.0.1:${values.port}`));
+};
+
+// Importing this module, as the tests do, must not open a port.
+if (import.meta.main) createServer(handler).listen(Number(values.port), "127.0.0.1", () => console.log(`agent on http://127.0.0.1:${values.port}`));
