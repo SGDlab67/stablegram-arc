@@ -13,3 +13,6 @@ docs/
 # Dotenv file
 .env
 demo/demo-keys.js
+
+# Agent worktrees
+.claude/
