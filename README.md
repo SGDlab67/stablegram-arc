@@ -44,6 +44,14 @@ of sale or scheduling tool reads them.
 
 ## Contracts
 
+Live on Arc testnet (chain 5042002), deployed at block 72,747,168:
+
+| Contract | Address |
+| --- | --- |
+| `Stableplan` | `0x32d3b9d88168a5f2677a6513cFaa6Ab0000920FA` |
+| `UsernameRegistry` | `0xF1b6362d7849a9A7324739677ADF0aB9dfd7F89f` |
+| `MockShare` | `0xefbbC534bcd31c4e221CFD882A000b90beDa23a7` |
+
 | Contract | What it does |
 | --- | --- |
 | `UsernameRegistry` | One name per address, case-insensitive, reverts on an unclaimed name |

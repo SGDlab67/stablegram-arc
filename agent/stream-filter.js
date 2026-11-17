@@ -12,7 +12,7 @@
 // every USDC transfer on the chain, is dropped before delivery, and a batch
 // with nothing of ours returns null so it is not delivered at all.
 
-const CONTRACT = "0xbadf08f324d5b4eaac5e33ae30ca57c1096e5dba"; // Stableplan payments, lower case
+const CONTRACT = "0x32d3b9d88168a5f2677a6513cfaa6ab0000920fa"; // Stableplan payments, lower case
 
 const EVENTS = {
   "0xdecc9598b2461ba6d53b07b125f717d31f9735b3bea4a6509e1bc1b7eb57a8e7": "Sent",
