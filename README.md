@@ -108,6 +108,37 @@ control.
   consequence of Arc's two-faced USDC: 18 decimals natively, 6 through the
   ERC-20 interface, over one balance.
 
+## QuickNode Streams
+
+The dashboard and the staff phones learn about a payment from a Stream, not
+from the agent's own word. The agent can claim it paid someone; the Stream
+says what the chain recorded.
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| `network` | `arc-testnet` | From the Streams OpenAPI enum, which lists `arc-testnet` and `arc-mainnet` |
+| `dataset` | `logs` | Events are all we need. Blocks and receipts would ship the whole chain to learn the same thing |
+| `dataset_batch_size` | `5` | Arc produces a block about every 0.5 seconds (measured: 50 blocks in 25 seconds), and a tip Stream on a sub-second chain is rejected below 5 |
+| `elastic_batch_enabled` | `true` | A batch of 5 never waits to fill, so a payment still arrives at tip speed |
+| `filter_function` | `agent/stream-filter.js` | Keeps only our contract's `Sent`, `Proposed`, `Approved` and `Rejected` logs, by address and topic, and returns null for a batch with none, so nothing is delivered for an empty batch |
+| `destination` | `webhook` to the agent's `POST /hooks/quicknode` | The agent already holds the venue and the plan, so the feed is assembled where the decisions were made |
+| `start_range` | the deploy block | No backfill of chain history we have no use for |
+
+The filter was checked against Arc testnet with `POST /streams/test_filter`
+before the Stream existed. That run is also how the payload shape below was
+established, rather than assumed:
+
+```
+stream.data[block][transaction][log]
+log = { address, topics, data, blockHash, blockNumber,
+        blockTimestamp, transactionHash, transactionIndex, logIndex, removed }
+```
+
+The webhook fails closed. It answers 503 until the Stream's
+`security_token` is in the macOS Keychain as `quicknode-stream-token`, then
+compares it in constant time. The server binds to localhost, so the only way
+it is reachable at all is the tunnel used for the demo.
+
 ## What we do not claim
 
 - **That the forecast is accurate.** The uplift factors are the owner's own
