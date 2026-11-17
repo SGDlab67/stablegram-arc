@@ -17,6 +17,8 @@ import {UsernameRegistry} from "./UsernameRegistry.sol";
 ///      per token, and revocable at any moment.
 ///   4. Hold standing orders: a send the user writes once and anyone may
 ///      trigger when it falls due. Whoever triggers it chooses nothing.
+///   5. Hold agent proposals: a send the agent suggests and nothing moves
+///      until the user approves it.
 ///
 /// This contract holds no balance and has no owner. It moves value in the
 /// same transaction it receives the instruction, so there is nothing here
@@ -56,10 +58,25 @@ contract Stablegram {
         string memo;
     }
 
+    /// A send the agent suggested for `user`. Nothing moves until `user`
+    /// approves it.
+    struct Proposal {
+        address user;
+        IERC20 token;
+        address to;
+        uint256 value;
+        string name;
+        string memo;
+    }
+
     UsernameRegistry public immutable usernames;
 
     /// Standing orders, by id. A cancelled order is zeroed in place.
     Order[] public orders;
+
+    /// Agent proposals, by id. An approved or rejected one is deleted.
+    mapping(uint256 => Proposal) public proposals;
+    uint256 public proposalCount;
 
     /// user => the one address allowed to send on their behalf
     mapping(address => address) public agentOf;
@@ -83,6 +100,11 @@ contract Stablegram {
     event LimitSet(address indexed user, address indexed token, uint128 perSend, uint128 perDay);
     event OrderCreated(uint256 indexed id, address indexed from, address indexed to, uint48 firstAt, uint48 every);
     event OrderCancelled(uint256 indexed id);
+    event Proposed(
+        uint256 indexed id, address indexed user, address indexed to, address token, uint256 value, string memo
+    );
+    event Approved(uint256 indexed id);
+    event Rejected(uint256 indexed id);
 
     error NothingToSend();
     error NativeSendFailed();
@@ -94,6 +116,8 @@ contract Stablegram {
     error NotYourOrder();
     error NoSuchOrder();
     error NotDue(uint256 nextAt);
+    error NoSuchProposal();
+    error NotYourProposal();
 
     constructor(UsernameRegistry usernames_) {
         usernames = usernames_;
@@ -156,6 +180,36 @@ contract Stablegram {
         to = _resolve(name, value, memo);
         token.safeTransferFrom(user, to, value);
         emit Sent(address(token), user, to, name, value, memo, true);
+    }
+
+    // --- proposals: the agent asks, you decide ---
+
+    /// Suggest a send for `user`. No limits apply because nothing moves; the
+    /// user must approve. Revoking the agent does not cancel a proposal, the
+    /// user can still reject it or approve it.
+    function propose(address user, IERC20 token, string calldata name, uint256 value, string calldata memo)
+        external
+        returns (uint256 id)
+    {
+        if (msg.sender == address(0) || agentOf[user] != msg.sender) revert NotAgent();
+        address to = _resolve(name, value, memo);
+        id = proposalCount++;
+        proposals[id] = Proposal({user: user, token: token, to: to, value: value, name: name, memo: memo});
+        emit Proposed(id, user, to, address(token), value, memo);
+    }
+
+    /// Send what the agent proposed. Only the user it is for.
+    function approve(uint256 id) external {
+        Proposal memory p = _take(id);
+        p.token.safeTransferFrom(p.user, p.to, p.value);
+        emit Approved(id);
+        emit Sent(address(p.token), p.user, p.to, p.name, p.value, p.memo, true);
+    }
+
+    /// Throw a proposal away. Only the user it is for.
+    function reject(uint256 id) external {
+        _take(id);
+        emit Rejected(id);
     }
 
     // --- standing orders ---
@@ -229,6 +283,14 @@ contract Stablegram {
     }
 
     // --- internals ---
+
+    /// Check the caller owns proposal `id`, delete it and hand it back.
+    function _take(uint256 id) private returns (Proposal memory p) {
+        p = proposals[id];
+        if (p.user == address(0)) revert NoSuchProposal();
+        if (p.user != msg.sender) revert NotYourProposal();
+        delete proposals[id];
+    }
 
     function _resolve(string calldata name, uint256 value, string calldata memo) private view returns (address to) {
         if (value == 0) revert NothingToSend();
