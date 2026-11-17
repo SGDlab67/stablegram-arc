@@ -1,0 +1,32 @@
+{
+  "name": "Longhorn Taps",
+  "city": "AUS",
+  "timezone": "America/Chicago",
+  "teams": ["Texas Longhorns", "Austin FC", "San Antonio Spurs", "Dallas Mavericks", "Houston Rockets", "Dallas Cowboys", "Houston Texans"],
+  "hours": { "open": 11, "close": 26 },
+  "baselineCovers": { "sun": 210, "mon": 120, "tue": 130, "wed": 150, "thu": 170, "fri": 230, "sat": 260 },
+  "patio": { "seats": 40, "turns": 2, "baselineFactor": 0.5, "coolF": 55, "idealLowF": 68, "idealHighF": 88, "hotF": 100 },
+  "coversPerServer": 30,
+  "coversPerCook": 60,
+  "scheduled": {
+    "sun": { "servers": 6, "cooks": 3 },
+    "mon": { "servers": 3, "cooks": 2 },
+    "tue": { "servers": 4, "cooks": 2 },
+    "wed": { "servers": 5, "cooks": 3 },
+    "thu": { "servers": 5, "cooks": 3 },
+    "fri": { "servers": 7, "cooks": 4 },
+    "sat": { "servers": 8, "cooks": 4 }
+  },
+  "gameUplift": 0.1,
+  "winUplift": 0.45,
+  "bonusUsd": 25,
+  "foodCostUsd": 12.5,
+  "supplierDepositPct": 0.2,
+  "staff": [
+    { "username": "maria", "role": "server" },
+    { "username": "dev", "role": "server" },
+    { "username": "sam", "role": "server" },
+    { "username": "lee", "role": "cook" }
+  ],
+  "supplier": "hillcountrymeats"
+}
