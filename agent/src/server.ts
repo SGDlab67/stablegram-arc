@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { timingSafeEqual } from "node:crypto";
 import { parseArgs } from "node:util";
 import { decodeEventLog, type Address, type Hex } from "viem";
-import { ABI, STABLEGRAM, act, keychain } from "./act.ts";
+import { ABI, STABLEPLAN, act, keychain } from "./act.ts";
 import { fetchEvents } from "./gemini.ts";
 import { forecast, market, plan, relevantEvents, today } from "./forecast.ts";
 import { loadVenue } from "./venue.ts";
@@ -57,7 +57,7 @@ function ingest(body: unknown) {
   const raw = (body as { data?: unknown })?.data ?? body;
   let added = 0;
   for (const log of [raw].flat(Infinity) as { address?: string; topics?: Hex[]; data?: Hex; blockNumber?: string; transactionHash?: string; logIndex?: string | number }[]) {
-    if (log?.address?.toLowerCase() !== STABLEGRAM.toLowerCase() || !log.topics) continue;
+    if (log?.address?.toLowerCase() !== STABLEPLAN.toLowerCase() || !log.topics) continue;
     try {
       const { eventName, args } = decodeEventLog({ abi: ABI, data: log.data ?? "0x", topics: log.topics as [Hex, ...Hex[]] }) as { eventName: string; args: Record<string, unknown> };
       if (!["Sent", "Proposed", "Approved", "Rejected"].includes(eventName)) continue;

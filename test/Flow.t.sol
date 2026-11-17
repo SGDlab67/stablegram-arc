@@ -5,14 +5,14 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {MockShare} from "../src/MockShare.sol";
-import {Stablegram} from "../src/Stablegram.sol";
+import {Stableplan} from "../src/Stableplan.sol";
 import {UsernameRegistry} from "../src/UsernameRegistry.sol";
 
 contract FlowTest is Test {
     MockShare share;
     MockShare other; // a second token, to prove the agent's limits are per token
     UsernameRegistry usernames;
-    Stablegram gram;
+    Stableplan gram;
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
@@ -25,7 +25,7 @@ contract FlowTest is Test {
         share = new MockShare("Mock Circle Share", "mCRCL");
         other = new MockShare("Other Share", "oCRCL");
         usernames = new UsernameRegistry();
-        gram = new Stablegram(usernames);
+        gram = new Stableplan(usernames);
 
         share.mint(alice, 100e18);
         other.mint(alice, 100e18);
@@ -98,7 +98,7 @@ contract FlowTest is Test {
         vm.startPrank(alice);
         share.approve(address(gram), 1e18);
         vm.expectEmit(true, true, true, true, address(gram));
-        emit Stablegram.Sent(address(share), alice, bob, "bob", 1e18, MEMO, false);
+        emit Stableplan.Sent(address(share), alice, bob, "bob", 1e18, MEMO, false);
         gram.sendToken(IERC20(address(share)), "bob", 1e18, MEMO);
         vm.stopPrank();
     }
@@ -107,7 +107,7 @@ contract FlowTest is Test {
         string memory tooLong = new string(141);
         vm.startPrank(alice);
         share.approve(address(gram), 1e18);
-        vm.expectRevert(Stablegram.MemoTooLong.selector);
+        vm.expectRevert(Stableplan.MemoTooLong.selector);
         gram.sendToken(IERC20(address(share)), "bob", 1e18, tooLong);
         vm.stopPrank();
     }
@@ -126,9 +126,9 @@ contract FlowTest is Test {
 
     function test_rejectsEmptySends() public {
         vm.startPrank(alice);
-        vm.expectRevert(Stablegram.NothingToSend.selector);
+        vm.expectRevert(Stableplan.NothingToSend.selector);
         gram.sendToken(IERC20(address(share)), "bob", 0, MEMO);
-        vm.expectRevert(Stablegram.NothingToSend.selector);
+        vm.expectRevert(Stableplan.NothingToSend.selector);
         gram.sendNative("bob", MEMO);
         vm.stopPrank();
     }
@@ -141,7 +141,7 @@ contract FlowTest is Test {
         vm.stopPrank();
     }
 
-    /// Stablegram must never be able to hold anything.
+    /// Stableplan must never be able to hold anything.
     function testFuzz_stablegramKeepsNoBalance(uint96 tokenAmount, uint96 nativeAmount) public {
         tokenAmount = uint96(bound(tokenAmount, 1, 50e18));
         nativeAmount = uint96(bound(nativeAmount, 1, 100 ether));
@@ -188,7 +188,7 @@ contract FlowTest is Test {
         _authorizeAgent(10e18, 100e18);
 
         vm.prank(agent);
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.OverPerSendLimit.selector, 11e18, 10e18));
+        vm.expectRevert(abi.encodeWithSelector(Stableplan.OverPerSendLimit.selector, 11e18, 10e18));
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 11e18, MEMO);
     }
 
@@ -198,7 +198,7 @@ contract FlowTest is Test {
         vm.startPrank(agent);
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 10e18, MEMO);
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 10e18, MEMO);
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.OverDailyLimit.selector, 30e18, 25e18));
+        vm.expectRevert(abi.encodeWithSelector(Stableplan.OverDailyLimit.selector, 30e18, 25e18));
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 10e18, MEMO);
         vm.stopPrank();
 
@@ -227,7 +227,7 @@ contract FlowTest is Test {
         vm.stopPrank();
 
         vm.prank(agent);
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.OverPerSendLimit.selector, 1, 0));
+        vm.expectRevert(abi.encodeWithSelector(Stableplan.OverPerSendLimit.selector, 1, 0));
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 1, MEMO);
     }
 
@@ -238,7 +238,7 @@ contract FlowTest is Test {
         gram.authorizeAgent(address(0));
 
         vm.prank(agent);
-        vm.expectRevert(Stablegram.NotAgent.selector);
+        vm.expectRevert(Stableplan.NotAgent.selector);
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 1e18, MEMO);
     }
 
@@ -246,14 +246,14 @@ contract FlowTest is Test {
         _authorizeAgent(10e18, 100e18);
 
         vm.prank(mallory);
-        vm.expectRevert(Stablegram.NotAgent.selector);
+        vm.expectRevert(Stableplan.NotAgent.selector);
         gram.sendAsAgent(alice, IERC20(address(share)), "bob", 1e18, MEMO);
     }
 
     /// Nobody has authorized an agent, so address(0) must not be one either.
     function test_unsetAgentIsNotAnAgent() public {
         vm.prank(address(0));
-        vm.expectRevert(Stablegram.NotAgent.selector);
+        vm.expectRevert(Stableplan.NotAgent.selector);
         gram.sendAsAgent(bob, IERC20(address(share)), "alice", 1e18, MEMO);
     }
 
@@ -264,7 +264,7 @@ contract FlowTest is Test {
         other.approve(address(gram), 20e18);
 
         vm.prank(agent);
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.OverPerSendLimit.selector, 1e18, 0));
+        vm.expectRevert(abi.encodeWithSelector(Stableplan.OverPerSendLimit.selector, 1e18, 0));
         gram.sendAsAgent(alice, IERC20(address(other)), "bob", 1e18, MEMO);
     }
 
@@ -283,12 +283,12 @@ contract FlowTest is Test {
         uint256 id = _weeklyOrder();
 
         vm.prank(mallory);
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.NotDue.selector, block.timestamp + WEEK));
+        vm.expectRevert(abi.encodeWithSelector(Stableplan.NotDue.selector, block.timestamp + WEEK));
         gram.runOrder(id);
 
         skip(WEEK);
         vm.expectEmit();
-        emit Stablegram.Sent(address(share), alice, bob, "bob", 1e18, MEMO, true);
+        emit Stableplan.Sent(address(share), alice, bob, "bob", 1e18, MEMO, true);
         vm.prank(mallory); // a stranger, who gains nothing and chooses nothing
         gram.runOrder(id);
 
@@ -302,7 +302,7 @@ contract FlowTest is Test {
         skip(WEEK);
         gram.runOrder(id);
 
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.NotDue.selector, block.timestamp + WEEK));
+        vm.expectRevert(abi.encodeWithSelector(Stableplan.NotDue.selector, block.timestamp + WEEK));
         gram.runOrder(id);
     }
 
@@ -315,7 +315,7 @@ contract FlowTest is Test {
         assertEq(share.balanceOf(bob), 1e18);
 
         // The next slot is week 6, still on the original weekday.
-        vm.expectRevert(abi.encodeWithSelector(Stablegram.NotDue.selector, firstAt + WEEK * 5));
+        vm.expectRevert(abi.encodeWithSelector(Stableplan.NotDue.selector, firstAt + WEEK * 5));
         gram.runOrder(id);
     }
 
@@ -323,14 +323,14 @@ contract FlowTest is Test {
         uint256 id = _weeklyOrder();
 
         vm.prank(mallory);
-        vm.expectRevert(Stablegram.NotYourOrder.selector);
+        vm.expectRevert(Stableplan.NotYourOrder.selector);
         gram.cancelOrder(id);
 
         vm.prank(alice);
         gram.cancelOrder(id);
 
         skip(WEEK);
-        vm.expectRevert(Stablegram.NoSuchOrder.selector);
+        vm.expectRevert(Stableplan.NoSuchOrder.selector);
         gram.runOrder(id);
     }
 
@@ -338,11 +338,11 @@ contract FlowTest is Test {
         vm.startPrank(alice);
         vm.expectRevert(UsernameRegistry.NoSuchName.selector);
         gram.createOrder(IERC20(address(share)), "nobody", 1e18, 0, WEEK, MEMO);
-        vm.expectRevert(Stablegram.BadInterval.selector);
+        vm.expectRevert(Stableplan.BadInterval.selector);
         gram.createOrder(IERC20(address(share)), "bob", 1e18, 0, 0, MEMO);
-        vm.expectRevert(Stablegram.BadInterval.selector);
+        vm.expectRevert(Stableplan.BadInterval.selector);
         gram.createOrder(IERC20(address(share)), "bob", 1e18, 0, type(uint48).max, MEMO);
-        vm.expectRevert(Stablegram.NothingToSend.selector);
+        vm.expectRevert(Stableplan.NothingToSend.selector);
         gram.createOrder(IERC20(address(share)), "bob", 0, 0, WEEK, MEMO);
         vm.stopPrank();
     }
@@ -377,7 +377,7 @@ contract FlowTest is Test {
         vm.stopPrank();
 
         vm.expectEmit(true, true, true, true, address(gram));
-        emit Stablegram.Proposed(0, alice, bob, address(share), 5e18, MEMO);
+        emit Stableplan.Proposed(0, alice, bob, address(share), 5e18, MEMO);
         vm.prank(agent);
         uint256 id = gram.propose(alice, IERC20(address(share)), "bob", 5e18, MEMO);
         assertEq(id, 0);
@@ -385,9 +385,9 @@ contract FlowTest is Test {
         assertEq(share.balanceOf(bob), 0); // nothing moves until approval
 
         vm.expectEmit(true, true, true, true, address(gram));
-        emit Stablegram.Approved(0);
+        emit Stableplan.Approved(0);
         vm.expectEmit(true, true, true, true, address(gram));
-        emit Stablegram.Sent(address(share), alice, bob, "bob", 5e18, MEMO, true);
+        emit Stableplan.Sent(address(share), alice, bob, "bob", 5e18, MEMO, true);
         vm.prank(alice);
         gram.approve(id);
 
@@ -400,7 +400,7 @@ contract FlowTest is Test {
         uint256 id = _propose(5e18);
 
         vm.expectEmit(true, true, true, true, address(gram));
-        emit Stablegram.Rejected(id);
+        emit Stableplan.Rejected(id);
         vm.prank(alice);
         gram.reject(id);
 
@@ -411,11 +411,11 @@ contract FlowTest is Test {
         _propose(1e18);
 
         vm.prank(mallory);
-        vm.expectRevert(Stablegram.NotAgent.selector);
+        vm.expectRevert(Stableplan.NotAgent.selector);
         gram.propose(alice, IERC20(address(share)), "bob", 1e18, MEMO);
 
         vm.prank(address(0));
-        vm.expectRevert(Stablegram.NotAgent.selector);
+        vm.expectRevert(Stableplan.NotAgent.selector);
         gram.propose(bob, IERC20(address(share)), "alice", 1e18, MEMO);
     }
 
@@ -423,15 +423,15 @@ contract FlowTest is Test {
         uint256 id = _propose(1e18);
 
         vm.startPrank(mallory);
-        vm.expectRevert(Stablegram.NotYourProposal.selector);
+        vm.expectRevert(Stableplan.NotYourProposal.selector);
         gram.approve(id);
-        vm.expectRevert(Stablegram.NotYourProposal.selector);
+        vm.expectRevert(Stableplan.NotYourProposal.selector);
         gram.reject(id);
         vm.stopPrank();
 
         // the agent proposes, it does not decide
         vm.startPrank(agent);
-        vm.expectRevert(Stablegram.NotYourProposal.selector);
+        vm.expectRevert(Stableplan.NotYourProposal.selector);
         gram.approve(id);
         vm.stopPrank();
     }
@@ -443,15 +443,15 @@ contract FlowTest is Test {
 
         vm.startPrank(alice);
         gram.approve(first);
-        vm.expectRevert(Stablegram.NoSuchProposal.selector);
+        vm.expectRevert(Stableplan.NoSuchProposal.selector);
         gram.approve(first);
-        vm.expectRevert(Stablegram.NoSuchProposal.selector);
+        vm.expectRevert(Stableplan.NoSuchProposal.selector);
         gram.reject(first);
 
         gram.reject(second);
-        vm.expectRevert(Stablegram.NoSuchProposal.selector);
+        vm.expectRevert(Stableplan.NoSuchProposal.selector);
         gram.approve(second);
-        vm.expectRevert(Stablegram.NoSuchProposal.selector);
+        vm.expectRevert(Stableplan.NoSuchProposal.selector);
         gram.approve(99); // never existed
         vm.stopPrank();
 
@@ -463,9 +463,9 @@ contract FlowTest is Test {
         vm.startPrank(agent);
         vm.expectRevert(UsernameRegistry.NoSuchName.selector);
         gram.propose(alice, IERC20(address(share)), "nobody", 1e18, MEMO);
-        vm.expectRevert(Stablegram.NothingToSend.selector);
+        vm.expectRevert(Stableplan.NothingToSend.selector);
         gram.propose(alice, IERC20(address(share)), "bob", 0, MEMO);
-        vm.expectRevert(Stablegram.MemoTooLong.selector);
+        vm.expectRevert(Stableplan.MemoTooLong.selector);
         gram.propose(alice, IERC20(address(share)), "bob", 1e18, new string(141));
         vm.stopPrank();
     }
@@ -497,7 +497,7 @@ contract FlowTest is Test {
         assertEq(share.balanceOf(bob), 2e18);
 
         vm.prank(agent);
-        vm.expectRevert(Stablegram.NotAgent.selector);
+        vm.expectRevert(Stableplan.NotAgent.selector);
         gram.propose(alice, IERC20(address(share)), "bob", 1e18, MEMO);
     }
 }

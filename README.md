@@ -47,11 +47,13 @@ of sale or scheduling tool reads them.
 | Contract | What it does |
 | --- | --- |
 | `UsernameRegistry` | One name per address, case-insensitive, reverts on an unclaimed name |
-| `Stablegram` | Pays by name with a note, as the owner or as the owner's agent, inside caps the contract enforces; holds standing orders and owner-approved proposals |
+| `Stableplan` | Pays by name with a note, as the owner or as the owner's agent, inside caps the contract enforces; holds standing orders and owner-approved proposals |
 | `MockShare` | A test token for the unit tests |
 
-The payments contract is still named `Stablegram` in the source. It is
-renamed with the next deployment.
+Nothing is wrapped and nothing is held. `Stableplan` moves the token the
+owner already holds, in the same transaction it receives the instruction, so
+there is no balance here to drain and no new asset to bootstrap. A fuzz test
+asserts its balance is always zero.
 
 ## Agent safety limits
 

@@ -29,9 +29,9 @@ The earlier stablegram spec (Venmo for tokenized stocks) is in `spec/archive/`. 
 
 ## 2. Contracts (Solidity 0.8.28, Foundry, Arc testnet chain 5042002)
 
-Keep `UsernameRegistry` (staff and suppliers are paid by @username) and `Stablegram` as they are, including agent caps and standing orders (base wages can be standing orders). `MockShare` can stay for tests.
+Keep `UsernameRegistry` (staff and suppliers are paid by @username) and `Stableplan` as they are, including agent caps and standing orders (base wages can be standing orders). `MockShare` can stay for tests.
 
-**Add to `Stablegram`: proposals, for agent payments the owner must approve.**
+**Add to `Stableplan`: proposals, for agent payments the owner must approve.**
 
 | Function | Who | Does |
 |---|---|---|
@@ -74,7 +74,7 @@ No framework. Built-in `node:http` and `node:test`. Dependencies: `viem` only, p
 
 ## 4. QuickNode Stream
 
-One Stream on Arc testnet. Dataset: logs (receipts if logs are not offered for Arc). Filter: only logs from the `Stablegram` address whose topic0 is `Sent`, `Proposed`, `Approved` or `Rejected`, reduced to `{block, tx, event, args}`. Destination: a webhook to `POST /hooks/quicknode`, behind a tunnel for the demo. The README documents the network, dataset, filter code and destination, as the bounty requires. The API key is in Keychain item `quicknode-api-key`.
+One Stream on Arc testnet. Dataset: logs (receipts if logs are not offered for Arc). Filter: only logs from the `Stableplan` address whose topic0 is `Sent`, `Proposed`, `Approved` or `Rejected`, reduced to `{block, tx, event, args}`. Destination: a webhook to `POST /hooks/quicknode`, behind a tunnel for the demo. The README documents the network, dataset, filter code and destination, as the bounty requires. The API key is in Keychain item `quicknode-api-key`.
 
 ## 5. Web (`web/`, Charles)
 
@@ -92,7 +92,7 @@ Drop the Venmo screens (portfolio, buy, markets, requests) from navigation.
 
 | # | Owner | Done when |
 |---|---|---|
-| M1 | builder | Proposals in `Stablegram`, with tests; `forge test` green, including the existing 27 tests |
+| M1 | builder | Proposals in `Stableplan`, with tests; `forge test` green, including the existing 27 tests |
 | M2 | builder | `npm test` green in `agent/`; `npm run plan -- --venue austin-bar` prints today's forecast and plan from live Gemini data |
 | M3 | Claude + user | New contracts deployed to Arc testnet; one live run pays a bonus and creates one proposal; the owner approves it |
 | M4 | Claude + user | The Stream delivers a `Sent` event to the webhook, and `/feed` shows it |

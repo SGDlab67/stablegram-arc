@@ -8,7 +8,7 @@
   "deployBlock": 72245663,
   "deployer": "0xA87D1A929a93FbC809391F5FF53aaB9bdA54EB46",
   "contracts": {
-    "Stablegram": {
+    "Stableplan": {
       "address": "0xBaDF08F324D5B4eaac5E33Ae30cA57C1096e5dBA",
       "abi": [
         {

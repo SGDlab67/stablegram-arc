@@ -6,9 +6,9 @@ import deployment from "../../deployments/arc-testnet.json" with { type: "json" 
 import type { Payment, Plan } from "./forecast.ts";
 
 export const USDC: Address = "0x3600000000000000000000000000000000000000";
-export const STABLEGRAM = deployment.contracts.Stablegram.address as Address;
+export const STABLEPLAN = deployment.contracts.Stableplan.address as Address;
 
-const deployed = deployment.contracts.Stablegram.abi as Abi;
+const deployed = deployment.contracts.Stableplan.abi as Abi;
 const nameOf = (f: unknown) => (f as { name?: string }).name;
 const known = new Set(deployed.map(nameOf).filter(Boolean));
 // propose and its events arrive with the next deployment. Until the json has
@@ -45,7 +45,7 @@ export type Result = { to: string; amount: string; fn: "sendAsAgent" | "propose"
 // Within both caps the agent pays directly; over either, it proposes and the owner decides.
 export async function act(p: Plan, owner: Address, live: boolean): Promise<Result[]> {
   const pub = createPublicClient({ chain, transport });
-  const read = (functionName: string, args: unknown[]) => pub.readContract({ address: STABLEGRAM, abi: ABI, functionName, args });
+  const read = (functionName: string, args: unknown[]) => pub.readContract({ address: STABLEPLAN, abi: ABI, functionName, args });
   const [perSend] = (await read("limitOf", [owner, USDC])) as [bigint, bigint];
   let remaining = (await read("remainingToday", [owner, USDC])) as bigint;
   const agent = (await read("agentOf", [owner])) as Address;
@@ -73,7 +73,7 @@ export async function act(p: Plan, owner: Address, live: boolean): Promise<Resul
     };
     try {
       // Simulate from the authorized agent's address, so a dry run works without the key.
-      const { request } = await pub.simulateContract({ address: STABLEGRAM, abi: ABI, functionName: fn, args, account: agent });
+      const { request } = await pub.simulateContract({ address: STABLEPLAN, abi: ABI, functionName: fn, args, account: agent });
       if (live && wallet) {
         r.hash = await wallet.writeContract({ ...request, account });
         await pub.waitForTransactionReceipt({ hash: r.hash as Hex });
