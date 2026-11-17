@@ -16,3 +16,7 @@ demo/demo-keys.js
 
 # Agent worktrees
 .claude/
+
+# Agent service
+agent/node_modules/
+agent/.cache/
