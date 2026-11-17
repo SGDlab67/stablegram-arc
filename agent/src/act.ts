@@ -8,16 +8,19 @@ import type { Payment, Plan } from "./forecast.ts";
 export const USDC: Address = "0x3600000000000000000000000000000000000000";
 export const STABLEGRAM = deployment.contracts.Stablegram.address as Address;
 
-// propose and its events ship on another branch, so the fragment is declared here until the deployment json has them.
-export const ABI = [
-  ...(deployment.contracts.Stablegram.abi as Abi),
-  ...parseAbi([
-    "function propose(address user, address token, string name, uint256 value, string memo) returns (uint256)",
-    "event Proposed(uint256 indexed id, address indexed user, address indexed to, address token, uint256 value, string memo)",
-    "event Approved(uint256 indexed id)",
-    "event Rejected(uint256 indexed id)",
-  ]),
-] as Abi;
+const deployed = deployment.contracts.Stablegram.abi as Abi;
+const nameOf = (f: unknown) => (f as { name?: string }).name;
+const known = new Set(deployed.map(nameOf).filter(Boolean));
+// propose and its events arrive with the next deployment. Until the json has
+// them these fragments stand in, and each one drops out the moment the
+// deployed ABI carries it, so nothing is ever declared twice.
+const pending = parseAbi([
+  "function propose(address user, address token, string name, uint256 value, string memo) returns (uint256)",
+  "event Proposed(uint256 indexed id, address indexed user, address indexed to, address token, uint256 value, string memo)",
+  "event Approved(uint256 indexed id)",
+  "event Rejected(uint256 indexed id)",
+]).filter((f) => !known.has(nameOf(f)));
+export const ABI = [...deployed, ...pending] as Abi;
 
 const chain = defineChain({
   id: deployment.chainId,
@@ -48,7 +51,8 @@ export async function act(p: Plan, owner: Address, live: boolean): Promise<Resul
   const agent = (await read("agentOf", [owner])) as Address;
 
   const keyHex = await keychain("venue-agent-key");
-  const account = keyHex ? privateKeyToAccount(keyHex as Hex) : undefined;
+  // A Keychain value may be stored with or without the 0x prefix.
+  const account = keyHex ? privateKeyToAccount((keyHex.startsWith("0x") ? keyHex : `0x${keyHex}`) as Hex) : undefined;
   if (live && !account) throw new Error("live run needs Keychain item venue-agent-key");
   if (live && account!.address.toLowerCase() !== agent.toLowerCase()) {
     throw new Error(`venue-agent-key is ${account!.address} but the owner's authorized agent is ${agent}`);

@@ -17,7 +17,7 @@ const { values } = parseArgs({
 });
 
 const streamToken = await keychain("quicknode-stream-token");
-if (!streamToken) console.warn("!!! Keychain item quicknode-stream-token is missing: /hooks/quicknode accepts ANYONE. Dev only. !!!");
+if (!streamToken) console.warn("Keychain item quicknode-stream-token is missing: /hooks/quicknode is closed until it is set.");
 console.log(values.live ? "LIVE: POST /run sends transactions" : "dry run: POST /run sends nothing (start with --live to send)");
 
 type FeedItem = { event: string; args: Record<string, string>; block: string; tx: string; logIndex: number };
@@ -96,7 +96,10 @@ createServer(async (req, res) => {
     }
     if (req.method === "POST" && url.pathname === "/hooks/quicknode") {
       const auth = req.headers.authorization?.replace(/^Bearer /, "") ?? (req.headers["x-qn-token"] as string | undefined);
-      if (streamToken && !sameToken(auth)) return json(res, 401, { error: "bad token" });
+      // Fail closed. This endpoint is the one thing a tunnel exposes to the
+      // internet, so an unconfigured token refuses rather than trusts.
+      if (!streamToken) return json(res, 503, { error: "webhook not configured: set Keychain item quicknode-stream-token" });
+      if (!sameToken(auth)) return json(res, 401, { error: "bad token" });
       return json(res, 200, { added: ingest(JSON.parse(await readBody(req))) });
     }
     json(res, 404, { error: "not found" });
