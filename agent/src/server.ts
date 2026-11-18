@@ -79,6 +79,32 @@ const sameToken = (given: string | undefined) => {
   return a.length === b.length && timingSafeEqual(a, b);
 };
 
+// Building a plan pulls tens of megabytes from Gemini and takes 10 to 20
+// seconds, which is a blank dashboard for that whole time. So the last plan is
+// kept and handed over at once while a fresh one is built behind it. Only the
+// very first request waits, and the server starts building on boot so that
+// usually nobody waits at all.
+type Built = Awaited<ReturnType<typeof build>>;
+let cached: { key: string; at: number; value: Built } | undefined;
+let building: Promise<void> | undefined;
+const FRESH_MS = 60_000;
+
+function refresh(q: URLSearchParams, key: string): Promise<void> {
+  building ??= build(q)
+    .then((value) => void (cached = { key, at: Date.now(), value }))
+    .catch((err) => console.error(`plan build failed: ${(err as Error).message}`))
+    .finally(() => void (building = undefined));
+  return building;
+}
+
+async function planFor(q: URLSearchParams): Promise<Built & { builtAt: string }> {
+  const key = `${q.get("venue") ?? "austin-bar"}|${q.get("day") ?? ""}`;
+  if (!cached || cached.key !== key) await refresh(q, key);
+  else if (Date.now() - cached.at > FRESH_MS) void refresh(q, key); // stale: answer now, refresh behind
+  if (!cached || cached.key !== key) throw new Error("could not build a plan, see the server log");
+  return { ...cached.value, builtAt: new Date(cached.at).toISOString() };
+}
+
 async function build(q: URLSearchParams) {
   const venue = await loadVenue(q.get("venue") ?? "austin-bar");
   const day = q.get("day") ?? today(venue.timezone);
@@ -144,7 +170,7 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
   res.setHeader("access-control-allow-headers", "content-type");
   try {
     if (req.method === "OPTIONS") return void res.writeHead(204).end();
-    if (req.method === "GET" && url.pathname === "/plan") return json(res, 200, await withRoutes(await build(url.searchParams)));
+    if (req.method === "GET" && url.pathname === "/plan") return json(res, 200, await withRoutes(await planFor(url.searchParams)));
     if (req.method === "GET" && url.pathname === "/feed") return json(res, 200, feed);
     if (req.method === "GET" && url.pathname === "/proposals") return json(res, 200, await readProposals(createPublicClient({ chain, transport })));
     if (req.method === "POST" && (url.pathname === "/approve" || url.pathname === "/reject")) {
@@ -156,7 +182,7 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
     if (req.method === "POST" && url.pathname === "/run") {
       if (!allowed(origin)) return json(res, 403, { error: "bad origin" });
       if (!values.owner) return json(res, 500, { error: "start the server with --owner 0x..." });
-      const { plan: p } = await build(url.searchParams);
+      const { plan: p } = await planFor(url.searchParams);
       return json(res, 200, { live: !!values.live, results: await act(p, values.owner as Address, !!values.live) });
     }
     if (req.method === "POST" && url.pathname === "/hooks/quicknode") {
@@ -175,4 +201,8 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
 };
 
 // Importing this module, as the tests do, must not open a port.
-if (import.meta.main) createServer(handler).listen(Number(values.port), "127.0.0.1", () => console.log(`agent on http://127.0.0.1:${values.port}`));
+if (import.meta.main) {
+  createServer(handler).listen(Number(values.port), "127.0.0.1", () => console.log(`agent on http://127.0.0.1:${values.port}`));
+  const warm = new URLSearchParams({ venue: "austin-bar" });
+  void refresh(warm, "austin-bar|").then(() => console.log(cached ? "first plan ready" : "first plan failed, the next request will try again"));
+}
