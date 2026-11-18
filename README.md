@@ -2,7 +2,7 @@
 
 **An agent that reads prediction-market odds on tonight's games and
 tomorrow's weather, forecasts how busy your venue will be, and pays your
-staff and suppliers in USDC on Arc, inside limits you set.**
+suppliers and your shift staff in USDC on Arc, inside limits you set.**
 
 Built for the University Blockchain Conference Hackathon 2026 (Nov 13 to
 20). Track: Agentic Payments and AI. Chain: Arc testnet, where gas is USDC.
@@ -13,14 +13,16 @@ Built for the University Blockchain Conference Hackathon 2026 (Nov 13 to
 
 ## The problem
 
-A sports bar staffs Saturday on Tuesday.
+A venue commits money days before it knows what it needs.
 
-- If the home team makes a late run, the bar is short-staffed on its best
-  night of the month.
-- If a cold front shuts the patio, the owner pays a full crew to stand
-  around and throws away food ordered for a full house.
-- Filling a shift at short notice takes a bonus, and that money has to
-  reach the person the same day.
+- The food order goes in before anyone knows whether the home team is
+  still in the race or a cold front will shut the patio. Order short and
+  you turn away the best night of the month. Order long and you throw it
+  out.
+- The supplier deposit has to land before the supplier will hold stock,
+  and it is almost always larger than any limit worth handing an agent.
+- Filling a shift at short notice takes a payment that reaches the person
+  the same day.
 
 The uncertainty is already priced. Gemini's prediction markets quote
 tonight's games and each city's high temperature, every day, live. No point
@@ -36,11 +38,14 @@ of sale or scheduling tool reads them.
    win, high 81F, patio open: +38% covers."
 3. **Plan the shift.** Extra servers and cooks, from the venue's own covers
    per server, plus the food order.
-4. **Pay.** Short-notice bonuses go to staff by `@username` in USDC. Each
-   payment's memo carries the market and the odds that justified it.
-5. **Ask when it matters.** Anything over the agent's per-send cap, such as
-   a supplier deposit, becomes a proposal in the owner's inbox. Nothing
-   moves until the owner approves it.
+4. **Ask for the big one.** The supplier deposit is over the agent's
+   per-send cap, so it becomes a proposal in the owner's inbox and nothing
+   moves until the owner approves it. This is the normal case rather than
+   an edge case: a deposit is almost always larger than a limit worth
+   setting.
+5. **Pay the small ones.** Short-notice shift payments go out by
+   `@username` in USDC, inside the caps, with no human in the loop. Each
+   memo carries the market and the odds that justified it.
 
 ## Contracts
 
@@ -153,8 +158,30 @@ it is reachable at all is the tunnel used for the demo.
 
 In the demo the local server holds the owner's key, while in production the owner signs in their own wallet. The dashboard's Approve and Reject buttons call `POST /approve` and `POST /reject` on the agent server, which opens the owner's Foundry keystore only to send and simulates every call first. The agent's own key can never approve: the contract only lets the proposal's `user` do that.
 
+## Where this generalizes
+
+The venue is the demo. The mechanism is a supplier deposit that an agent
+proposes and an owner approves inside a cap the contract enforces, and
+that shape is not specific to bars.
+
+Allium's attribution of stablecoin payment volume for January to August
+2026 puts supplier payments at 28 billion USD and B2B settlement at 137 to
+153 billion USD. B2B also carries the highest cross-border share of any
+category at 43 percent, against 61 percent of all attributed stablecoin
+payment volume being domestic. That is where a deposit is genuinely hard
+today: the supplier is in another country, there is no shared bank, and
+production does not start until the money lands.
+
+We are not claiming the venue market. We are claiming the deposit, which
+is the leg with measured volume behind it.
+
 ## What we do not claim
 
+- **That you can pay W-2 wages this way.** 29 CFR 531.27 requires wages in
+  cash or a negotiable instrument payable at par, and several states
+  including California independently require payment in US currency. The
+  shift payments here are contractor payments. Hourly employees get
+  dollars.
 - **That the forecast is accurate.** The uplift factors are the owner's own
   numbers. A real product fits them from point-of-sale history.
 - **That these markets are deep enough to hedge a venue.** Measured on

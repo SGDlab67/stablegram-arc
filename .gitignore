@@ -20,3 +20,7 @@ demo/demo-keys.js
 # Agent service
 agent/node_modules/
 agent/.cache/
+
+# Market research notes, not part of the build
+research_notes/
+reports/

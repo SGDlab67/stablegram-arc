@@ -177,7 +177,8 @@ function PlanSection({ plan }: { plan: Fetched<PlanResponse> }) {
     }
     setBusy(false);
   };
-  const rows = p ? [...p.payments.map((x) => ({ ...x, role: "Staff bonus" })), ...(p.supplier ? [{ ...p.supplier, role: "Supplier deposit" }] : [])] : [];
+  // The deposit leads: it is over the per-send cap, so it is the proposal the owner approves.
+  const rows = p ? [...(p.supplier ? [{ ...p.supplier, role: "Supplier deposit" }] : []), ...p.payments.map((x) => ({ ...x, role: "Shift contractor" }))] : [];
   return (
     <section aria-label="Plan">
       <SectionTitle>Plan</SectionTitle>
