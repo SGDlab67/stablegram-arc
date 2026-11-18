@@ -149,6 +149,10 @@ The webhook fails closed. It answers 503 until the Stream's
 compares it in constant time. The server binds to localhost, so the only way
 it is reachable at all is the tunnel used for the demo.
 
+### Demo shortcut: who signs approve and reject
+
+In the demo the local server holds the owner's key, while in production the owner signs in their own wallet. The dashboard's Approve and Reject buttons call `POST /approve` and `POST /reject` on the agent server, which opens the owner's Foundry keystore only to send and simulates every call first. The agent's own key can never approve: the contract only lets the proposal's `user` do that.
+
 ## What we do not claim
 
 - **That the forecast is accurate.** The uplift factors are the owner's own

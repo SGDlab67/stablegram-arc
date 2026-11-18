@@ -122,6 +122,38 @@ textarea,
   }
 }
 
+/* The owner dashboard is a wide screen for a laptop: undo the phone frame around it and let the page scroll. */
+.device:has(.dash) {
+  max-width: none;
+}
+@media (min-width: 820px) {
+  html:has(.dash),
+  body:has(.dash) {
+    overflow: auto;
+    background: var(--page);
+  }
+  .stage:has(.dash) {
+    display: block;
+    height: auto;
+    padding: 0;
+  }
+  .stage:has(.dash) .aside {
+    display: none;
+  }
+  .device:has(.dash) {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    border-radius: 0;
+    box-shadow: none;
+    transform: none;
+  }
+  .device:has(.dash) .device-scroll {
+    height: auto;
+    overflow: visible;
+  }
+}
+
 button {
   cursor: pointer;
 }

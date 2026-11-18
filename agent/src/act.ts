@@ -43,6 +43,8 @@ export async function keychain(service: string): Promise<string | undefined> {
 export type Result = { to: string; amount: string; fn: "sendAsAgent" | "propose"; call: string; simulation: string; hash?: string };
 
 // Within both caps the agent pays directly; over either, it proposes and the owner decides.
+export const route = (amount: bigint, perSend: bigint, remaining: bigint) => (amount <= perSend && amount <= remaining ? "sendAsAgent" : "propose");
+
 export async function act(p: Plan, owner: Address, live: boolean): Promise<Result[]> {
   const pub = createPublicClient({ chain, transport });
   const read = (functionName: string, args: unknown[]) => pub.readContract({ address: STABLEPLAN, abi: ABI, functionName, args });
@@ -61,7 +63,7 @@ export async function act(p: Plan, owner: Address, live: boolean): Promise<Resul
 
   const results: Result[] = [];
   for (const pay of [...p.payments, ...(p.supplier ? [p.supplier] : [])] as Payment[]) {
-    const fn = pay.amount <= perSend && pay.amount <= remaining ? "sendAsAgent" : "propose";
+    const fn = route(pay.amount, perSend, remaining);
     if (fn === "sendAsAgent") remaining -= pay.amount;
     const args = [owner, USDC, pay.username, pay.amount, pay.memo] as const;
     const r: Result = {
