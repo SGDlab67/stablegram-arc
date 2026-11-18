@@ -29,3 +29,12 @@ Checked against the live Gemini API on 2026-11-17. The fixture `test/fixtures/ev
 - The QuickNode payload shape and its auth. `/hooks/quicknode` takes raw logs as an array, `{data: [...]}` or nested, and checks `Authorization: Bearer <token>` or `x-qn-token`. QuickNode's own HMAC signature headers are not implemented. Confirm both when the Stream exists (M4).
 - `act.ts` was never run live. Dry run simulates from the owner's authorized agent address (so it works without the key); `propose` reverts in simulation until the new contract is deployed.
 - A transaction under 20 gwei is dropped on Arc (old spec note). viem's default fee estimate is used and not checked.
+
+## Seeding the demo (M3)
+
+- `npm run seed -- [--dry-run|--live]` (dry run is the default) prints a numbered plan against the live chain, then in `--live` runs it in order. Re-running skips what is already true. `npm run verify` prints the readiness table and sends nothing (exit 1 when not ready).
+- The six demo accounts (agent, maria, dev, sam, lee, hillcountrymeats) come from one mnemonic in Keychain item `stableplan-demo-mnemonic`, address index in that order. If the item is missing the script prints a new mnemonic once and the `security add-generic-password ... -w` command (it prompts, so nothing lands in argv or history), then exits. The agent's key is copied into `venue-agent-key` through `security -i` on stdin, never overwriting an existing item.
+- The owner signs from the Foundry keystore `arc-deployer` with the password from Keychain item `arc-deployer-keystore`. That path only runs in `--live` and has not been run.
+- Gas: each account is funded to 125% of its calls at the live `maxFeePerGas`, rounded up to a micro-USDC (native is 18 decimals, the ERC-20 view 6). The agent gets a flat budget of 10 sends at 300k gas.
+- The plan assumes the day costs at most 700 USDC (4 bonuses of 25 plus a deposit of up to 600). The allowance is set to that, and readiness fails while the owner holds less. On 2026-11-17 the owner held 39.78.
+- Arc rejects native transfers to the well known Hardhat/Foundry test addresses (the `test ... junk` mnemonic), so do not use that mnemonic for the demo accounts.

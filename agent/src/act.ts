@@ -22,13 +22,13 @@ const pending = parseAbi([
 ]).filter((f) => !known.has(nameOf(f)));
 export const ABI = [...deployed, ...pending] as Abi;
 
-const chain = defineChain({
+export const chain = defineChain({
   id: deployment.chainId,
   name: deployment.name,
   nativeCurrency: { name: "USDC", symbol: "USDC", decimals: deployment.nativeDecimals },
   rpcUrls: { default: { http: [deployment.rpc] } },
 });
-const transport = http(deployment.rpc, { timeout: 10_000 });
+export const transport = http(deployment.rpc, { timeout: 10_000 });
 
 // Secrets come from the macOS Keychain only: execFile, no shell, nothing on argv but the item name.
 export async function keychain(service: string): Promise<string | undefined> {

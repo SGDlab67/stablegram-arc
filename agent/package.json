@@ -6,7 +6,9 @@
   "scripts": {
     "test": "node --import tsx --test test/*.test.ts",
     "plan": "tsx src/cli.ts",
-    "serve": "tsx src/server.ts"
+    "serve": "tsx src/server.ts",
+    "seed": "tsx src/seed.ts",
+    "verify": "tsx src/verify.ts"
   },
   "dependencies": { "viem": "^2.21.0" },
   "devDependencies": { "tsx": "^4.19.0" }
