@@ -1,33 +1,14 @@
-import { createDecipheriv, scryptSync } from "node:crypto";
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { bytesToHex, concat, createPublicClient, createWalletClient, isAddressEqual, keccak256, type Hex, type LocalAccount } from "viem";
+import { bytesToHex, createPublicClient, createWalletClient, isAddressEqual, type Hex, type LocalAccount } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import deployment from "../../deployments/arc-testnet.json" with { type: "json" };
 import { chain, keychain, transport } from "./act.ts";
-import { OWNER, buildPlan, estimateGas, loadDemo, native, readSnapshot, table, totals, type Demo } from "./demo.ts";
+import { OWNER, buildPlan, estimateGas, loadDemo, native, ownerAccount, readSnapshot, table, totals, type Demo } from "./demo.ts";
 
 const { values } = parseArgs({ options: { "dry-run": { type: "boolean" }, live: { type: "boolean" } }, allowPositionals: false });
 if (values.live && values["dry-run"]) throw new Error("pick one of --dry-run and --live");
 const live = !!values.live;
-
-// The owner's Foundry keystore (the same one script/with-deployer.sh unlocks), opened with the password from Keychain.
-async function ownerAccount(): Promise<LocalAccount> {
-  const password = await keychain("arc-deployer-keystore");
-  if (!password) throw new Error("live run needs Keychain item arc-deployer-keystore");
-  const { crypto: c } = JSON.parse(await readFile(join(homedir(), ".foundry/keystores/arc-deployer"), "utf8"));
-  const k = c.kdfparams;
-  const dk = scryptSync(password, Buffer.from(k.salt, "hex"), k.dklen, { N: k.n, r: k.r, p: k.p, maxmem: 256 * k.n * k.r });
-  const ct = Buffer.from(c.ciphertext, "hex");
-  if (keccak256(concat([dk.subarray(16, 32), ct])) !== `0x${c.mac}`) throw new Error("wrong password for the arc-deployer keystore");
-  const d = createDecipheriv("aes-128-ctr", dk.subarray(0, 16), Buffer.from(c.cipherparams.iv, "hex"));
-  const account = privateKeyToAccount(`0x${Buffer.concat([d.update(ct), d.final()]).toString("hex")}`);
-  if (!isAddressEqual(account.address, OWNER)) throw new Error(`keystore is ${account.address}, the deployer is ${OWNER}`);
-  return account;
-}
 
 // act.ts reads the agent's key from Keychain item venue-agent-key. It goes in through `security -i` on stdin: not argv, not shell history.
 async function agentKeySet(agent: Demo): Promise<boolean> {

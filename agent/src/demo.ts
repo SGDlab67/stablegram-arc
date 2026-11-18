@@ -1,14 +1,18 @@
 // What the demo needs on chain, what is already true, and what is left to do. Shared by seed.ts and verify.ts.
 // The decisions are pure (buildPlan, fundNeeded, problems) so they are tested with the chain reads stubbed.
-import { encodeFunctionData, formatUnits, isAddressEqual, parseAbi, zeroAddress, type Abi, type Address, type Hex, type PublicClient } from "viem";
-import { mnemonicToAccount, type HDAccount } from "viem/accounts";
+import { createDecipheriv, scryptSync } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { concat, encodeFunctionData, formatUnits, isAddressEqual, keccak256, parseAbi, zeroAddress, type Abi, type Address, type Hex, type LocalAccount, type PublicClient } from "viem";
+import { mnemonicToAccount, privateKeyToAccount, type HDAccount } from "viem/accounts";
 import deployment from "../../deployments/arc-testnet.json" with { type: "json" };
 import { ABI, STABLEPLAN, USDC, keychain } from "./act.ts";
 import type { Venue } from "./forecast.ts";
 import { loadVenue } from "./venue.ts";
 
 export const REGISTRY = deployment.contracts.UsernameRegistry.address as Address;
-const REGISTRY_ABI = deployment.contracts.UsernameRegistry.abi as Abi;
+export const REGISTRY_ABI = deployment.contracts.UsernameRegistry.abi as Abi;
 const ERC20 = parseAbi(["function approve(address spender, uint256 value) returns (bool)", "function allowance(address owner, address spender) view returns (uint256)", "function balanceOf(address account) view returns (uint256)"]);
 
 export const OWNER = deployment.deployer as Address;
@@ -25,6 +29,21 @@ const MICRO = 10n ** 12n; // native is 18 decimals, the ERC-20 view of the same 
 export const usd = (micro: bigint) => formatUnits(micro, 6);
 export const native = (wei: bigint) => usd(wei / MICRO); // the 6 decimal view, as the ERC-20 interface shows it
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
+// The owner's Foundry keystore (the same one script/with-deployer.sh unlocks), opened with the password from Keychain.
+export async function ownerAccount(): Promise<LocalAccount> {
+  const password = await keychain("arc-deployer-keystore");
+  if (!password) throw new Error("live run needs Keychain item arc-deployer-keystore");
+  const { crypto: c } = JSON.parse(await readFile(join(homedir(), ".foundry/keystores/arc-deployer"), "utf8"));
+  const k = c.kdfparams;
+  const dk = scryptSync(password, Buffer.from(k.salt, "hex"), k.dklen, { N: k.n, r: k.r, p: k.p, maxmem: 256 * k.n * k.r });
+  const ct = Buffer.from(c.ciphertext, "hex");
+  if (keccak256(concat([dk.subarray(16, 32), ct])) !== `0x${c.mac}`) throw new Error("wrong password for the arc-deployer keystore");
+  const d = createDecipheriv("aes-128-ctr", dk.subarray(0, 16), Buffer.from(c.cipherparams.iv, "hex"));
+  const account = privateKeyToAccount(`0x${Buffer.concat([d.update(ct), d.final()]).toString("hex")}`);
+  if (!isAddressEqual(account.address, OWNER)) throw new Error(`keystore is ${account.address}, the deployer is ${OWNER}`);
+  return account;
+}
 
 export type Demo = { name: string; username?: string; account: HDAccount };
 export type Row = { name: string; address: Address; username?: string; native: bigint; has: string; holder: Address };

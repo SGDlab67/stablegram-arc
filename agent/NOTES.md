@@ -38,3 +38,11 @@ Checked against the live Gemini API on 2026-11-17. The fixture `test/fixtures/ev
 - Gas: each account is funded to 125% of its calls at the live `maxFeePerGas`, rounded up to a micro-USDC (native is 18 decimals, the ERC-20 view 6). The agent gets a flat budget of 10 sends at 300k gas.
 - The plan assumes the day costs at most 700 USDC (4 bonuses of 25 plus a deposit of up to 600). The allowance is set to that, and readiness fails while the owner holds less. On 2026-11-17 the owner held 39.78.
 - Arc rejects native transfers to the well known Hardhat/Foundry test addresses (the `test ... junk` mnemonic), so do not use that mnemonic for the demo accounts.
+
+## Dashboard endpoints (M5)
+
+- `GET /proposals` reads the open proposals from the chain (`proposalCount`, then `proposals(id)`, skipping a zero `user`, the mark of an approved or rejected one) and resolves each `to` with `UsernameRegistry.nameOf`. Values are decimal strings. Empty array on a fresh chain.
+- `POST /approve` and `POST /reject` take `{id}`, simulate with `publicClient.call` and refuse (409) anything that would revert. Same guard as `/run`: bad origin is 403, no `--owner` is 500. Like `/run`, they send only under `--live`; otherwise they simulate and return `{live: false, hash: null, status}`.
+- `GET /plan` tags each payment with `fn` (`sendAsAgent` or `propose`), from the owner's `limitOf` and `remainingToday` and the same `route` rule `act.ts` uses, so the dashboard can say "agent pays" or "needs your approval" before Run. Left out when no `--owner` or the read fails.
+- **Demo shortcut: in the demo the local server holds the owner's key, while in production the owner signs in their own wallet.** The key is opened from the Foundry keystore `arc-deployer` (`ownerAccount` in `demo.ts`, shared with `seed.ts`) only at the moment of a live send.
+- Not verified: a live approve or reject, because the chain has no proposals until it is seeded. `/proposals` against the real chain returns `[]`.
