@@ -22,8 +22,13 @@ if (await keychain(ITEM)) {
   process.exit(0);
 }
 
+// `security -i` splits its line on whitespace, so a twelve word phrase passed
+// to -w arrives as twelve arguments and the command fails. -X takes the same
+// bytes as hex, which has no spaces, and `find-generic-password -w` reads the
+// phrase back unchanged.
+const hex = Buffer.from(generateMnemonic(english), "utf8").toString("hex");
 const store = spawn("security", ["-i"], { stdio: ["pipe", "ignore", "inherit"] });
-store.stdin.end(`add-generic-password -a "${process.env.USER}" -s ${ITEM} -w ${generateMnemonic(english)}\n`);
+store.stdin.end(`add-generic-password -a stableplan-demo -s ${ITEM} -X ${hex}\n`);
 
 const code = await new Promise<number>((done) => store.on("close", (c) => done(c ?? 1)));
 if (code !== 0 || !(await keychain(ITEM))) {
