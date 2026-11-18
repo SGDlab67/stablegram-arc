@@ -1,7 +1,7 @@
 // What the demo needs on chain, what is already true, and what is left to do. Shared by seed.ts and verify.ts.
 // The decisions are pure (buildPlan, fundNeeded, problems) so they are tested with the chain reads stubbed.
 import { encodeFunctionData, formatUnits, isAddressEqual, parseAbi, zeroAddress, type Abi, type Address, type Hex, type PublicClient } from "viem";
-import { english, generateMnemonic, mnemonicToAccount, type HDAccount } from "viem/accounts";
+import { mnemonicToAccount, type HDAccount } from "viem/accounts";
 import deployment from "../../deployments/arc-testnet.json" with { type: "json" };
 import { ABI, STABLEPLAN, USDC, keychain } from "./act.ts";
 import type { Venue } from "./forecast.ts";
@@ -42,17 +42,13 @@ export function demoAccounts(mnemonic: string, venue: Venue): Demo[] {
   return names.map((name, i) => ({ name, username: i ? name : undefined, account: mnemonicToAccount(mnemonic, { addressIndex: i }) }));
 }
 
-// The mnemonic is shown once and never stored here. The command prompts for the value, so it stays out of argv and shell history.
+// The mnemonic only ever lives in Keychain. When it is missing this prints the command to add it (no secret in the output) and exits.
 export async function loadDemo() {
   const mnemonic = await keychain("stableplan-demo-mnemonic");
   if (!mnemonic) {
     console.log(`Keychain item stableplan-demo-mnemonic is missing. Nothing was done.
 
-New demo mnemonic (shown once, saved nowhere):
-
-  ${generateMnemonic(english)}
-
-Store it, then run this again. The command prompts for the value, paste the mnemonic above:
+Add it with this command. -w with no value prompts for it, so it never lands in shell history or argv. Any BIP-39 mnemonic will do:
 
   security add-generic-password -a "$USER" -s stableplan-demo-mnemonic -w`);
     process.exit(1);
