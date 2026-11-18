@@ -67,7 +67,11 @@ export async function loadDemo() {
   if (!mnemonic) {
     console.log(`Keychain item stableplan-demo-mnemonic is missing. Nothing was done.
 
-Add it with this command. -w with no value prompts for it, so it never lands in shell history or argv. Any BIP-39 mnemonic will do:
+Let one be generated for you. It is stored straight in the Keychain and never printed:
+
+  npm run init-mnemonic
+
+Or add your own throwaway BIP-39 phrase. -w with no value prompts for it, so it never lands in shell history or argv:
 
   security add-generic-password -a "$USER" -s stableplan-demo-mnemonic -w`);
     process.exit(1);
