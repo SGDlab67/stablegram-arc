@@ -2,6 +2,7 @@
 // The decisions are pure (buildPlan, fundNeeded, problems) so they are tested with the chain reads stubbed.
 import { createDecipheriv, scryptSync } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { concat, encodeFunctionData, formatUnits, isAddressEqual, keccak256, parseAbi, zeroAddress, type Abi, type Address, type Hex, type LocalAccount, type PublicClient } from "viem";
@@ -19,7 +20,21 @@ export const OWNER = deployment.deployer as Address;
 export const OWNER_NAME = "longhorntaps";
 export const PER_SEND = 30_000_000n; // $30: a $25 bonus pays straight through, the supplier deposit does not
 export const PER_DAY = 150_000_000n;
-export const DAY_USDC = 700_000_000n; // the day's plan: 4 bonuses of $25 and a supplier deposit of up to $600
+// What the owner must hold and approve for one night. It is the venue's own
+// numbers rather than a constant, so changing the venue file changes this:
+// one bonus per named staff member, plus a deposit on the busiest night's food.
+// Override it with STABLEPLAN_DAY_USDC (whole dollars) when the wallet is
+// thinner than the venue, which is the usual case on a testnet.
+export function dayBudget(v: Venue): bigint {
+  const override = process.env.STABLEPLAN_DAY_USDC;
+  if (override) return BigInt(Math.round(Number(override) * 1e6));
+  const busiest = Math.max(...Object.values(v.baselineCovers));
+  const deposit = busiest * v.foodCostUsd * v.supplierDepositPct;
+  return BigInt(Math.ceil(v.staff.length * v.bonusUsd + deposit)) * 1_000_000n;
+}
+
+// Read at import so there is never an unset budget, whichever entry point runs.
+export const DAY_USDC = dayBudget(JSON.parse(readFileSync(new URL("../venues/austin-bar.json", import.meta.url), "utf8")) as Venue);
 // ponytail: flat gas budget for the agent's own sends (it cannot be simulated before it is authorized). Revisit if sendAsAgent gets dearer.
 export const AGENT_TXS = 10n;
 export const AGENT_TX_GAS = 300_000n;

@@ -100,6 +100,7 @@ test("a name held by another address, or a second name for one address, stops th
 test("readiness flags an owner who cannot cover the day's plan", () => {
   const s = seeded();
   s.owner.erc20 = 39_000_000n;
-  assert.deepEqual(problems(s), [`owner holds 39 USDC, the day's plan needs 700`]);
+  // The budget comes from the venue file, so assert against it rather than a number that drifts when the venue changes.
+  assert.deepEqual(problems(s), [`owner holds 39 USDC, the day's plan needs ${Number(DAY_USDC) / 1e6}`]);
   assert.equal(OWNER, "0xA87D1A929a93FbC809391F5FF53aaB9bdA54EB46");
 });
