@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { gunzipSync } from "node:zlib";
 import { parseArgs } from "node:util";
 import { createPublicClient, createWalletClient, decodeEventLog, encodeFunctionData, zeroAddress, type Address, type Hex, type PublicClient } from "viem";
 import { ABI, STABLEPLAN, USDC, act, chain, keychain, route, transport } from "./act.ts";
@@ -63,21 +64,33 @@ async function decide(fn: "approve" | "reject", body: string) {
   return { code: 200, body: { live: true, hash, status } };
 }
 
-const readBody = async (req: IncomingMessage) => {
+const readRaw = async (req: IncomingMessage) => {
   let n = 0;
   const chunks: Buffer[] = [];
   for await (const c of req) {
     if ((n += c.length) > 5e6) throw new Error("body too large");
     chunks.push(c);
   }
-  return Buffer.concat(chunks).toString("utf8");
+  return Buffer.concat(chunks);
 };
 
-const sameToken = (given: string | undefined) => {
-  const a = Buffer.from(given ?? "");
-  const b = Buffer.from(streamToken ?? "");
+const readBody = async (req: IncomingMessage) => (await readRaw(req)).toString("utf8");
+
+// Streams does not send a bearer token. Every delivery carries X-QN-Nonce,
+// X-QN-Timestamp and X-QN-Signature, where the signature is
+// HMAC-SHA256(security token, nonce + timestamp + payload) in hex. The body may
+// arrive gzipped and the signature is over the decoded JSON, so decompress
+// first and sign exactly the string that was parsed.
+function signedByQuickNode(req: IncomingMessage, payload: string): boolean {
+  const nonce = req.headers["x-qn-nonce"];
+  const timestamp = req.headers["x-qn-timestamp"];
+  const given = req.headers["x-qn-signature"];
+  if (typeof nonce !== "string" || typeof timestamp !== "string" || typeof given !== "string") return false;
+  const want = createHmac("sha256", Buffer.from(streamToken!)).update(nonce + timestamp + payload).digest("hex");
+  const a = Buffer.from(given);
+  const b = Buffer.from(want);
   return a.length === b.length && timingSafeEqual(a, b);
-};
+}
 
 // Building a plan pulls tens of megabytes from Gemini and takes 10 to 20
 // seconds, which is a blank dashboard for that whole time. So the last plan is
@@ -160,7 +173,12 @@ export function ingest(body: unknown) {
 }
 
 // A browser always sends Origin on cross-site posts: refuse any page that is not the web app.
-const allowed = (origin: string | undefined) => !origin || origin === values.origin;
+// The money routes demand the web app's Origin, and a missing one is refused.
+// A browser always sends Origin on a cross-site POST, so this costs the
+// dashboard nothing, and it is what stops a stranger who finds the tunnel from
+// posting to /run or /approve with curl. The tunnel exists for the QuickNode
+// webhook, which carries its own secret instead.
+const allowed = (origin: string | undefined) => origin === values.origin;
 
 export const handler = async (req: IncomingMessage, res: ServerResponse) => {
   const url = new URL(req.url ?? "/", "http://x");
@@ -186,12 +204,11 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
       return json(res, 200, { live: !!values.live, results: await act(p, values.owner as Address, !!values.live) });
     }
     if (req.method === "POST" && url.pathname === "/hooks/quicknode") {
-      const auth = req.headers.authorization?.replace(/^Bearer /, "") ?? (req.headers["x-qn-token"] as string | undefined);
-      // Fail closed. This endpoint is the one thing a tunnel exposes to the
-      // internet, so an unconfigured token refuses rather than trusts.
       if (!streamToken) return json(res, 503, { error: "webhook not configured: set Keychain item quicknode-stream-token" });
-      if (!sameToken(auth)) return json(res, 401, { error: "bad token" });
-      return json(res, 200, { added: ingest(JSON.parse(await readBody(req))) });
+      const raw = await readRaw(req);
+      const payload = (req.headers["content-encoding"] === "gzip" ? gunzipSync(raw) : raw).toString("utf8");
+      if (!signedByQuickNode(req, payload)) return json(res, 401, { error: "bad signature" });
+      return json(res, 200, { added: ingest(JSON.parse(payload)) });
     }
     json(res, 404, { error: "not found" });
   } catch (err) {
