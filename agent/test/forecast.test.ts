@@ -85,10 +85,13 @@ test("plan pays bonuses and a supplier deposit in USDC base units", () => {
   const f = forecast(venue, DAY, events);
   const p = plan(venue, f);
   assert.ok(p.payments.length > 0);
-  for (const pay of p.payments) assert.equal(pay.amount, 25_000_000n);
+  // Read the rates from the venue, so sizing the demo to a testnet wallet does not break the test.
+  for (const pay of p.payments) assert.equal(pay.amount, BigInt(venue.bonusUsd) * 1_000_000n);
   assert.equal(p.supplier?.username, "hillcountrymeats");
   assert.equal(typeof p.supplier?.amount, "bigint");
-  assert.equal(p.supplier!.amount, BigInt(Math.round(f.covers * 12.5 * 0.2)) * 1_000_000n);
+  assert.equal(p.supplier!.amount, BigInt(Math.round(f.covers * venue.foodCostUsd * venue.supplierDepositPct)) * 1_000_000n);
+  // The deposit must break the per-send cap, or the demo never produces a proposal.
+  assert.ok(p.supplier!.amount > 30_000_000n, "supplier deposit should exceed the 30 USDC per-send cap");
 });
 
 test("memos stay at or under 140 bytes and carry the reason", () => {
