@@ -7,7 +7,7 @@ import { InstallHint } from "@/components/install-hint";
 import { Mark, Screen, SearchBar } from "@/components/shell";
 import { AssetDot, Avatar, EmptyState, PreviewNote } from "@/components/ui";
 import { UsersRound } from "lucide-react";
-import { ChevronRight, Plus } from "lucide-react";
+import { Bot, ChevronRight, Plus } from "lucide-react";
 import { ASSETS, HACKATHON_TAG, personOf, usd } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { useCountUp } from "@/components/feel";
@@ -50,6 +50,18 @@ export default function Home() {
       <p className="px-5 pb-2 text-[22px] font-semibold tracking-tight">
         {greet}, {me.first}
       </p>
+
+      {/* The agent dashboard is the point of the project, and nothing used to link to it. */}
+      <Link href="/dashboard" className="mx-4 flex items-center gap-3 rounded-[22px] bg-brand p-4 text-white">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15">
+          <Bot size={20} aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold">Owner dashboard</span>
+          <span className="block text-[13px] text-white/85">The forecast, the agent budget and what needs your approval</span>
+        </span>
+        <ChevronRight size={20} className="shrink-0 text-white/85" aria-hidden />
+      </Link>
 
       <div className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-1 pt-1">
         {top.map((h) => (

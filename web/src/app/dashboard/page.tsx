@@ -1,6 +1,7 @@
 "use client";
 
-import { Activity, ExternalLink, Inbox, TriangleAlert, WifiOff } from "lucide-react";
+import { Activity, ChevronRight, ExternalLink, Inbox, TriangleAlert, WifiOff } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Card, EmptyState, PrimaryButton, SectionTitle } from "@/components/ui";
 import { usd } from "@/lib/data";
@@ -367,9 +368,14 @@ export default function Dashboard() {
   const day = d && new Date(`${d.forecast.day}T00:00:00Z`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" });
   return (
     <main className="dash mx-auto w-full max-w-[1100px] px-4 pb-12 pt-6">
-      <header className="px-1">
-        <h1 className="min-h-9 text-[30px] font-semibold leading-tight tracking-tight">{d?.venue.name ?? "Stableplan"}</h1>
-        <p className="min-h-6 text-[16px] text-muted">{day}</p>
+      <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 px-1">
+        <div>
+          <h1 className="min-h-9 text-[30px] font-semibold leading-tight tracking-tight">{d?.venue.name ?? "Stableplan"}</h1>
+          <p className="min-h-6 text-[16px] text-muted">{day}</p>
+        </div>
+        <Link href="/" className="inline-flex min-h-11 items-center gap-1.5 text-[15px] font-semibold text-brand">
+          Phone app <ChevronRight size={16} aria-hidden />
+        </Link>
       </header>
       <div className="grid gap-x-6 min-[900px]:grid-cols-2">
         <div className="min-[900px]:row-span-2">

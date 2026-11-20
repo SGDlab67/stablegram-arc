@@ -106,6 +106,8 @@ export const ASSETS: Asset[] = [
   { symbol: "NFLX", name: "Netflix", group: "stocks", market: "stocks", price: 61.54, change24h: -0.87, color: "#E50914", demo: true, logo: "/logos/NFLX.png", about: "Streaming films and series." },
   { symbol: "COIN", name: "Coinbase", group: "stocks", market: "stocks", price: 116.35, change24h: -8.03, color: "#0052FF", demo: true, logo: "/logos/COIN.png", about: "A US crypto exchange and custodian." },
   { symbol: "CRCL", name: "Circle", group: "stocks", market: "stocks", price: 55.64, change24h: -9.97, color: "#3D7BF7", demo: true, logo: "/logos/CRCL.png", about: "Issuer of the USDC and EURC stablecoins." },
+  { symbol: "SPCX", name: "SpaceX", group: "stocks", market: "stocks", price: 212.4, change24h: 2.18, color: "#005288", demo: true, about: "Falcon rockets and the Starlink satellite network. A private company with no public listing, so this demo token stands for pre-IPO exposure of the kind secondary markets price, not a listed share." },
+  { symbol: "ANTH", name: "Anthropic", group: "stocks", market: "stocks", price: 168.75, change24h: 1.64, color: "#D97757", demo: true, about: "Builds the Claude AI models. A private company with no public listing, so this demo token stands for pre-IPO exposure of the kind secondary markets price, not a listed share." },
   { symbol: "PAXG", name: "Gold", group: "stocks", market: "metals", price: 3875.01, change24h: -0.09, color: "#D4AF37", demo: true, logo: "/logos/PAXG.png", about: "PAX Gold. Each token is one troy ounce of gold in a London vault, issued by Paxos." },
   { symbol: "XAUT", name: "Tether Gold", group: "stocks", market: "metals", price: 3872.45, change24h: -0.1, color: "#C9A646", demo: true, logo: "/logos/XAUT.png", about: "Each token is one troy ounce of gold in a Swiss vault, issued by Tether." },
   { symbol: "KAG", name: "Silver", group: "stocks", market: "metals", price: 48.72, change24h: -0.22, color: "#9AA0A6", demo: true, logo: "/logos/KAG.png", about: "Kinesis Silver. Each token is one troy ounce of silver held in a vault." },
@@ -248,6 +250,8 @@ export const MY_HOLDINGS: Record<string, number> = {
   TSLA: 0.05,
   BTC: 0.0012,
   AAPL: 0.03,
+  SPCX: 0.02,
+  ANTH: 0.04,
   EURC: 12,
 };
 
