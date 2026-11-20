@@ -10,7 +10,7 @@ Built for the University Blockchain Conference Hackathon 2026 (Nov 13 to
 | | |
 | --- | --- |
 | Owner dashboard, live | <https://stableplan.vercel.app/dashboard> |
-| Demo video, 2m31 | <https://drive.google.com/file/d/12QCEHVK5jW8AW2GkuNanJrUdC6DIPC1X/view> |
+| Demo video, 2m31 | <https://youtu.be/27QdtVTXsQ0> |
 | Contract on Arc testnet | [`0x32d3b9d8...0000920FA`](https://explorer.testnet.arc.io/address/0x32d3b9d88168a5f2677a6513cfaa6ab0000920fa) |
 
 Everything below is deployed and running. 41 Foundry tests, four of them

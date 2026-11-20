@@ -146,10 +146,11 @@ Tailwind. macOS Keychain and a Foundry keystore for keys. Vercel.
 ## 6. Demo Video (required)
 
 ```
-https://drive.google.com/file/d/12QCEHVK5jW8AW2GkuNanJrUdC6DIPC1X/view
+https://youtu.be/27QdtVTXsQ0
 ```
 
-2 minutes 31 seconds, 1080p, shared to anyone with the link. Thirteen captioned shots
+2 minutes 31 seconds, 1080p, unlisted on YouTube so anyone with the link can watch.
+Mirror, in case YouTube is blocked for a judge: https://drive.google.com/file/d/12QCEHVK5jW8AW2GkuNanJrUdC6DIPC1X/view Thirteen captioned shots
 of the live product and real terminal output, in this order:
 
 1. What it is, and where the caps live.
