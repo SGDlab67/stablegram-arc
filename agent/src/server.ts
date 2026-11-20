@@ -133,15 +133,18 @@ async function withRoutes<T extends { plan: Plan }>(b: T) {
   try {
     const pub = createPublicClient({ chain, transport });
     const read = (functionName: string) => pub.readContract({ address: STABLEPLAN, abi: ABI, functionName, args: [values.owner as Address, USDC] });
-    const [perSend] = (await read("limitOf")) as [bigint, bigint];
+    const [perSend, perDay] = (await read("limitOf")) as [bigint, bigint];
     let remaining = (await read("remainingToday")) as bigint;
+    // What the chain says before this plan is routed, so the dashboard can show
+    // the cap the pitch is about instead of asking anyone to take it on trust.
+    const limits = { perSend: perSend.toString(), perDay: perDay.toString(), remaining: remaining.toString() };
     const tag = (p: Payment) => {
       const fn = route(p.amount, perSend, remaining);
       if (fn === "sendAsAgent") remaining -= p.amount;
       return { ...p, fn };
     };
     const { payments, supplier } = b.plan;
-    return { ...b, plan: { ...b.plan, payments: payments.map(tag), supplier: supplier && tag(supplier) } };
+    return { ...b, plan: { ...b.plan, limits, payments: payments.map(tag), supplier: supplier && tag(supplier) } };
   } catch {
     return b;
   }

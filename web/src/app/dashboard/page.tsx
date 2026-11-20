@@ -14,12 +14,14 @@ const EXPLORER = "https://explorer.testnet.arc.io/tx/";
 
 type Market = { ticker: string; title: string; volume24h?: string; odds: { label: string; p: number }[] };
 type Payment = { username: string; amount: string; memo: string; fn?: "sendAsAgent" | "propose" };
+/** The owner's on-chain caps on the agent, in USDC base units. */
+type Limits = { perSend: string; perDay: string; remaining: string };
 type PlanResponse = {
   venue: { name: string };
   source: "live" | "partial" | "cache";
   markets: Market[];
   forecast: { day: string; covers: number; baseline: number; factors: { ticker: string; label: string; effect: number }[] };
-  plan: { extraServers: number; extraCooks: number; unfilled: number; payments: Payment[]; supplier: Payment | null };
+  plan: { extraServers: number; extraCooks: number; unfilled: number; payments: Payment[]; supplier: Payment | null; limits?: Limits };
 };
 type Proposal = { id: string; user: string; token: string; to: string; toName: string; value: string; name: string; memo: string };
 type FeedItem = { event: string; args: Record<string, string>; block: string; tx: string; logIndex: number };
@@ -166,6 +168,27 @@ const pill = "inline-flex min-h-7 shrink-0 items-center rounded-full px-3 text-[
 const Pill = ({ fn }: { fn?: Payment["fn"] }) =>
   fn && (fn === "sendAsAgent" ? <span className={`${pill} bg-brand-soft text-brand`}>agent pays</span> : <span className={`${pill} bg-chip text-ink ring-1 ring-ink/30`}>needs your approval</span>);
 
+/** The caps the contract enforces on the agent, and how much of today is left. */
+function Budget({ limits }: { limits: Limits }) {
+  const perDay = Number(limits.perDay);
+  const spent = perDay - Number(limits.remaining);
+  const used = perDay ? Math.min(100, Math.round((spent / perDay) * 100)) : 0;
+  return (
+    <div className="mt-4 rounded-2xl bg-chip p-3">
+      <p className="flex items-baseline justify-between gap-3 text-[14px]">
+        <span className="font-medium">Agent budget today</span>
+        <span className="tabular font-semibold">
+          {dollars(String(spent))} of {dollars(limits.perDay)} spent
+        </span>
+      </p>
+      <span className="mt-2 block h-2 overflow-hidden rounded-full bg-white" aria-hidden>
+        <span className="block h-full rounded-full bg-brand" style={{ width: `${used}%` }} />
+      </span>
+      <p className="mt-2 text-[13px] text-muted">The contract refuses anything over {dollars(limits.perSend)} in one send, or past the total for the day. Those come to you instead.</p>
+    </div>
+  );
+}
+
 function PlanSection({ plan }: { plan: Fetched<PlanResponse> }) {
   const p = plan.data?.plan;
   const [busy, setBusy] = useState(false);
@@ -195,6 +218,7 @@ function PlanSection({ plan }: { plan: Fetched<PlanResponse> }) {
               {p.extraServers} extra {p.extraServers === 1 ? "server" : "servers"} and {p.extraCooks} extra {p.extraCooks === 1 ? "cook" : "cooks"}
             </p>
             {p.unfilled > 0 && <p className="mt-1 text-[13px] text-muted">{p.unfilled} of those shifts have no named staff to pay.</p>}
+            {p.limits && <Budget limits={p.limits} />}
             <ul className="mt-3 divide-y divide-line border-t border-line">
               {rows.map((x) => (
                 <li key={x.username} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-3">

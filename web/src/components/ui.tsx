@@ -240,7 +240,7 @@ export function Change({ pct, className = "" }: { pct: number; className?: strin
 /** One look for every empty list: an icon in a soft circle, a short title, one line of help, and an optional button. */
 export function EmptyState({ icon: Icon, title, text, action }: { icon: LucideIcon; title: string; text?: string; action?: { label: string; href: string } }) {
   return (
-    <div className="flex flex-col items-center px-6 py-8 text-center">
+    <div role="status" className="flex flex-col items-center px-6 py-8 text-center">
       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand">
         <Icon size={24} />
       </span>
