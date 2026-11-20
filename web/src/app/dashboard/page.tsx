@@ -289,12 +289,8 @@ function PlanSection({ plan }: { plan: Fetched<PlanResponse> }) {
 
 const button = "inline-flex h-11 min-w-11 items-center justify-center rounded-full px-5 text-[15px] font-semibold disabled:opacity-40";
 
-function Approvals() {
-  const [bump, setBump] = useState(0);
-  const feed = useAgent<FeedItem[]>("/feed", 4000);
-  // The inbox follows the chain: a new event at the top of the feed means a proposal may have arrived or been decided.
-  const top = feed.data?.[0];
-  const proposals = useAgent<Proposal[]>("/proposals", 0, bump + (top ? top.logIndex + Number(top.block) : 0));
+/** The proposals the agent could not pay itself. The only place on this page that moves money. */
+function Waiting({ proposals, onDecided }: { proposals: Fetched<Proposal[]>; onDecided: () => void }) {
   const [busy, setBusy] = useState<string>();
   const [said, setSaid] = useState<Record<string, string>>({});
   const decide = async (id: string, fn: "approve" | "reject") => {
@@ -304,87 +300,100 @@ function Approvals() {
       const r = await fetch(`${AGENT}/${fn}`, { method: "POST", headers: { "content-type": "application/json", ...SKIP }, body: JSON.stringify({ id }) });
       const body = await r.json();
       msg = !r.ok ? `Not sent: ${body.error}` : body.live ? `${fn === "approve" ? "Approved" : "Rejected"}, ${body.status}` : `Checked, nothing sent: ${body.status}`;
-      if (r.ok && body.live) setBump((b) => b + 1);
+      if (r.ok && body.live) onDecided();
     } catch {
       msg = `Not sent: cannot reach the agent server at ${AGENT}`;
     }
     setSaid((s) => ({ ...s, [id]: msg }));
     setBusy(undefined);
   };
+  const n = proposals.data?.length ?? 0;
+  return (
+    <section aria-label="Waiting for you">
+      <SectionTitle right={n > 0 && <span className="rounded-full bg-brand px-2.5 py-1 text-[12px] font-semibold text-white">{n}</span>}>Waiting for you</SectionTitle>
+      <Card className="min-h-48">
+        {!proposals.data && !proposals.error && <Skeleton className="h-24" />}
+        {!proposals.data && proposals.error && <Offline error={proposals.error} />}
+        {proposals.data?.length === 0 && <EmptyState icon={Inbox} title="Nothing waiting for you" text="When the agent wants to pay more than your caps allow, the request lands here." />}
+        <ul className="divide-y divide-line">
+          {proposals.data?.map((p) => (
+            <li key={p.id} className="py-4 first:pt-0 last:pb-0">
+              <p className="flex items-baseline justify-between gap-3">
+                <span className="text-[15px] font-semibold">@{p.toName || p.name}</span>
+                <span className="tabular text-[17px] font-semibold">{amountOf(p.value, p.token)}</span>
+              </p>
+              <p className="mt-1 text-[14px] text-muted">{p.memo}</p>
+              <div className="mt-3 flex gap-3">
+                <button type="button" disabled={busy === p.id} onClick={() => decide(p.id, "approve")} aria-label={`Approve proposal ${p.id} to @${p.toName || p.name}`} className={`${button} bg-brand text-white`}>
+                  Approve
+                </button>
+                <button type="button" disabled={busy === p.id} onClick={() => decide(p.id, "reject")} aria-label={`Reject proposal ${p.id} to @${p.toName || p.name}`} className={`${button} bg-chip text-ink`}>
+                  Reject
+                </button>
+              </div>
+              <p aria-live="polite" className="mt-2 min-h-5 text-[13px] text-muted">
+                {said[p.id]}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </section>
+  );
+}
+
+/** Everything the contract has recorded on Arc, oldest kept, newest first. */
+function History({ feed, proposals }: { feed: Fetched<FeedItem[]>; proposals: Fetched<Proposal[]> }) {
   const nameOf = (id: string) => proposals.data?.find((p) => p.id === id)?.toName;
   const who = (e: FeedItem) => (e.args.name ? `@${e.args.name}` : e.args.to ? (nameOf(e.args.id) ? `@${nameOf(e.args.id)}` : short(e.args.to)) : `Proposal #${e.args.id}`);
-
   return (
-    <section aria-label="Approvals and activity">
-      <SectionTitle>Approvals and activity</SectionTitle>
-      <div className="grid gap-4 min-[900px]:grid-cols-2">
-        <Card className="min-h-48">
-          <h3 className="text-[17px] font-semibold">Waiting for you</h3>
-          {!proposals.data && !proposals.error && <Skeleton className="mt-3 h-24" />}
-          {!proposals.data && proposals.error && <Offline error={proposals.error} />}
-          {proposals.data?.length === 0 && <EmptyState icon={Inbox} title="Nothing waiting for you" text="When the agent wants to pay more than your caps allow, the request lands here." />}
-          <ul className="divide-y divide-line">
-            {proposals.data?.map((p) => (
-              <li key={p.id} className="py-4">
-                <p className="flex items-baseline justify-between gap-3">
-                  <span className="text-[15px] font-semibold">@{p.toName || p.name}</span>
-                  <span className="tabular text-[17px] font-semibold">{amountOf(p.value, p.token)}</span>
-                </p>
-                <p className="mt-1 text-[14px] text-muted">{p.memo}</p>
-                <div className="mt-3 flex gap-3">
-                  <button type="button" disabled={busy === p.id} onClick={() => decide(p.id, "approve")} aria-label={`Approve proposal ${p.id} to @${p.toName || p.name}`} className={`${button} bg-brand text-white`}>
-                    Approve
-                  </button>
-                  <button type="button" disabled={busy === p.id} onClick={() => decide(p.id, "reject")} aria-label={`Reject proposal ${p.id} to @${p.toName || p.name}`} className={`${button} bg-chip text-ink`}>
-                    Reject
-                  </button>
-                </div>
-                <p aria-live="polite" className="mt-2 min-h-5 text-[13px] text-muted">
-                  {said[p.id]}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </Card>
-        <Card className="min-h-48">
-          <h3 className="text-[17px] font-semibold">Transaction history</h3>
-          <p className="mt-0.5 text-[13px] text-muted">Every payment and proposal this contract has recorded on Arc testnet, read from the chain and updated live.</p>
-          {!feed.data && !feed.error && <Skeleton className="mt-3 h-24" />}
-          {!feed.data && feed.error && <Offline error={feed.error} />}
-          {feed.data?.length === 0 && <EmptyState icon={Activity} title="No activity yet" text="Payments and proposals appear here the moment the chain records them." />}
-          {feed.error && feed.data && <p className="mt-1 text-[13px] text-muted">Feed paused, retrying. {feed.error}.</p>}
-          {/* A fixed-height box, so a new event never moves the page. */}
-          <ul className="mt-2 max-h-80 divide-y divide-line overflow-y-auto" tabIndex={0} aria-label="Live feed events">
-            {feed.data?.map((e) => (
-              <li key={`${e.tx}-${e.logIndex}`} className="py-3">
-                <p className="flex items-baseline justify-between gap-3">
-                  <span className="text-[15px] font-semibold">
-                    {e.event} <span className="font-normal text-muted">{who(e)}</span>
-                  </span>
-                  {e.args.value && <span className="tabular text-[15px] font-semibold">{amountOf(e.args.value, e.args.token)}</span>}
-                </p>
-                {e.args.memo && <p className="mt-0.5 text-[14px] text-muted">{e.args.memo}</p>}
-                {e.event === "Sent" && <p className="text-[13px] text-muted">{e.args.byAgent === "true" ? "paid by the agent, inside your caps" : "person to person, the sender's own authority"}</p>}
-                <p className="mt-0.5 text-[13px] text-muted">
+    <section aria-label="Transaction history">
+      <SectionTitle right={feed.data && feed.data.length > 0 && <span className="text-[12px] font-medium text-muted">{feed.data.length} on chain</span>}>Transaction history</SectionTitle>
+      <Card className="min-h-48">
+        <p className="text-[13px] text-muted">Every payment and proposal this contract has recorded on Arc testnet, read from the chain at startup and updated live by a QuickNode Stream.</p>
+        {!feed.data && !feed.error && <Skeleton className="mt-3 h-24" />}
+        {!feed.data && feed.error && <Offline error={feed.error} />}
+        {feed.data?.length === 0 && <EmptyState icon={Activity} title="No activity yet" text="Payments and proposals appear here the moment the chain records them." />}
+        {feed.error && feed.data && <p className="mt-1 text-[13px] text-muted">Feed paused, retrying. {feed.error}.</p>}
+        {/* A fixed-height box, so a new event never moves the page. */}
+        <ul className="mt-2 max-h-96 divide-y divide-line overflow-y-auto" tabIndex={0} aria-label="Transaction history">
+          {feed.data?.map((e) => (
+            <li key={`${e.tx}-${e.logIndex}`} className="py-3 first:pt-0">
+              <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+                <span className="text-[15px] font-semibold">
+                  {e.event} <span className="font-normal text-muted">{who(e)}</span>
+                </span>
+                {e.args.value && <span className="tabular text-[15px] font-semibold">{amountOf(e.args.value, e.args.token)}</span>}
+              </p>
+              {e.args.memo && <p className="mt-0.5 text-[14px] text-muted">{e.args.memo}</p>}
+              {e.event === "Sent" && <p className="text-[13px] text-muted">{e.args.byAgent === "true" ? "paid by the agent, inside your caps" : "person to person, the sender's own authority"}</p>}
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[13px] text-muted">
+                <span>
                   {ago(e.at)}
                   {e.at ? " \u00b7 " : ""}block {e.block}
-                </p>
+                </span>
                 {e.tx && (
-                  <a href={`${EXPLORER}${e.tx}`} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-brand underline">
+                  <a href={`${EXPLORER}${e.tx}`} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 font-semibold text-brand underline">
                     View transaction <ExternalLink size={14} aria-hidden />
                   </a>
                 )}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
+              </p>
+            </li>
+          ))}
+        </ul>
+      </Card>
     </section>
   );
 }
 
 export default function Dashboard() {
   const plan = useAgent<PlanResponse>("/plan?venue=austin-bar");
+  // The inbox follows the chain: a new event at the top of the feed means a proposal
+  // may have arrived or been decided. Both panels read the same two fetches.
+  const [bump, setBump] = useState(0);
+  const feed = useAgent<FeedItem[]>("/feed", 4000);
+  const top = feed.data?.[0];
+  const proposals = useAgent<Proposal[]>("/proposals", 0, bump + (top ? top.logIndex + Number(top.block) : 0));
   const d = plan.data;
   const day = d && new Date(`${d.forecast.day}T00:00:00Z`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" });
   return (
@@ -398,16 +407,23 @@ export default function Dashboard() {
           Phone app <ChevronRight size={16} aria-hidden />
         </Link>
       </header>
-      <div className="grid gap-x-6 min-[900px]:grid-cols-2">
-        <div className="min-[900px]:row-span-2">
+      {/*
+        Two independent columns rather than one grid of cells. A grid row is as tall as
+        its tallest card, so a short card used to leave a hole beside a tall one.
+        Left reads as the reasoning (how busy, and why). Right is the money (what it
+        will pay, and what needs you). The record runs full width underneath.
+      */}
+      <div className="grid items-start gap-x-6 min-[900px]:grid-cols-2">
+        <div className="flex flex-col">
+          <Forecast plan={plan} />
           <Tonight plan={plan} />
         </div>
-        <Forecast plan={plan} />
-        <PlanSection plan={plan} />
-        <div className="min-[900px]:col-span-2">
-          <Approvals />
+        <div className="flex flex-col">
+          <PlanSection plan={plan} />
+          <Waiting proposals={proposals} onDecided={() => setBump((b) => b + 1)} />
         </div>
       </div>
+      <History feed={feed} proposals={proposals} />
     </main>
   );
 }
