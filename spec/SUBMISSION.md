@@ -82,10 +82,14 @@ normal day for that weekday, and derives the staffing gap and the supplier
 deposit. The forecast is deterministic, so any decision can be replayed from the
 same inputs.
 
-Then the plan splits by what the agent is allowed to do. Four shift bonuses at
-$25 each sit under the $30 per-send cap, so the agent pays them and nobody is
-asked. Today's supplier deposit is $134, over the cap, so it becomes a proposal
-in the owner's inbox and nothing moves until the owner approves it. The contract
+Then the plan splits by what the agent is allowed to do. A $25 shift bonus sits
+under the $30 per-send cap, so the agent pays it and nobody is asked. Today's
+supplier deposit is $102, over the cap, so it becomes a proposal in the owner's
+inbox and nothing moves until the owner approves it.
+
+On the day we recorded, the daily cap bit in the middle of the same plan. The
+agent had already spent $100 of its $150, so the first two bonuses paid straight
+through and the next two flipped to needing approval, mid-list. The contract
 decides which of those two happens. Not the agent, and not the prompt.
 
 Every payment's memo carries the market and the odds that justified it, so the
@@ -218,6 +222,11 @@ agent-moved USDC, and asserts the total equals spentOf, that every send is insid
 perSend, that the total is inside perDay, and that perDay minus the total equals
 remainingToday. It also drops any Sent that shares a transaction with an Approved,
 because an owner approval emits Sent(byAgent: true) while leaving spentOf alone.
+
+script/refusals.sh is the other half. It runs four eth_calls against the deployed
+contract: the agent over its per-send cap, the agent approving its own proposal,
+a stranger sending as the agent, and a payment to a username nobody has claimed.
+Each one comes back with the contract's own error. Nothing is signed to run it.
 
 QuickNode Streams
 
