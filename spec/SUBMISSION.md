@@ -3,10 +3,7 @@
 UBC Hackathon 2026. Project 1546499, https://devpost.com/software/stablegram
 
 The project page (tagline, description, built with, links) is filled in on Devpost.
-The nine form fields below can only be sent by actually submitting, so they are staged
-here. Paste them, or say the word and I will submit.
-
-Two fields cannot be answered yet. They are marked BLOCKED.
+These are the nine form field answers, as submitted on 2026-11-20.
 
 ---
 
@@ -19,7 +16,8 @@ Huu Tai Le, Oregon State University. Contracts, agent, Arc integration.
 Charles Sneed. App, design, demo.
 ```
 
-Fill in Charles's affiliation before submitting. I do not have it.
+Charles's affiliation is not in here because I do not have it. Everything else in this
+field is correct; edit the submission to add it.
 
 ---
 
@@ -143,28 +141,40 @@ Tailwind. macOS Keychain and a Foundry keystore for keys. Vercel.
 
 ## 6. Demo Video (required)
 
-**BLOCKED.** Not recorded. 2 to 3 minutes, YouTube or Google Drive, reachable by judges.
+```
+https://drive.google.com/file/d/12QCEHVK5jW8AW2GkuNanJrUdC6DIPC1X/view
+```
 
-Shot list, in the order the pitch runs:
+2 minutes 31 seconds, 1080p, shared to anyone with the link. Thirteen captioned shots
+of the live product and real terminal output, in this order:
 
-1. The dashboard: tonight's markets, the forecast, the plan split into what the agent pays and what needs approval.
-2. The budget meter, so the cap is on screen before anything moves.
-3. Approve the supplier deposit. Transaction history updates live through the Stream.
-4. The four refusals. This is the part judges should remember:
-   - agent attempts over the per-send cap, becomes a proposal
-   - agent tries to approve its own proposal, reverts with `NotYourProposal`
-   - owner revokes with `authorizeAgent(address(0))`
-   - the next agent payment reverts
-5. `npm run attest` in a terminal, re-deriving the day from the log. End on PASS.
+1. What it is, and where the caps live.
+2. The problem: money committed before the night is known.
+3. The forecast: 341 covers against 230 on a normal Friday.
+4. The two Gemini markets behind that number, volumes included.
+5. The plan, split into what the agent may pay and what it may not.
+6. The budget meter at $100 of $150, with @sam and @lee flipped to approval mid-plan.
+7. The owner's inbox.
+8. The $92 supplier deposit approved live, in block 73211464, and the history row that
+   says an owner approval is outside the agent's budget.
+9. The same transaction on the Arc explorer.
+10. `npm run attest`, ending on PASS, with the just-approved $92 correctly absent.
+11. `script/refusals.sh`: four eth_calls the contract refuses.
+12. The three relationship shapes, each with its transaction.
+13. Links.
+
+Every pixel of app and terminal content in it is a real capture or real stdout. The
+captions are the only written part. No voiceover.
 
 ---
 
 ## 7. Github Repo Link (required, public repo required)
 
-**BLOCKED.** `https://github.com/SGDlab67/stablegram-arc` is PRIVATE.
+```
+https://github.com/SGDlab67/stablegram-arc
+```
 
-The submission rules require a public repository. Making it public is still waiting
-on your Svim overlap check, so this is your call and I have not touched it.
+Public.
 
 ---
 
@@ -257,9 +267,14 @@ USDC (native, and its ERC-20 interface) 0x36000000000000000000000000000000000000
 
 ---
 
-## Before you submit
+## State at submission
 
-- [ ] Demo video recorded and reachable by judges (field 6)
-- [ ] Repo made public (field 7)
-- [ ] Charles's affiliation added to field 1
-- [ ] Owner wallet topped up past $234 if the demo runs the plan live
+- [x] Demo video recorded, uploaded and link-shared (field 6)
+- [x] Repo public (field 7)
+- [ ] Charles's affiliation added to field 1, which needs an edit on Devpost
+- [x] README carries the architecture overview, the repo layout and the run commands
+- [x] 41 Foundry tests and 25 agent tests green on the submitted commit
+
+Chain state as submitted: per-send cap $30, daily cap $150, $100 of it spent by the
+agent today across four shift bonuses, one $92 supplier deposit approved by the owner
+during the recording, and one $111 proposal left open for the live demo.

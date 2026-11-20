@@ -7,9 +7,53 @@ suppliers and your shift staff in USDC on Arc, inside limits you set.**
 Built for the University Blockchain Conference Hackathon 2026 (Nov 13 to
 20). Track: Agentic Payments and AI. Chain: Arc testnet, where gas is USDC.
 
-> This README is being rewritten as the build lands. The architecture,
-> safety limits, Stream configuration and contract addresses below are the
-> design; `spec/SPEC.md` is the authority until the final pass.
+| | |
+| --- | --- |
+| Owner dashboard, live | <https://stableplan.vercel.app/dashboard> |
+| Demo video, 2m31 | <https://drive.google.com/file/d/12QCEHVK5jW8AW2GkuNanJrUdC6DIPC1X/view> |
+| Contract on Arc testnet | [`0x32d3b9d8...0000920FA`](https://explorer.testnet.arc.io/address/0x32d3b9d88168a5f2677a6513cfaa6ab0000920fa) |
+
+Everything below is deployed and running. 41 Foundry tests, four of them
+fuzzed at 256 runs, and 25 agent tests.
+
+## What is in the repo
+
+```
+src/           Stableplan.sol, UsernameRegistry.sol, MockShare.sol
+test/          Foundry tests, including the UTC day boundary fuzz
+script/        Deploy.s.sol, refusals.sh
+agent/src/     forecast and plan, chain writes (act.ts), server, attest, history backfill
+agent/venues/  one JSON file per venue: baseline covers, staff, supplier, uplift priors
+web/           Next.js app: the owner dashboard at /dashboard, the phone prototype at /
+deployments/   arc-testnet.json, the addresses and ABIs everything else reads
+spec/          SPEC.md and the submission answers
+```
+
+The agent never holds the dashboard's truth. It writes to the chain, a
+QuickNode Stream delivers what the chain recorded to `POST /hooks/quicknode`,
+and the dashboard renders that feed plus a backfill read at boot.
+
+## Run it yourself
+
+Nothing here needs a key to check. Both of these are read-only.
+
+```sh
+cd agent && npm install
+npm run attest        # re-derive today's agent spend from the event log and
+                      # assert it against the contract's own counter
+cd .. && script/refusals.sh   # four things the contract will not let the agent do,
+                              # each an eth_call against the deployed contract
+forge test            # 41 tests
+```
+
+To run the agent itself you need the owner's keystore and the Keychain items
+it names, which stay on the demo machine:
+
+```sh
+npm run plan          # today's forecast and plan, no writes
+npm run serve         # the API the dashboard reads, plus the Stream webhook
+npm run p2p           # a person to person send, dry run unless --live
+```
 
 ## The problem
 
