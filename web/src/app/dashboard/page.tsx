@@ -6,6 +6,10 @@ import { Card, EmptyState, PrimaryButton, SectionTitle } from "@/components/ui";
 import { usd } from "@/lib/data";
 
 const AGENT = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://127.0.0.1:8787";
+// Served from a public origin the agent is reached through an ngrok tunnel, and free
+// ngrok answers a browser request with its own warning page unless this header is set.
+// Harmless when AGENT is localhost, so it goes on every call.
+const SKIP = { "ngrok-skip-browser-warning": "1" };
 const EXPLORER = "https://explorer.testnet.arc.io/tx/";
 
 type Market = { ticker: string; title: string; volume24h?: string; odds: { label: string; p: number }[] };
@@ -31,7 +35,7 @@ function useAgent<T>(path: string, every = 0, bump = 0): Fetched<T> {
     let last = "";
     const load = async () => {
       try {
-        const r = await fetch(`${AGENT}${path}`);
+        const r = await fetch(`${AGENT}${path}`, { headers: SKIP });
         const text = await r.text();
         if (!r.ok) throw new Error(`the agent server answered ${r.status}`);
         if (alive && text !== last) {
@@ -169,7 +173,7 @@ function PlanSection({ plan }: { plan: Fetched<PlanResponse> }) {
   const doRun = async () => {
     setBusy(true);
     try {
-      const r = await fetch(`${AGENT}/run?venue=austin-bar`, { method: "POST" });
+      const r = await fetch(`${AGENT}/run?venue=austin-bar`, { method: "POST", headers: SKIP });
       const body = await r.json();
       setRun(r.ok ? { data: body } : { error: body.error ?? `the agent server answered ${r.status}` });
     } catch {
@@ -256,7 +260,7 @@ function Approvals() {
     setBusy(id);
     let msg: string;
     try {
-      const r = await fetch(`${AGENT}/${fn}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id }) });
+      const r = await fetch(`${AGENT}/${fn}`, { method: "POST", headers: { "content-type": "application/json", ...SKIP }, body: JSON.stringify({ id }) });
       const body = await r.json();
       msg = !r.ok ? `Not sent: ${body.error}` : body.live ? `${fn === "approve" ? "Approved" : "Rejected"}, ${body.status}` : `Checked, nothing sent: ${body.status}`;
       if (r.ok && body.live) setBump((b) => b + 1);

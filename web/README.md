@@ -16,6 +16,31 @@ npm run dev
 ```
 Open http://localhost:3000. To try it on your phone, open the "Network" address that `npm run dev` prints while both devices are on the same Wi-Fi.
 
+## Deploy it (Vercel)
+
+Only `/dashboard` talks to the agent, and the agent runs on the presenter's laptop. The hosted page is a window onto that laptop: with the laptop asleep or the tunnel down, the dashboard says "Agent offline".
+
+1. **Vercel project:** set Root Directory to `web`. The Next.js preset is detected, so there is no `vercel.json`.
+2. **One environment variable** (Production and Preview):
+   ```
+   NEXT_PUBLIC_AGENT_URL=https://strut-goggles-unglazed.ngrok-free.dev
+   ```
+   Next inlines it into the browser bundle at build time, so changing it needs a redeploy, not just an agent restart.
+3. **On the laptop,** the tunnel:
+   ```bash
+   ngrok http 8787 --url strut-goggles-unglazed.ngrok-free.dev
+   ```
+   and the agent, with `--origin` set to the exact origin the browser is on (scheme and host, no trailing slash, no path):
+   ```bash
+   cd agent
+   npm run serve -- --origin https://<your-project>.vercel.app --owner 0x<venue owner address> --live
+   ```
+   Drop `--live` to demo without sending transactions.
+
+`--origin` is an exact string compare. If it does not match the page's origin (the default `http://localhost:3000` left in place, a trailing slash, or a per-deployment preview hostname), Approve, Reject and Run return `403 bad origin`, and the read-only panels fail too, because the agent only sends the CORS header on a match.
+
+One catch on a free ngrok plan: the tunnel answers browser requests with ngrok's own warning page, so the hosted dashboard reads HTML where it expects JSON (local use is unaffected). Demo it through a tunnel without that interstitial, and point `NEXT_PUBLIC_AGENT_URL` at that URL.
+
 ## Screens
 | Path | Screen |
 |---|---|

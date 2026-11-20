@@ -13,7 +13,7 @@ const { values } = parseArgs({
   options: {
     live: { type: "boolean" },
     port: { type: "string", default: "8787" },
-    origin: { type: "string", default: "http://localhost:3000" }, // the web app
+    origin: { type: "string", default: "http://localhost:3000" }, // the web app, or several separated by commas
     owner: { type: "string" }, // the venue owner's address, whose limits the agent spends against
   },
 });
@@ -178,14 +178,17 @@ export function ingest(body: unknown) {
 // dashboard nothing, and it is what stops a stranger who finds the tunnel from
 // posting to /run or /approve with curl. The tunnel exists for the QuickNode
 // webhook, which carries its own secret instead.
-const allowed = (origin: string | undefined) => origin === values.origin;
+// An exact-match allowlist. The local page and the hosted page are different origins,
+// so both are named when the demo runs from a deployed URL.
+const origins = new Set(values.origin.split(",").map((o) => o.trim()).filter(Boolean));
+const allowed = (origin: string | undefined) => !!origin && origins.has(origin);
 
 export const handler = async (req: IncomingMessage, res: ServerResponse) => {
   const url = new URL(req.url ?? "/", "http://x");
   const origin = req.headers.origin;
-  if (origin === values.origin) res.setHeader("access-control-allow-origin", origin);
+  if (allowed(origin)) res.setHeader("access-control-allow-origin", origin as string);
   res.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
-  res.setHeader("access-control-allow-headers", "content-type");
+  res.setHeader("access-control-allow-headers", "content-type, ngrok-skip-browser-warning");
   try {
     if (req.method === "OPTIONS") return void res.writeHead(204).end();
     if (req.method === "GET" && url.pathname === "/plan") return json(res, 200, await withRoutes(await planFor(url.searchParams)));
