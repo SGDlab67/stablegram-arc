@@ -11,6 +11,7 @@
     "serve": "tsx src/server.ts",
     "seed": "tsx src/seed.ts",
     "verify": "tsx src/verify.ts",
+    "attest": "tsx src/attest.ts",
     "init-mnemonic": "tsx src/init-mnemonic.ts"
   },
   "dependencies": {
