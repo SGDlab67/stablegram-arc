@@ -345,6 +345,10 @@ function Waiting({ proposals, onDecided }: { proposals: Fetched<Proposal[]>; onD
 /** Everything the contract has recorded on Arc, oldest kept, newest first. */
 function History({ feed, proposals }: { feed: Fetched<FeedItem[]>; proposals: Fetched<Proposal[]> }) {
   const nameOf = (id: string) => proposals.data?.find((p) => p.id === id)?.toName;
+  // An owner approval emits Sent(byAgent: true) as well, because the contract moves the
+  // money the same way. Labelling that one "paid by the agent" would read as the agent
+  // spending past its cap, so a Sent sharing a transaction with an Approved is the owner's.
+  const approvedTx = new Set(feed.data?.filter((e) => e.event === "Approved").map((e) => e.tx));
   const who = (e: FeedItem) => (e.args.name ? `@${e.args.name}` : e.args.to ? (nameOf(e.args.id) ? `@${nameOf(e.args.id)}` : short(e.args.to)) : `Proposal #${e.args.id}`);
   return (
     <section aria-label="Transaction history">
@@ -366,7 +370,7 @@ function History({ feed, proposals }: { feed: Fetched<FeedItem[]>; proposals: Fe
                 {e.args.value && <span className="tabular text-[15px] font-semibold">{amountOf(e.args.value, e.args.token)}</span>}
               </p>
               {e.args.memo && <p className="mt-0.5 text-[14px] text-muted">{e.args.memo}</p>}
-              {e.event === "Sent" && <p className="text-[13px] text-muted">{e.args.byAgent === "true" ? "paid by the agent, inside your caps" : "person to person, the sender's own authority"}</p>}
+              {e.event === "Sent" && <p className="text-[13px] text-muted">{e.args.byAgent !== "true" ? "person to person, the sender's own authority" : approvedTx.has(e.tx) ? "you approved this, so it is outside the agent's budget" : "paid by the agent, inside your caps"}</p>}
               <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[13px] text-muted">
                 <span>
                   {ago(e.at)}
