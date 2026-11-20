@@ -12,7 +12,8 @@
     "seed": "tsx src/seed.ts",
     "verify": "tsx src/verify.ts",
     "attest": "tsx src/attest.ts",
-    "init-mnemonic": "tsx src/init-mnemonic.ts"
+    "init-mnemonic": "tsx src/init-mnemonic.ts",
+    "p2p": "tsx src/p2p.ts"
   },
   "dependencies": {
     "viem": "^2.21.0"

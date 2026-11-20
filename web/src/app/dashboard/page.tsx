@@ -206,7 +206,9 @@ function PlanSection({ plan }: { plan: Fetched<PlanResponse> }) {
     setBusy(false);
   };
   // The deposit leads: it is over the per-send cap, so it is the proposal the owner approves.
-  const rows = p ? [...(p.supplier ? [{ ...p.supplier, role: "Supplier deposit" }] : []), ...p.payments.map((x) => ({ ...x, role: "Shift contractor" }))] : [];
+  const rows = p
+    ? [...(p.supplier ? [{ ...p.supplier, role: "Supplier deposit, business to business" }] : []), ...p.payments.map((x) => ({ ...x, role: "Shift contractor, business to person" }))]
+    : [];
   return (
     <section aria-label="Plan">
       <SectionTitle>Plan</SectionTitle>
@@ -347,7 +349,7 @@ function Approvals() {
                   {e.args.value && <span className="tabular text-[15px] font-semibold">{amountOf(e.args.value, e.args.token)}</span>}
                 </p>
                 {e.args.memo && <p className="mt-0.5 text-[14px] text-muted">{e.args.memo}</p>}
-                {e.args.byAgent === "true" && <p className="text-[13px] text-muted">paid by the agent</p>}
+                {e.event === "Sent" && <p className="text-[13px] text-muted">{e.args.byAgent === "true" ? "paid by the agent, inside your caps" : "person to person, the sender's own authority"}</p>}
                 {e.tx && (
                   <a href={`${EXPLORER}${e.tx}`} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-brand underline">
                     View transaction <ExternalLink size={14} aria-hidden />
