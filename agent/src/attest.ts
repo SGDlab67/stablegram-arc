@@ -88,8 +88,12 @@ async function main() {
   const sends = counted.filter((s) => stamps.get(s.block)! / DAY === today);
 
   const read = (functionName: string) => pub.readContract({ address: STABLEPLAN, abi: ABI, functionName, args: [OWNER, USDC] });
-  const [spent, limit, remaining] = (await Promise.all([read("spentOf"), read("limitOf"), read("remainingToday")])) as [[bigint, bigint], [bigint, bigint], bigint];
-  const [spentDay, spentAmount] = spent;
+  const [spent, limit, remaining] = (await Promise.all([read("spentOf"), read("limitOf"), read("remainingToday")])) as [[number | bigint, bigint], [bigint, bigint], bigint];
+  // spentOf.day is a uint48, and viem decodes anything up to uint48 as a JS number
+  // rather than a bigint. Comparing it to a bigint day is always false, which read
+  // as a stale day and failed the attestation on perfectly good chain state.
+  const spentDay = BigInt(spent[0]);
+  const spentAmount = spent[1];
   const [perSend, perDay] = limit;
   const counter = spentDay === today ? spentAmount : 0n; // a stale day is spent in a day that is over, so today it is zero
   const total = sum(sends);
