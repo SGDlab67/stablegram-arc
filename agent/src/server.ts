@@ -14,7 +14,11 @@ const { values } = parseArgs({
   options: {
     live: { type: "boolean" },
     port: { type: "string", default: "8787" },
-    origin: { type: "string", default: "http://localhost:3000" }, // the web app, or several separated by commas
+    // The web app, or several separated by commas. localhost and 127.0.0.1 are the same
+// machine but different origins to a browser, so both ship by default: opening the
+// dashboard on the wrong spelling otherwise blocks every read and the page just
+// sits on its skeletons.
+    origin: { type: "string", default: "http://localhost:3000,http://127.0.0.1:3000" },
     owner: { type: "string" }, // the venue owner's address, whose limits the agent spends against
   },
 });
@@ -233,7 +237,7 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
 if (import.meta.main) {
   createServer(handler).listen(Number(values.port), "127.0.0.1", () => console.log(`agent on http://127.0.0.1:${values.port}`));
   void readHistory(createPublicClient({ chain, transport }))
-    .then((logs) => console.log(`history: ${ingest(logs)} events read from the chain`))
+    .then((logs) => ingest(logs))
     .catch((e) => console.warn(`history backfill failed, the feed starts empty and fills from the Stream: ${(e as Error).message}`));
   const warm = new URLSearchParams({ venue: "austin-bar" });
   void refresh(warm, "austin-bar|").then(() => console.log(cached ? "first plan ready" : "first plan failed, the next request will try again"));

@@ -13,7 +13,8 @@
     "verify": "tsx src/verify.ts",
     "attest": "tsx src/attest.ts",
     "init-mnemonic": "tsx src/init-mnemonic.ts",
-    "p2p": "tsx src/p2p.ts"
+    "p2p": "tsx src/p2p.ts",
+    "history": "tsx src/warm-history.ts"
   },
   "dependencies": {
     "viem": "^2.21.0"
