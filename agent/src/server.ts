@@ -7,6 +7,7 @@ import { ABI, STABLEPLAN, USDC, act, chain, keychain, route, transport } from ".
 import { REGISTRY, REGISTRY_ABI, ownerAccount } from "./demo.ts";
 import { fetchEvents } from "./gemini.ts";
 import { forecast, market, plan, relevantEvents, today, type Payment, type Plan } from "./forecast.ts";
+import { readHistory } from "./history.ts";
 import { loadVenue } from "./venue.ts";
 
 const { values } = parseArgs({
@@ -22,8 +23,8 @@ const streamToken = await keychain("quicknode-stream-token");
 if (!streamToken) console.warn("Keychain item quicknode-stream-token is missing: /hooks/quicknode is closed until it is set.");
 console.log(values.live ? "LIVE: POST /run sends transactions" : "dry run: POST /run sends nothing (start with --live to send)");
 
-type FeedItem = { event: string; args: Record<string, string>; block: string; tx: string; logIndex: number };
-export const feed: FeedItem[] = []; // ponytail: in memory, lost on restart; the Stream can backfill
+type FeedItem = { event: string; args: Record<string, string>; block: string; tx: string; logIndex: number; at?: number };
+export const feed: FeedItem[] = []; // in memory; readHistory() refills it from the chain at boot
 
 const json = (res: ServerResponse, code: number, body: unknown) => {
   res.writeHead(code, { "content-type": "application/json" });
@@ -154,7 +155,7 @@ async function withRoutes<T extends { plan: Plan }>(b: T) {
 export function ingest(body: unknown) {
   const raw = (body as { data?: unknown })?.data ?? body;
   let added = 0;
-  for (const log of [raw].flat(Infinity) as { address?: string; topics?: Hex[]; data?: Hex; blockNumber?: string; transactionHash?: string; logIndex?: string | number }[]) {
+  for (const log of [raw].flat(Infinity) as { address?: string; topics?: Hex[]; data?: Hex; blockNumber?: string; transactionHash?: string; logIndex?: string | number; blockTimestamp?: string | number }[]) {
     if (log?.address?.toLowerCase() !== STABLEPLAN.toLowerCase() || !log.topics) continue;
     try {
       const { eventName, args } = decodeEventLog({ abi: ABI, data: log.data ?? "0x", topics: log.topics as [Hex, ...Hex[]] }) as { eventName: string; args: Record<string, unknown> };
@@ -165,12 +166,17 @@ export function ingest(body: unknown) {
         block: String(Number(log.blockNumber ?? 0)),
         tx: log.transactionHash ?? "",
         logIndex: Number(log.logIndex ?? 0),
+        // Streams sends this as a hex string, the backfill as seconds. 0 means unknown.
+        at: Number(log.blockTimestamp ?? 0) || undefined,
       };
       if (feed.some((x) => x.tx === item.tx && x.logIndex === item.logIndex)) continue; // the Stream may redeliver
-      feed.unshift(item);
+      feed.push(item);
       added++;
     } catch {} // not one of ours
   }
+  // Newest first, whatever order it arrived in: the Stream batches blocks and can
+  // deliver them out of order, and the boot backfill arrives oldest first.
+  feed.sort((a, b) => Number(b.block) - Number(a.block) || b.logIndex - a.logIndex);
   feed.length = Math.min(feed.length, 500);
   return added;
 }
@@ -226,6 +232,9 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
 // Importing this module, as the tests do, must not open a port.
 if (import.meta.main) {
   createServer(handler).listen(Number(values.port), "127.0.0.1", () => console.log(`agent on http://127.0.0.1:${values.port}`));
+  void readHistory(createPublicClient({ chain, transport }))
+    .then((logs) => console.log(`history: ${ingest(logs)} events read from the chain`))
+    .catch((e) => console.warn(`history backfill failed, the feed starts empty and fills from the Stream: ${(e as Error).message}`));
   const warm = new URLSearchParams({ venue: "austin-bar" });
   void refresh(warm, "austin-bar|").then(() => console.log(cached ? "first plan ready" : "first plan failed, the next request will try again"));
 }

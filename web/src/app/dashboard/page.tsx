@@ -25,7 +25,7 @@ type PlanResponse = {
   plan: { extraServers: number; extraCooks: number; unfilled: number; payments: Payment[]; supplier: Payment | null; limits?: Limits };
 };
 type Proposal = { id: string; user: string; token: string; to: string; toName: string; value: string; name: string; memo: string };
-type FeedItem = { event: string; args: Record<string, string>; block: string; tx: string; logIndex: number };
+type FeedItem = { event: string; args: Record<string, string>; block: string; tx: string; logIndex: number; at?: number };
 type RunResponse = { live: boolean; results: { to: string; amount: string; fn: string; simulation: string; hash?: string }[] };
 
 type Fetched<T> = { data?: T; error?: string };
@@ -64,6 +64,20 @@ const dollars = (base: string) => usd(Number(base) / 1e6, { cents: false });
 /** Token amounts: the native currency is 18 decimals, the USDC ERC-20 view is 6. */
 const amountOf = (value: string, token?: string) => usd(Number(BigInt(value || "0")) / 10 ** (!token || /^0x0+$/.test(token) ? 18 : 6), { cents: false });
 const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
+/** Block time as something readable. Seconds since the epoch, 0 or missing when unknown. */
+const ago = (at?: number) => {
+  if (!at) return "";
+  const s = Math.max(0, Math.round(Date.now() / 1000 - at));
+  if (s < 60) return "just now";
+  const units: [number, string][] = [
+    [60, "minute"],
+    [3600, "hour"],
+    [86400, "day"],
+  ];
+  const [div, unit] = units.reverse().find(([d]) => s >= d) ?? units[0];
+  const n = Math.floor(s / div);
+  return `${n} ${unit}${n === 1 ? "" : "s"} ago`;
+};
 
 const SOURCE = { live: "Live", partial: "Partial", cache: "Cached" } as const;
 const SOURCE_TITLE = { live: "Every Gemini query answered", partial: "Some Gemini queries failed", cache: "Gemini did not answer, showing the last response" } as const;
@@ -333,7 +347,8 @@ function Approvals() {
           </ul>
         </Card>
         <Card className="min-h-48">
-          <h3 className="text-[17px] font-semibold">Live feed</h3>
+          <h3 className="text-[17px] font-semibold">Transaction history</h3>
+          <p className="mt-0.5 text-[13px] text-muted">Every payment and proposal this contract has recorded on Arc testnet, read from the chain and updated live.</p>
           {!feed.data && !feed.error && <Skeleton className="mt-3 h-24" />}
           {!feed.data && feed.error && <Offline error={feed.error} />}
           {feed.data?.length === 0 && <EmptyState icon={Activity} title="No activity yet" text="Payments and proposals appear here the moment the chain records them." />}
@@ -350,6 +365,10 @@ function Approvals() {
                 </p>
                 {e.args.memo && <p className="mt-0.5 text-[14px] text-muted">{e.args.memo}</p>}
                 {e.event === "Sent" && <p className="text-[13px] text-muted">{e.args.byAgent === "true" ? "paid by the agent, inside your caps" : "person to person, the sender's own authority"}</p>}
+                <p className="mt-0.5 text-[13px] text-muted">
+                  {ago(e.at)}
+                  {e.at ? " \u00b7 " : ""}block {e.block}
+                </p>
                 {e.tx && (
                   <a href={`${EXPLORER}${e.tx}`} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-brand underline">
                     View transaction <ExternalLink size={14} aria-hidden />
